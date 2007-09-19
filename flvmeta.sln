@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "flvmeta", "flvmeta.vcproj", "{23DDA37F-C704-4136-825A-C3274CE1377A}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "flvdump", "flvdump.vcproj", "{23DDA37F-C704-4136-825A-C3274CE1377F}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{23DDA37F-C704-4136-825A-C3274CE1377A}.Debug.ActiveCfg = Debug|Win32
+		{23DDA37F-C704-4136-825A-C3274CE1377A}.Debug.Build.0 = Debug|Win32
+		{23DDA37F-C704-4136-825A-C3274CE1377A}.Release.ActiveCfg = Release|Win32
+		{23DDA37F-C704-4136-825A-C3274CE1377A}.Release.Build.0 = Release|Win32
+		{23DDA37F-C704-4136-825A-C3274CE1377F}.Debug.ActiveCfg = Debug|Win32
+		{23DDA37F-C704-4136-825A-C3274CE1377F}.Debug.Build.0 = Debug|Win32
+		{23DDA37F-C704-4136-825A-C3274CE1377F}.Release.ActiveCfg = Release|Win32
+		{23DDA37F-C704-4136-825A-C3274CE1377F}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
