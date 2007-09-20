@@ -89,41 +89,42 @@ size_t compute_h263_size(FILE * flv_in, flv_info * info) {
     size_t bytes_read = fread(header, sizeof(byte), 9, flv_in);
     if (bytes_read == 9) {
         uint32 psc = uint24_be_to_uint32(*(uint24_be *)(header)) >> 7;
-        uint32 psize = ((header[3] & 0x03) << 1) + ((header[4] >> 7) & 0x01);
-        switch (psize) {
-            case 0:
-                info->video_width  = ((header[4] & 0x7f) << 1) + ((header[5] >> 7) & 0x01);
-                info->video_height = ((header[5] & 0x7f) << 1) + ((header[6] >> 7) & 0x01);
-                break;
-            case 1:
-                info->video_width  = ((header[4] & 0x7f) << 9) + (header[5] << 1) + ((header[6] >> 7) & 0x01);
-                info->video_height = ((header[6] & 0x7f) << 9) + (header[7] << 1) + ((header[8] >> 7) & 0x01);
-                break;
-            case 2:
-                info->video_width  = 352;
-                info->video_height = 288;
-                break;
-            case 3:
-                info->video_width  = 176;
-                info->video_height = 144;
-                break;
-            case 4:
-                info->video_width  = 128;
-                info->video_height = 96;
-                break;
-            case 5:
-                info->video_width  = 320;
-                info->video_height = 240;
-                break;
-            case 6:
-                info->video_width  = 160;
-                info->video_height = 120;
-                break;
-            default:
-                break;
+        if (psc == 1) {
+            uint32 psize = ((header[3] & 0x03) << 1) + ((header[4] >> 7) & 0x01);
+            switch (psize) {
+                case 0:
+                    info->video_width  = ((header[4] & 0x7f) << 1) + ((header[5] >> 7) & 0x01);
+                    info->video_height = ((header[5] & 0x7f) << 1) + ((header[6] >> 7) & 0x01);
+                    break;
+                case 1:
+                    info->video_width  = ((header[4] & 0x7f) << 9) + (header[5] << 1) + ((header[6] >> 7) & 0x01);
+                    info->video_height = ((header[6] & 0x7f) << 9) + (header[7] << 1) + ((header[8] >> 7) & 0x01);
+                    break;
+                case 2:
+                    info->video_width  = 352;
+                    info->video_height = 288;
+                    break;
+                case 3:
+                    info->video_width  = 176;
+                    info->video_height = 144;
+                    break;
+                case 4:
+                    info->video_width  = 128;
+                    info->video_height = 96;
+                    break;
+                case 5:
+                    info->video_width  = 320;
+                    info->video_height = 240;
+                    break;
+                case 6:
+                    info->video_width  = 160;
+                    info->video_height = 120;
+                    break;
+                default:
+                    break;
+            }
         }
     }
-
     return bytes_read;
 }
 
@@ -540,9 +541,10 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
 
     flv_tag ft;
     ft.type = FLV_TAG_TYPE_META;
-    ft.timestamp = uint32_to_uint24_be(0);
     ft.body_length = uint32_to_uint24_be(on_metadata_name_size + on_metadata_size);
-    ft.padding = swap_uint32(0);
+    ft.timestamp = uint32_to_uint24_be(0);
+    ft.timestamp_extended = 0;
+    ft.stream_id = uint32_to_uint24_be(0);
     if (fwrite(&ft, sizeof(flv_tag), 1, flv_out) != 1 ||
         amf_data_write(meta->on_metadata_name, flv_out) < on_metadata_name_size ||
         amf_data_write(meta->on_metadata, flv_out) < on_metadata_size
@@ -586,9 +588,10 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
             uint32 on_last_second_size = (uint32)amf_data_size(meta->on_last_second);
             flv_tag tag;
             tag.type = FLV_TAG_TYPE_META;
-            tag.timestamp = ft.timestamp;
             tag.body_length = uint32_to_uint24_be(on_last_second_name_size + on_last_second_size);
-            tag.padding = swap_uint32(0);
+            tag.timestamp = ft.timestamp;
+            tag.timestamp_extended = 0;
+            tag.stream_id = uint32_to_uint24_be(0);
             if (fwrite(&tag, sizeof(flv_tag), 1, flv_out) != 1 ||
                 amf_data_write(meta->on_last_second_name, flv_out) < on_last_second_name_size ||
                 amf_data_write(meta->on_last_second, flv_out) < on_last_second_size
@@ -692,15 +695,19 @@ int main(int argc, char ** argv) {
         fprintf(stderr, "Usage: flvmeta in_file out_file\n\n");
         return 1;
     }
+    
+    if (!strcmp(argv[1], argv[2])) {
+    	fprintf(stderr, "Error: input file and output file must be different.\n\n");
+    }
 
     int errcode = inject_metadata(argv[1], argv[2]);
     switch (errcode) {
-        case ERROR_OPEN_READ: fprintf(stderr, "Error opening %s for reading.\n", argv[1]); break;
-        case ERROR_OPEN_WRITE: fprintf(stderr, "Error opening %s for writing.\n", argv[2]); break;
-        case ERROR_NO_FLV: fprintf(stderr, "%s is not a valid FLV file.\n", argv[1]); break;
-        case ERROR_EOF: fprintf(stderr, "Unexpected end of file.\n"); break;
-        case ERROR_INVALID_TAG: fprintf(stderr, "Invalid FLV tag.\n"); break;
-        case ERROR_WRITE: fprintf(stderr, "Unable to write to %s.\n", argv[2]); break;
+        case ERROR_OPEN_READ: fprintf(stderr, "Error: cannot open %s for reading.\n", argv[1]); break;
+        case ERROR_OPEN_WRITE: fprintf(stderr, "Error: cannot open %s for writing.\n", argv[2]); break;
+        case ERROR_NO_FLV: fprintf(stderr, "Error: %s is not a valid FLV file.\n", argv[1]); break;
+        case ERROR_EOF: fprintf(stderr, "Error: unexpected end of file.\n"); break;
+        case ERROR_INVALID_TAG: fprintf(stderr, "Error: invalid FLV tag.\n"); break;
+        case ERROR_WRITE: fprintf(stderr, "Error: unable to write to %s.\n", argv[2]); break;
     }
     return errcode;
 }

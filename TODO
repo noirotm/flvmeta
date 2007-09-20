@@ -1,0 +1,18 @@
+Large file support.
+
+##
+
+Using memory mapping to improve the reading speed.
+
+##
+
+Allow user to specify custom metadata tags.
+
+##
+
+i18n support.
+The programs don't have much output, mainly errors, so it should be easy
+to translate it in several languages.
+
+If you want to contribute, send an email to flvmeta-discussion@googlegroups.com.
+

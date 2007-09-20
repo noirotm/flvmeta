@@ -1,0 +1,35 @@
+2007-09-20 Marc Noirot <marc.noirot@gmail.com>	
+	* flv.h, flvmeta.c, flvdump.c: Added support for Screen Video
+	  V2, and On2 VP6 with alpha channel.
+
+	* flvdump.c (compute_metadata): Fixed a compilation issue
+	  on MacOSX caused by a misplaced minus sign.
+
+	* flvmeta.c (main): Added protection against giving the same
+	  file as input and output.
+
+	* flv.h, flvmeta.c: Fixed the padding in the flv_tag to better
+	  reflect its role.
+	
+	* flvmeta.c: Made error messages more uniform.
+	
+	* flvmeta.c (compute_h263_size): Added Picture Start Code check.
+	
+	* flvdump.c (main): Suppressed a compilation warning.
+	
+	* Makefile.am: Added -Wall.
+	
+	* Makefile.am: Removed non-existant directory `doc' from EXTRA_DIST.
+	
+	Added THANKS, TODO standard files.
+	
+	* AUTHORS, README, Changelog: Standard stuff.
+
+2007-09-19 Marc Noirot <marc.noirot@gmail.com>
+	This is the first public commit of FLVmeta.
+	A few things need to be polished before an official release.
+
+
+Copyright 2007 Marc Noirot
+Copying and distribution of this file, with or without modification, are
+permitted provided the copyright notice and this notice are preserved.

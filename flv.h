@@ -55,7 +55,8 @@ typedef struct __flv_tag {
     uint8       type;
     uint24_be   body_length; /* in bytes, total tag size minus 11 */
     uint24_be   timestamp; /* milli-seconds */
-    uint32_be   padding; /* reserved, must be "\0\0\0\0" */
+    uint8       timestamp_extended; /* timestamp extension */
+    uint24_be   stream_id; /* reserved, must be "\0\0\0" */
     /* body comes next */
 } flv_tag;
 

@@ -69,7 +69,7 @@ int main(int argc, char ** argv) {
         if (fread(&ft, sizeof(ft), 1, flv_in) == 0)
             break;
 
-        printf("--- Tag #%lu at 0x%lX (%d) ---\n", n++, offset, offset);
+        printf("--- Tag #%lu at 0x%lX (%li) ---\n", n++, offset, offset);
         switch (ft.type) {
             case FLV_TAG_TYPE_AUDIO: str = "Audio"; break;
             case FLV_TAG_TYPE_VIDEO: str = "Video"; break;
