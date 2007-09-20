@@ -154,6 +154,19 @@ size_t compute_vp6_size(FILE * flv_in, flv_info * info) {
 }
 
 /*
+    compute On2 VP6 with Alpha video size
+*/
+size_t compute_vp6_alpha_size(FILE * flv_in, flv_info * info) {
+    byte header[8];
+    size_t bytes_read = fread(header, sizeof(byte), 8, flv_in);
+    if (bytes_read == 5) {
+        info->video_width  = (header[7] << 4) - (header[0] >> 4);
+	    info->video_height = (header[6] << 4) - (header[0] & 0x0f);
+    }
+    return bytes_read;
+}
+
+/*
     compute video width and height from the first video frame
 */
 size_t compute_video_size(FILE * flv_in, flv_info * info) {
@@ -163,10 +176,14 @@ size_t compute_video_size(FILE * flv_in, flv_info * info) {
             bytes_read = compute_h263_size(flv_in, info);
             break;
         case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO:
+        case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2:
             bytes_read = compute_screen_size(flv_in, info);
             break;
         case FLV_VIDEO_TAG_CODEC_ON2_VP6:
             bytes_read = compute_vp6_size(flv_in, info);
+            break;
+        case FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA:
+            bytes_read = compute_vp6_alpha_size(flv_in, info);
             break;
     }
     return bytes_read;
@@ -446,7 +463,7 @@ void compute_metadata(const flv_info * info, flv_metadata * meta) {
     amf_associative_array_add(meta->on_metadata, amf_str("metadatacreator"), amf_str(LONG_COPYRIGHT_STR));
 
     tzset();
-    amf_associative_array_add(meta->on_metadata, amf_str("metadatadate"), amf_date_new((number64)(time(NULL)+daylight*3600)*1000, (sint16)-timezone/60));
+    amf_associative_array_add(meta->on_metadata, amf_str("metadatadate"), amf_date_new((number64)(time(NULL)+daylight*3600)*1000, -(sint16)timezone/60));
     if (info->have_audio) {
         amf_associative_array_add(meta->on_metadata, amf_str("audiocodecid"), amf_number_new((number64)info->audio_codec));
     }

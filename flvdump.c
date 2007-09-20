@@ -127,8 +127,10 @@ int main(int argc, char ** argv) {
 
             switch (flv_video_tag_codec_id(vt)) {
                 case FLV_VIDEO_TAG_CODEC_SORENSEN_H263: str = "Sorensen H.263"; break;
-                case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO: str = "Screen video"; break;
+                case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO: str = "Screen Video"; break;
                 case FLV_VIDEO_TAG_CODEC_ON2_VP6: str = "On2 VP6"; break;
+                case FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA: str = "On2 VP6 Alpha"; break;
+                case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2: str = "Screen Video V2"; break;
                 default: str = "Unknown";
             }
             printf("* Video codec: %s\n", str);

@@ -85,9 +85,11 @@ typedef byte flv_audio_tag;
 #define flv_audio_tag_sound_format(tag) (((tag) & 0xF0) >> 4)
 
 /* video tag */
-#define FLV_VIDEO_TAG_CODEC_SORENSEN_H263 2
-#define FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO  3
-#define FLV_VIDEO_TAG_CODEC_ON2_VP6       4
+#define FLV_VIDEO_TAG_CODEC_SORENSEN_H263   2
+#define FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO    3
+#define FLV_VIDEO_TAG_CODEC_ON2_VP6         4
+#define FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA   5
+#define FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2 6
 
 #define FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME               1
 #define FLV_VIDEO_TAG_FRAME_TYPE_INTERFRAME             2
