@@ -1,3 +1,19 @@
+2007-09-21 Marc Noirot <marc.noirot@gmail.com>
+	* configure.ac: 1.0 Release.
+	
+	* amf.c (amf_data_free): Fixed a memory leak on array objects.
+	
+	* config.h.win, configure.ac, flvdump.c, flvmeta.c:
+	  Added bug report mail address.
+	
+	* configure.ac: Added a number of language and headers tests.
+	  Marked autoconf minimum version as 2.61.
+	  
+	* flvmeta.c (compute_metadata): Fixed video width and height
+	  injection.
+	
+	* Makefile.am: Removed the empty flv.c from the sources.
+
 2007-09-20 Marc Noirot <marc.noirot@gmail.com>	
 	* flv.h, flvmeta.c, flvdump.c: Added support for Screen Video
 	  V2, and On2 VP6 with alpha channel.
@@ -21,7 +37,7 @@
 	
 	* Makefile.am: Removed non-existant directory `doc' from EXTRA_DIST.
 	
-	Added THANKS, TODO standard files.
+	* THANKS, TODO: Added.
 	
 	* AUTHORS, README, Changelog: Standard stuff.
 

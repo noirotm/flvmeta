@@ -983,7 +983,7 @@ void amf_data_free(amf_data * data) {
             case AMF_TYPE_UNDEFINED: break;
             /*case AMF_TYPE_REFERENCE:*/
             case AMF_TYPE_ASSOCIATIVE_ARRAY: amf_associative_array_free(data); break;
-            case AMF_TYPE_ARRAY: break; amf_array_free(data); break;
+            case AMF_TYPE_ARRAY: amf_array_free(data); break;
             case AMF_TYPE_DATE: break;
             /*case AMF_TYPE_SIMPLEOBJECT:*/
             case AMF_TYPE_XML: break;

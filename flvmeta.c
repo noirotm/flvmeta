@@ -418,8 +418,8 @@ void compute_metadata(const flv_info * info, flv_metadata * meta) {
 
     amf_associative_array_add(meta->on_metadata, amf_str("lasttimestamp"), amf_number_new(info->last_timestamp / 1000.0));
     amf_associative_array_add(meta->on_metadata, amf_str("lastkeyframetimestamp"), amf_number_new(info->last_keyframe_timestamp / 1000.0));
-    amf_associative_array_add(meta->on_metadata, amf_str("width"), amf_number_new(0));
-    amf_associative_array_add(meta->on_metadata, amf_str("height"), amf_number_new(0));
+    amf_associative_array_add(meta->on_metadata, amf_str("width"), amf_number_new(info->video_width));
+    amf_associative_array_add(meta->on_metadata, amf_str("height"), amf_number_new(info->video_height));
 
     number64 video_data_rate = ((info->real_video_data_size / 1024.0) * 8.0) / duration;
     amf_associative_array_add(meta->on_metadata, amf_str("videodatarate"), amf_number_new(video_data_rate));
@@ -693,6 +693,7 @@ int main(int argc, char ** argv) {
         fprintf(stderr, "This is free software; see the source for copying conditions. There is NO\n"
                         "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n");
         fprintf(stderr, "Usage: flvmeta in_file out_file\n\n");
+        fprintf(stderr, "Report bugs to <%s>\n\n", PACKAGE_BUGREPORT);
         return 1;
     }
     
