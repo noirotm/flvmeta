@@ -1,7 +1,17 @@
 2007-09-22 Marc Noirot <marc.noirot@gmail.com>
+	* flvmeta.c (compute_metadata, get_flv_info):
+	  Fixed an offset and file size computation error.
+	
+	* flvmeta.c (compute_metadata): Audio-related metadata
+	  should not appear when the file has no audio data.
+	
+	* Makefile.win: Removed references to flv.c.
+
+2007-09-22 Marc Noirot <marc.noirot@gmail.com>
 	* types.c, types.h: Removed 64 bits integers conversions.
 	
-	* types.c: Fixed few literal unsigned integers.
+	* types.c (uint32_to_uint24_be): Fixed a few literal unsigned
+	  integers.
 
 2007-09-21 Marc Noirot <marc.noirot@gmail.com>
 	* configure.ac: 1.0 Release.
