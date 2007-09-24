@@ -16,3 +16,14 @@ to translate it in several languages.
 
 If you want to contribute, send an email to flvmeta-discussion@googlegroups.com.
 
+##
+
+Various speed enhancements.
+
+##
+
+Command line options.
+
+##
+
+Fix offset computation with screen video without sound

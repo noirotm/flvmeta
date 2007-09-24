@@ -1,3 +1,8 @@
+2007-09-22 Marc Noirot <marc.noirot@gmail.com>
+	* types.c, types.h: Removed 64 bits integers conversions.
+	
+	* types.c: Fixed few literal unsigned integers.
+
 2007-09-21 Marc Noirot <marc.noirot@gmail.com>
 	* configure.ac: 1.0 Release.
 	
