@@ -44,18 +44,6 @@ uint32 swap_uint32(uint32 l) {
             ((l & 0xFF000000U) >> 24));
 }
 
-/* swap 64 bits integers */
-uint64 swap_uint64(uint64 l) {
-    return (((l & 0x00000000000000FFULL) << 56) |
-            ((l & 0x000000000000FF00ULL) << 40) |
-            ((l & 0x0000000000FF0000ULL) << 24) |
-            ((l & 0x00000000FF000000ULL) << 8)  |
-            ((l & 0x000000FF00000000ULL) >> 8)  |
-            ((l & 0x0000FF0000000000ULL) >> 24) |
-            ((l & 0x00FF000000000000ULL) >> 40) |
-            ((l & 0xFF00000000000000ULL) >> 56));
-}
-
 /* swap 64 bits doubles */
 typedef union __convert_u {
     uint64 i;
@@ -94,13 +82,13 @@ uint32 uint24_be_to_uint32(uint24_be l) {
 uint24_be uint32_to_uint24_be(uint32 l) {
     uint24_be r;
 #ifdef LITTLE_ENDIAN_ARCH
-    r.b0 = (uint8)((l & 0x00FF0000) >> 16);
-    r.b1 = (uint8)((l & 0x0000FF00) >> 8);
-    r.b2 = (uint8)(l & 0x000000FF);
+    r.b0 = (uint8)((l & 0x00FF0000U) >> 16);
+    r.b1 = (uint8)((l & 0x0000FF00U) >> 8);
+    r.b2 = (uint8) (l & 0x000000FFU);
 #else
-    r.b0 = (uint8)(l & 0x000000FF);
-    r.b1 = (uint8)((l & 0x0000FF00) >> 8);
-    r.b2 = (uint8)((l & 0x00FF0000) >> 16);
+    r.b0 = (uint8) (l & 0x000000FFU);
+    r.b1 = (uint8)((l & 0x0000FF00U) >> 8);
+    r.b2 = (uint8)((l & 0x00FF0000U) >> 16);
 #endif
     return r;
 }

@@ -1,2 +1,10 @@
+Version 1.0.1
+  - Bug fix release.
+  - Fixed a critical bug where file size and offsets would not
+    be correctly computed if the input file did not have
+    an onMetaData event.
+  - Audio related metadata are not added anymore if the FLV file
+    has no audio data.
+
 Version 1.0
   - This is the first public release.

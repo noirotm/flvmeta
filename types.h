@@ -58,9 +58,6 @@ sint16 swap_sint16(sint16);
 /* swap 32 bits integers */
 uint32 swap_uint32(uint32);
 
-/* swap 64 bits integers */
-uint64 swap_uint64(uint64);
-
 /* swap 64 bits doubles */
 number64 swap_number64(number64);
 
@@ -69,7 +66,6 @@ number64 swap_number64(number64);
 #define swap_uint16(x) (x)
 #define swap_sint16(x) (x)
 #define swap_uint32(x) (x)
-#define swap_uint64(x) (x)
 #define swap_number64(x) (x)
 
 #endif /* LITTLE_ENDIAN_ARCH */

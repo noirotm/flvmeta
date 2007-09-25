@@ -2,12 +2,12 @@
 # makefile for flvmeta
 BINEXT = .exe
 
-FLV_DUMP_SRC = flvdump.c flv.c amf.c types.c
+FLV_DUMP_SRC = flvdump.c amf.c types.c
 FLV_DUMP_HDR = flvmeta.h flv.h amf.h types.h config.h
 FLV_DUMP_OBJ = $(FLV_DUMP_SRC:.c=.o)
 FLV_DUMP_BIN = flvdump$(BINEXT)
 
-FLV_META_SRC = flvmeta.c flv.c amf.c types.c
+FLV_META_SRC = flvmeta.c amf.c types.c
 FLV_META_HDR = flvmeta.h flv.h amf.h types.h config.h
 FLV_META_OBJ = $(FLV_META_SRC:.c=.o)
 FLV_META_BIN = flvmeta$(BINEXT)

@@ -300,14 +300,19 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
                 size_t len = (size_t)amf_string_get_size(tag_name);
 
                 if (!strncmp(name, "onMetaData", len)) {
-                    info->on_metadata_size = body_length;
+                    info->on_metadata_size = body_length + sizeof(flv_tag) + sizeof(uint32_be);
                 }
                 else {
                     if (!strncmp(name, "onLastSecond", len)) {
                         info->have_on_last_second = 1;
                     }
                     info->meta_data_size += (body_length + sizeof(flv_tag));
+                    info->total_prev_tags_size += sizeof(uint32_be);
                 }
+            }
+            else {
+                info->meta_data_size += (body_length + sizeof(flv_tag));
+                info->total_prev_tags_size += sizeof(uint32_be);
             }
 
             body_length -= (uint32)amf_data_size(tag_name);
@@ -360,6 +365,7 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
             info->real_video_data_size += (body_length - 1);
 
             body_length -= (uint32)(sizeof(flv_video_tag) + bytes_read);
+            info->total_prev_tags_size += sizeof(uint32_be);
         }
         else if (ft.type == FLV_TAG_TYPE_AUDIO) {
             flv_audio_tag at;
@@ -381,6 +387,7 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
             info->real_audio_data_size += (body_length - 1);
 
             body_length -= sizeof(flv_audio_tag);
+            info->total_prev_tags_size += sizeof(uint32_be);
         }
         else {
             return ERROR_INVALID_TAG;
@@ -388,7 +395,6 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
 
         body_length += sizeof(uint32); /* skip tag size */
         fseek(flv_in, (long)body_length, SEEK_CUR);
-        info->total_prev_tags_size += sizeof(uint32_be);
     }
 
     return OK;
@@ -423,12 +429,14 @@ void compute_metadata(const flv_info * info, flv_metadata * meta) {
 
     number64 video_data_rate = ((info->real_video_data_size / 1024.0) * 8.0) / duration;
     amf_associative_array_add(meta->on_metadata, amf_str("videodatarate"), amf_number_new(video_data_rate));
-    number64 audio_data_rate = ((info->real_audio_data_size / 1024.0) * 8.0) / duration;
-    amf_associative_array_add(meta->on_metadata, amf_str("audiodatarate"), amf_number_new(audio_data_rate));
+    
     number64 framerate = info->video_frames_number / duration;
     amf_associative_array_add(meta->on_metadata, amf_str("framerate"), amf_number_new(framerate));
 
     if (info->have_audio) {
+        number64 audio_data_rate = ((info->real_audio_data_size / 1024.0) * 8.0) / duration;
+        amf_associative_array_add(meta->on_metadata, amf_str("audiodatarate"), amf_number_new(audio_data_rate));
+        
         number64 audio_khz = 0.0;
         switch (info->audio_rate) {
             case FLV_AUDIO_TAG_SOUND_RATE_5_5: audio_khz = 5500.0; break;
@@ -484,7 +492,8 @@ void compute_metadata(const flv_info * info, flv_metadata * meta) {
     /*
         When we know the final size, we can recompute te offsets for the filepositions, and the final datasize.
     */
-    uint32 new_on_metadata_size = (uint32)(amf_data_size(meta->on_metadata_name) + amf_data_size(meta->on_metadata));
+    uint32 new_on_metadata_size = sizeof(flv_tag) + sizeof(uint32_be) +
+        (uint32)(amf_data_size(meta->on_metadata_name) + amf_data_size(meta->on_metadata));
     uint32 on_last_second_size = (uint32)(amf_data_size(meta->on_last_second_name) + amf_data_size(meta->on_last_second));
 
     amf_node * node_t = amf_array_first(info->timestamps);
@@ -505,8 +514,7 @@ void compute_metadata(const flv_info * info, flv_metadata * meta) {
         node_f = amf_array_next(node_f);
     }
 
-
-    uint32 total_data_size = info->video_data_size + info->audio_data_size + info->meta_data_size + sizeof(flv_tag) + new_on_metadata_size;
+    uint32 total_data_size = info->video_data_size + info->audio_data_size + info->meta_data_size + new_on_metadata_size;
     if (!info->have_on_last_second) {
         total_data_size += (uint32)on_last_second_size;
     }
