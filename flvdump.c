@@ -55,7 +55,7 @@ int main(int argc, char ** argv) {
     printf("Version: %d\n", fh.version);
     printf("Has audio: %s\n", flv_header_has_audio(fh) ? "yes" : "no");
     printf("Has video: %s\n", flv_header_has_video(fh) ? "yes" : "no");
-    printf("Offset: %lu\n", swap_uint32(fh.offset));
+    printf("Offset: %u\n", swap_uint32(fh.offset));
 
     /* skip first empty previous tag size */
     fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
@@ -70,7 +70,7 @@ int main(int argc, char ** argv) {
         if (fread(&ft, sizeof(ft), 1, flv_in) == 0)
             break;
 
-        printf("--- Tag #%lu at 0x%lX (%li) ---\n", n++, offset, offset);
+        printf("--- Tag #%u at 0x%lX (%li) ---\n", n++, offset, offset);
         switch (ft.type) {
             case FLV_TAG_TYPE_AUDIO: str = "Audio"; break;
             case FLV_TAG_TYPE_VIDEO: str = "Video"; break;
@@ -80,8 +80,8 @@ int main(int argc, char ** argv) {
         printf("Tag type: %s\n", str);
 
         uint32 body_length = uint24_be_to_uint32(ft.body_length);
-        printf("Body length: %lu\n", body_length);
-        printf("Timestamp: %lu\n", uint24_be_to_uint32(ft.timestamp));
+        printf("Body length: %u\n", body_length);
+        printf("Timestamp: %u\n", uint24_be_to_uint32(ft.timestamp));
 
         if (ft.type == FLV_TAG_TYPE_AUDIO) {
             flv_audio_tag at;
@@ -161,7 +161,7 @@ int main(int argc, char ** argv) {
         }
         fseek(flv_in, (long)body_length, SEEK_CUR);
         if (fread(&prev_tag_size, sizeof(uint32_be), 1, flv_in) == 1) {
-            printf("Previous tag size: %lu\n", swap_uint32(prev_tag_size));
+            printf("Previous tag size: %u\n", swap_uint32(prev_tag_size));
         }
     }
 

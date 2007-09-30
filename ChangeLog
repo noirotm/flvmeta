@@ -1,7 +1,21 @@
-2007-09-25 Marc Noirot <marc.noirot@gmail.com>
-	* configure.ac, configure.h.win: 1.0.1 Release.
-
+2007-09-30 Marc Noirot <marc.noirot@gmail.com>
+	* configure.ac: 1.0.2 Release.
+	
+	* configure.ac, config.h.win, types.h, types.c:
+	  Fixed integer and float size checking, as well as endianness
+	  checking. This fixes issues on 64-bits architectures.
+	
+	* flvdump.c (main): Fixed printf type specifiers.
+	
+	* flvmeta.c (get_flv_info): Fixed "times" metadata tag,
+	  which was incorrectly written as "timestamps".
+	
+	* flvmeta.c (compute_metadata): Fixed audio delay
+	  computation.
+	
 2007-09-24 Marc Noirot <marc.noirot@gmail.com>
+	* configure.ac: 1.0.1 Release.
+	
 	* flvmeta.c (compute_metadata, get_flv_info):
 	  Fixed an offset and file size computation error.
 	

@@ -26,13 +26,19 @@
 
 #include "flvmeta.h"
 
-typedef unsigned char byte, uint8, uint8_bitmask;
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
 
-typedef unsigned short uint16, uint16_be, uint16_le;
+typedef uint8_t byte, uint8, uint8_bitmask;
 
-typedef signed short sint16, sint16_be, sint16_le;
+typedef uint16_t uint16, uint16_be, uint16_le;
 
-typedef unsigned long uint32, uint32_be, uint32_le;
+typedef int16_t sint16, sint16_be, sint16_le;
+
+typedef uint32_t uint32, uint32_be, uint32_le;
+
+typedef int32_t sint32, sint32_be, sint32_le;
 
 #pragma pack(push, 1)
 typedef struct __uint24 {
@@ -40,17 +46,32 @@ typedef struct __uint24 {
 } uint24, uint24_be, uint24_le;
 #pragma pack(pop)
 
-typedef unsigned long long int uint64, uint64_le, uint64_be;
+typedef uint64_t uint64, uint64_le, uint64_be;
 
-typedef double number64, number64_le, number64_be;
-
-
+typedef
+#if SIZEOF_FLOAT == 8
+float
+#elif SIZEOF_DOUBLE == 8
+double
+#elif SIZEOF_LONG_DOUBLE == 8
+long double
+#else
+uint64_t
+#endif
+number64, number64_le, number64_be;
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#ifdef LITTLE_ENDIAN_ARCH
+#ifdef WORDS_BIGENDIAN
+
+# define swap_uint16(x) (x)
+# define swap_sint16(x) (x)
+# define swap_uint32(x) (x)
+# define swap_number64(x) (x)
+
+#else /* WORDS_BIGENDIAN */
 /* swap 16 bits integers */
 uint16 swap_uint16(uint16);
 sint16 swap_sint16(sint16);
@@ -60,15 +81,7 @@ uint32 swap_uint32(uint32);
 
 /* swap 64 bits doubles */
 number64 swap_number64(number64);
-
-#else /* LITTLE_ENDIAN_ARCH */
-
-#define swap_uint16(x) (x)
-#define swap_sint16(x) (x)
-#define swap_uint32(x) (x)
-#define swap_number64(x) (x)
-
-#endif /* LITTLE_ENDIAN_ARCH */
+#endif /* WORDS_BIGENDIAN */
 
 /* convert big endian 24 bits integers to native integers */
 uint32 uint24_be_to_uint32(uint24_be);

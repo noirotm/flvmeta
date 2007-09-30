@@ -34,15 +34,4 @@
 
 #define LONG_COPYRIGHT_STR PACKAGE_STRING " - " COPYRIGHT_STR
 
-/* CPU configuration*/
-#if defined(_M_IX86) || defined(__i386__)
-# define ARCH_X86
-#endif
-
-#if defined(ARCH_X86) /* more to come... */
-# define LITTLE_ENDIAN_ARCH
-#else
-# define BIG_ENDIAN_ARCH
-#endif
-
 #endif /* __FLVMETA_H__ */

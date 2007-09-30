@@ -257,7 +257,7 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
     info->keyframes = amf_object_new();
     info->timestamps = amf_array_new();
     info->filepositions = amf_array_new();
-    amf_object_add(info->keyframes, amf_str("timestamps"), info->timestamps);
+    amf_object_add(info->keyframes, amf_str("times"), info->timestamps);
     amf_object_add(info->keyframes, amf_str("filepositions"), info->filepositions);
 
     /* skip first empty previous tag size */
@@ -480,7 +480,7 @@ void compute_metadata(const flv_info * info, flv_metadata * meta) {
         amf_associative_array_add(meta->on_metadata, amf_str("videocodecid"), amf_number_new((number64)info->video_codec));
     }
     if (info->have_audio && info->have_video) {
-        number64 audio_delay = (info->audio_first_timestamp - info->video_first_timestamp) / 1000.0;
+        number64 audio_delay = ((sint32)info->audio_first_timestamp - (sint32)info->video_first_timestamp) / 1000.0;
         amf_associative_array_add(meta->on_metadata, amf_str("audiodelay"), amf_number_new((number64)audio_delay));
     }
     amf_associative_array_add(meta->on_metadata, amf_str("canSeekToEnd"), amf_boolean_new(info->can_seek_to_end));
