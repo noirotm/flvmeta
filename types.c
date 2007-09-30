@@ -24,7 +24,7 @@
 
 #include "types.h"
 
-#ifdef LITTLE_ENDIAN_ARCH
+#ifndef WORDS_BIGENDIAN
 /* swap 16 bits integers */
 uint16 swap_uint16(uint16 s) {
     return (((s & 0x00FFU) << 8) |
@@ -63,32 +63,32 @@ number64 swap_number64(number64 n) {
            ((c.i & 0xFF00000000000000ULL) >> 56));
     return c.f;
 }
-#endif /* LITTLE_ENDIAN_ARCH */
+#endif /* !WORDS_BIGENDIAN */
 
 /* convert big endian 24 bits integers to native integers */
 uint32 uint24_be_to_uint32(uint24_be l) {
-#ifdef LITTLE_ENDIAN_ARCH
-    return (((l.b0) << 16) |
-            ((l.b1) << 8)  |
-             (l.b2));
-#else
+#ifdef WORDS_BIGENDIAN
     return (((l.b2) << 16) |
             ((l.b1) << 8)  |
              (l.b0));
+#else
+    return (((l.b0) << 16) |
+            ((l.b1) << 8)  |
+             (l.b2));
 #endif
 }
 
 /* convert native integers into 24 bits big endian integers */
 uint24_be uint32_to_uint24_be(uint32 l) {
     uint24_be r;
-#ifdef LITTLE_ENDIAN_ARCH
-    r.b0 = (uint8)((l & 0x00FF0000U) >> 16);
-    r.b1 = (uint8)((l & 0x0000FF00U) >> 8);
-    r.b2 = (uint8) (l & 0x000000FFU);
-#else
+#ifdef WORDS_BIGENDIAN
     r.b0 = (uint8) (l & 0x000000FFU);
     r.b1 = (uint8)((l & 0x0000FF00U) >> 8);
     r.b2 = (uint8)((l & 0x00FF0000U) >> 16);
+#else
+    r.b0 = (uint8)((l & 0x00FF0000U) >> 16);
+    r.b1 = (uint8)((l & 0x0000FF00U) >> 8);
+    r.b2 = (uint8) (l & 0x000000FFU);
 #endif
     return r;
 }
