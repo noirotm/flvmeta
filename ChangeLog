@@ -1,3 +1,11 @@
+2007-10-05 Marc Noirot <marc.noirot@gmail.com>
+	* flvmeta.c (compute_vp6_alpha_size): Fixed read check.
+	
+	* flvmeta.c (get_flv_info): Added a file reading check
+	  that had been forgotten.
+	
+	* flvmeta.c: A few small fixes.
+
 2007-09-30 Marc Noirot <marc.noirot@gmail.com>
 	* configure.ac: 1.0.2 Release.
 	

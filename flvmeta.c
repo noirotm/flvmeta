@@ -56,7 +56,6 @@ typedef struct __flv_info {
     uint32 real_audio_data_size;
     uint32 video_first_timestamp;
     uint32 audio_first_timestamp;
-
     uint8 can_seek_to_end;
     uint8 have_keyframes;
     uint32 last_keyframe_timestamp;
@@ -86,7 +85,7 @@ typedef struct __flv_metadata {
 */
 size_t compute_h263_size(FILE * flv_in, flv_info * info) {
     byte header[9];
-    size_t bytes_read = fread(header, sizeof(byte), 9, flv_in);
+    size_t bytes_read = fread(header, 1, 9, flv_in);
     if (bytes_read == 9) {
         uint32 psc = uint24_be_to_uint32(*(uint24_be *)(header)) >> 7;
         if (psc == 1) {
@@ -133,7 +132,7 @@ size_t compute_h263_size(FILE * flv_in, flv_info * info) {
 */
 size_t compute_screen_size(FILE * flv_in, flv_info * info) {
     byte header[4];
-    size_t bytes_read = fread(header, sizeof(byte), 4, flv_in);
+    size_t bytes_read = fread(header, 1, 4, flv_in);
     if (bytes_read == 4) {
         info->video_width  = ((header[0] & 0x0f) << 8) + header[1];
         info->video_height = ((header[2] & 0x0f) << 8) + header[3];
@@ -146,7 +145,7 @@ size_t compute_screen_size(FILE * flv_in, flv_info * info) {
 */
 size_t compute_vp6_size(FILE * flv_in, flv_info * info) {
     byte header[5];
-    size_t bytes_read = fread(header, sizeof(byte), 5, flv_in);
+    size_t bytes_read = fread(header, 1, 5, flv_in);
     if (bytes_read == 5) {
         info->video_width  = (header[4] << 4) - (header[0] >> 4);
 	    info->video_height = (header[3] << 4) - (header[0] & 0x0f);
@@ -159,8 +158,8 @@ size_t compute_vp6_size(FILE * flv_in, flv_info * info) {
 */
 size_t compute_vp6_alpha_size(FILE * flv_in, flv_info * info) {
     byte header[8];
-    size_t bytes_read = fread(header, sizeof(byte), 8, flv_in);
-    if (bytes_read == 5) {
+    size_t bytes_read = fread(header, 1, 8, flv_in);
+    if (bytes_read == 8) {
         info->video_width  = (header[7] << 4) - (header[0] >> 4);
 	    info->video_height = (header[6] << 4) - (header[0] & 0x0f);
     }
@@ -246,7 +245,7 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
         read FLV header
     */
 
-    if (fread(&(info->header), sizeof(info->header), 1, flv_in) < 1) {
+    if (fread(&(info->header), sizeof(flv_header), 1, flv_in) < 1) {
         return ERROR_NO_FLV;
     }
 
@@ -271,7 +270,7 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
         uint32 timestamp;
 
         offset = ftell(flv_in);
-        if (fread(&ft, sizeof(ft), 1, flv_in) == 0) {
+        if (fread(&ft, sizeof(flv_tag), 1, flv_in) == 0) {
             break;
         }
 
@@ -369,7 +368,11 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
         }
         else if (ft.type == FLV_TAG_TYPE_AUDIO) {
             flv_audio_tag at;
-            fread(&at, sizeof(flv_audio_tag), 1, flv_in);
+            
+            if (fread(&at, sizeof(flv_audio_tag), 1, flv_in) == 0) {
+                return ERROR_EOF;
+            }
+            
             if (info->have_audio != 1) {
                 info->have_audio = 1;
                 info->audio_codec = flv_audio_tag_sound_format(at);
@@ -577,7 +580,7 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
 
     fseek(flv_in, info->first_data_tag_offset, SEEK_SET);
 
-    byte * copy_buffer = (byte *)malloc(info->biggest_tag_body_size * sizeof(byte));
+    byte * copy_buffer = (byte *)malloc(info->biggest_tag_body_size);
     int have_on_last_second = 0;
     while (!feof(flv_in)) {
         uint32 body_length;
@@ -619,12 +622,12 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
         }
 
         /* copy the tag verbatim */
-        if (fread(copy_buffer, sizeof(byte), body_length, flv_in) < body_length) {
+        if (fread(copy_buffer, 1, body_length, flv_in) < body_length) {
             free(copy_buffer);
             return ERROR_EOF;
         }
         if (fwrite(&ft, sizeof(flv_tag), 1, flv_out) != 1 ||
-            fwrite(copy_buffer, sizeof(byte), body_length, flv_out) < body_length) {
+            fwrite(copy_buffer, 1, body_length, flv_out) < body_length) {
             free(copy_buffer);
             return ERROR_WRITE;
         }
