@@ -25,24 +25,6 @@
 #include "types.h"
 
 #ifndef WORDS_BIGENDIAN
-/* swap 16 bits integers */
-uint16 swap_uint16(uint16 s) {
-    return (((s & 0x00FFU) << 8) |
-            ((s & 0xFF00U) >> 8));
-}
-
-sint16 swap_sint16(sint16 s) {
-    return (((s & 0x00FF) << 8) |
-            ((s & 0xFF00) >> 8));
-}
-
-/* swap 32 bits integers */
-uint32 swap_uint32(uint32 l) {
-    return (((l & 0x000000FFU) << 24) |
-            ((l & 0x0000FF00U) << 8)  |
-            ((l & 0x00FF0000U) >> 8)  |
-            ((l & 0xFF000000U) >> 24));
-}
 
 /* swap 64 bits doubles */
 typedef union __convert_u {
@@ -64,19 +46,6 @@ number64 swap_number64(number64 n) {
     return c.f;
 }
 #endif /* !WORDS_BIGENDIAN */
-
-/* convert big endian 24 bits integers to native integers */
-uint32 uint24_be_to_uint32(uint24_be l) {
-#ifdef WORDS_BIGENDIAN
-    return (((l.b2) << 16) |
-            ((l.b1) << 8)  |
-             (l.b0));
-#else
-    return (((l.b0) << 16) |
-            ((l.b1) << 8)  |
-             (l.b2));
-#endif
-}
 
 /* convert native integers into 24 bits big endian integers */
 uint24_be uint32_to_uint24_be(uint32 l) {

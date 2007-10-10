@@ -123,6 +123,9 @@
 				RelativePath=".\flvmeta.c">
 			</File>
 			<File
+				RelativePath=".\mmap.c">
+			</File>
+			<File
 				RelativePath=".\types.c">
 			</File>
 		</Filter>
@@ -160,6 +163,9 @@
 			</File>
 			<File
 				RelativePath=".\flvmeta.h">
+			</File>
+			<File
+				RelativePath=".\mmap.h">
 			</File>
 			<File
 				RelativePath=".\types.h">
