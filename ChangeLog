@@ -1,3 +1,17 @@
+2007-10-11 Marc Noirot <marc.noirot@gmail.com>
+	* flvmeta.c (inject_metadata): Output file is only
+	  opened after input file reading succeeded.
+
+2007-10-10 Marc Noirot <marc.noirot@gmail.com>
+	* types.h, types.c: Transformed most conversion functions
+	  into macros, to improve execution speed.
+
+	* amf.c (amf_data_decode, amf_data_encode):
+	  Fixed missing break statements.
+	
+	* amf.c (amf_string_encode): Forgot to count
+	  the string length prefix size.
+
 2007-10-05 Marc Noirot <marc.noirot@gmail.com>
 	* flvmeta.c (compute_vp6_alpha_size): Fixed read check.
 	

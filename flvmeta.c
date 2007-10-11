@@ -68,7 +68,7 @@ typedef struct __flv_info {
     uint32 total_prev_tags_size;
     uint8 have_on_last_second;
     amf_data * keyframes;
-    amf_data * timestamps;
+    amf_data * times;
     amf_data * filepositions;
 } flv_info;
 
@@ -238,7 +238,7 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
     info->total_prev_tags_size = 0;
     info->have_on_last_second = 0;
     info->keyframes = NULL;
-    info->timestamps = NULL;
+    info->times = NULL;
     info->filepositions = NULL;
 
     /*
@@ -254,9 +254,9 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
     }
 
     info->keyframes = amf_object_new();
-    info->timestamps = amf_array_new();
+    info->times = amf_array_new();
     info->filepositions = amf_array_new();
-    amf_object_add(info->keyframes, amf_str("times"), info->timestamps);
+    amf_object_add(info->keyframes, amf_str("times"), info->times);
     amf_object_add(info->keyframes, amf_str("filepositions"), info->filepositions);
 
     /* skip first empty previous tag size */
@@ -340,7 +340,7 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
                     info->have_keyframes = 1;
                 }
                 info->last_keyframe_timestamp = timestamp;
-                amf_array_push(info->timestamps, amf_number_new(timestamp / 1000.0));
+                amf_array_push(info->times, amf_number_new(timestamp / 1000.0));
                 amf_array_push(info->filepositions, amf_number_new(offset));
 
                 /* is last frame a key frame ? if so, we can seek to end */
@@ -499,7 +499,7 @@ void compute_metadata(const flv_info * info, flv_metadata * meta) {
         (uint32)(amf_data_size(meta->on_metadata_name) + amf_data_size(meta->on_metadata));
     uint32 on_last_second_size = (uint32)(amf_data_size(meta->on_last_second_name) + amf_data_size(meta->on_last_second));
 
-    amf_node * node_t = amf_array_first(info->timestamps);
+    amf_node * node_t = amf_array_first(info->times);
     amf_node * node_f = amf_array_first(info->filepositions);
     while (node_t != NULL || node_f != NULL) {
         amf_data * amf_filepos = amf_array_get(node_f);
@@ -656,22 +656,12 @@ int inject_metadata(const char * in_file, const char * out_file) {
     }
 
     /*
-        open output file
-    */
-    FILE * flv_out = fopen(out_file, "wb");
-    if (flv_out == NULL) {
-        fclose(flv_in);
-        return ERROR_OPEN_WRITE;
-    }
-
-    /*
         get all necessary information from the flv file
     */
     flv_info info;
     res = get_flv_info(flv_in, &info);
     if (res != OK) {
         fclose(flv_in);
-        fclose(flv_out);
         amf_data_free(info.keyframes);
         return res;
     }
@@ -681,6 +671,19 @@ int inject_metadata(const char * in_file, const char * out_file) {
 
     /* debug */
     /* amf_data_dump(stderr, meta.on_metadata, 0); */
+    
+    /*
+        open output file
+    */
+    FILE * flv_out = fopen(out_file, "wb");
+    if (flv_out == NULL) {
+        fclose(flv_in);
+        amf_data_free(meta.on_last_second_name);
+        amf_data_free(meta.on_last_second);
+        amf_data_free(meta.on_metadata_name);
+        amf_data_free(meta.on_metadata);
+        return ERROR_OPEN_WRITE;
+    }
 
     /*
         write the output file

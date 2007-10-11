@@ -338,21 +338,29 @@ amf_data * amf_data_decode(byte * buffer, size_t maxbytes, size_t * size) {
         switch (buffer[0]) {
             case AMF_TYPE_NUMBER:
                 data = amf_number_decode(buffer+1, maxbytes-1, size);
+                break;
             case AMF_TYPE_BOOLEAN:
                 data = amf_boolean_decode(buffer+1, maxbytes-1, size);
+                break;
             case AMF_TYPE_STRING:
                 data = amf_string_decode(buffer+1, maxbytes-1, size);
+                break;
             case AMF_TYPE_OBJECT:
                 data = amf_object_decode(buffer+1, maxbytes-1, size);
+                break;
             case AMF_TYPE_UNDEFINED:
                 data = amf_undefined_new();
+                break;
             /*case AMF_TYPE_REFERENCE:*/
             case AMF_TYPE_ASSOCIATIVE_ARRAY:
                 data = amf_associative_array_decode(buffer+1, maxbytes-1, size);
+                break;
             case AMF_TYPE_ARRAY:
                 data = amf_array_decode(buffer+1, maxbytes-1, size);
+                break;
             case AMF_TYPE_DATE:
                 data = amf_date_decode(buffer+1, maxbytes-1, size);
+                break;
             /*case AMF_TYPE_SIMPLEOBJECT:*/
             case AMF_TYPE_XML:
             case AMF_TYPE_CLASS:
@@ -642,7 +650,7 @@ static size_t amf_string_encode(amf_data * data, byte * buffer, size_t maxbytes)
         memcpy(buffer, &len, sizeof(uint16_be));
         if (maxbytes-sizeof(uint16) >= data->string_data.size) {
             memcpy(buffer+sizeof(uint16), data->string_data.mbstr, data->string_data.size);
-            return data->string_data.size;
+            return sizeof(uint16) + data->string_data.size;
         }
     }
     return 0;
@@ -775,22 +783,29 @@ size_t amf_data_encode(amf_data * data, byte * buffer, size_t maxbytes) {
         ++size;
         switch (data->type) {
             case AMF_TYPE_NUMBER:
-                size = amf_number_encode(data, buffer+1, maxbytes-1);
+                size += amf_number_encode(data, buffer+1, maxbytes-1);
+                break;
             case AMF_TYPE_BOOLEAN:
-                size = amf_boolean_encode(data, buffer+1, maxbytes-1);
+                size += amf_boolean_encode(data, buffer+1, maxbytes-1);
+                break;
             case AMF_TYPE_STRING:
-                size = amf_string_encode(data, buffer+1, maxbytes-1);
+                size += amf_string_encode(data, buffer+1, maxbytes-1);
+                break;
             case AMF_TYPE_OBJECT:
-                size = amf_object_encode(data, buffer+1, maxbytes-1);
+                size += amf_object_encode(data, buffer+1, maxbytes-1);
+                break;
             case AMF_TYPE_UNDEFINED:
                 break;
             /*case AMF_TYPE_REFERENCE:*/
             case AMF_TYPE_ASSOCIATIVE_ARRAY:
-                size = amf_associative_array_encode(data, buffer+1, maxbytes-1);
+                size += amf_associative_array_encode(data, buffer+1, maxbytes-1);
+                break;
             case AMF_TYPE_ARRAY:
-                size = amf_array_encode(data, buffer+1, maxbytes-1);
+                size += amf_array_encode(data, buffer+1, maxbytes-1);
+                break;
             case AMF_TYPE_DATE:
-                size = amf_date_encode(data, buffer+1, maxbytes-1);
+                size += amf_date_encode(data, buffer+1, maxbytes-1);
+                break;
             /*case AMF_TYPE_SIMPLEOBJECT:*/
             case AMF_TYPE_XML:
             case AMF_TYPE_CLASS:
