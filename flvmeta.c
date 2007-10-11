@@ -533,34 +533,44 @@ void compute_metadata(flv_info * info, flv_metadata * meta) {
 /*
     Write the flv output file
 */
-int write_flv(byte * flv_in, size_t in_size, byte * flv_out, const flv_info * info, const flv_metadata * meta) {
+int write_flv(byte * flv_in, size_t in_size, FILE * flv_out, const flv_info * info, const flv_metadata * meta) {
     byte * in_ptr = flv_in;
-    byte * out_ptr = flv_out;
     
-    /* write the flv header and first "previous tag size" */
-    memcpy(flv_out, flv_in, sizeof(flv_header) + sizeof(uint32_be));
+    /* write the flv header */
+    if (fwrite(in_ptr, sizeof(flv_header), 1, flv_out) != 1) {
+        return ERROR_WRITE;
+    }
+
+    /* first "previous tag size" */
+    uint32_be size = swap_uint32(0);
+    if (fwrite(&size, sizeof(uint32_be), 1, flv_out) != 1) {
+        return ERROR_WRITE;
+    }
 
     in_ptr += sizeof(flv_header) + sizeof(uint32_be);
-    out_ptr += sizeof(flv_header) + sizeof(uint32_be);
 
     /* write the onMetaData tag */
     uint32 on_metadata_name_size = (uint32)amf_data_size(meta->on_metadata_name);
     uint32 on_metadata_size = (uint32)amf_data_size(meta->on_metadata);
 
-    flv_tag * ft = (flv_tag*)out_ptr;
-    ft->type = FLV_TAG_TYPE_META;
-    ft->body_length = uint32_to_uint24_be(on_metadata_name_size + on_metadata_size);
-    ft->timestamp = uint32_to_uint24_be(0);
-    ft->timestamp_extended = 0;
-    ft->stream_id = uint32_to_uint24_be(0);
-    
-    out_ptr += sizeof(flv_tag);
-    out_ptr += amf_data_encode(meta->on_metadata_name, out_ptr, flv_out + info->file_size - out_ptr);
-    out_ptr += amf_data_encode(meta->on_metadata, out_ptr, flv_out + info->file_size - out_ptr);
+    flv_tag ft;
+    ft.type = FLV_TAG_TYPE_META;
+    ft.body_length = uint32_to_uint24_be(on_metadata_name_size + on_metadata_size);
+    ft.timestamp = uint32_to_uint24_be(0);
+    ft.timestamp_extended = 0;
+    ft.stream_id = uint32_to_uint24_be(0);
+    if (fwrite(&ft, sizeof(flv_tag), 1, flv_out) != 1 ||
+        amf_data_write(meta->on_metadata_name, flv_out) < on_metadata_name_size ||
+        amf_data_write(meta->on_metadata, flv_out) < on_metadata_size
+    ) {
+        return ERROR_WRITE;
+    }
 
     /* previous tag size */
-    *(uint32_be*)(out_ptr) = swap_uint32(sizeof(flv_tag) + on_metadata_name_size + on_metadata_size);
-    out_ptr += sizeof(uint32_be);
+    size = swap_uint32(sizeof(flv_tag) + on_metadata_name_size + on_metadata_size);
+    if (fwrite(&size, sizeof(uint32_be), 1, flv_out) != 1) {
+        return ERROR_WRITE;
+    }
 
     /* copy the rest of the tags verbatim */
     uint32 duration;
@@ -581,47 +591,56 @@ int write_flv(byte * flv_in, size_t in_size, byte * flv_out, const flv_info * in
         if (in_ptr + sizeof(flv_tag) > flv_in + in_size) {
             break;
         }
-        ft = (flv_tag*)in_ptr;
+        flv_tag * pft = (flv_tag*)in_ptr;
 
-        body_length = uint24_be_to_uint32(ft->body_length);
-        timestamp = uint24_be_to_uint32(ft->timestamp);
+        body_length = uint24_be_to_uint32(pft->body_length);
+        timestamp = uint24_be_to_uint32(pft->timestamp);
 
         /* check for bogus body_length, that might make us buffer overflow */
         if (in_ptr + sizeof(flv_tag) + body_length + sizeof(uint32_be) > flv_in + in_size) {
             return ERROR_NO_FLV;
         }
 
+        uint32 total_size = sizeof(flv_tag) + body_length;
+
         /* insert an onLastSecond metadata tag */
         if (!have_on_last_second && !info->have_on_last_second && (duration - timestamp) <= 1000) {
             uint32 on_last_second_name_size = (uint32)amf_data_size(meta->on_last_second_name);
             uint32 on_last_second_size = (uint32)amf_data_size(meta->on_last_second);
-            flv_tag * tag = (flv_tag*)out_ptr;
-            tag->type = FLV_TAG_TYPE_META;
-            tag->body_length = uint32_to_uint24_be(on_last_second_name_size + on_last_second_size);
-            tag->timestamp = ft->timestamp;
-            tag->timestamp_extended = 0;
-            tag->stream_id = uint32_to_uint24_be(0);
-
-            out_ptr += sizeof(flv_tag);
-            out_ptr += amf_data_encode(meta->on_last_second_name, out_ptr, flv_out + info->file_size - out_ptr);
-            out_ptr += amf_data_encode(meta->on_last_second, out_ptr, flv_out + info->file_size - out_ptr);
+            flv_tag tag;
+            tag.type = FLV_TAG_TYPE_META;
+            tag.body_length = uint32_to_uint24_be(on_last_second_name_size + on_last_second_size);
+            tag.timestamp = pft->timestamp;
+            tag.timestamp_extended = 0;
+            tag.stream_id = uint32_to_uint24_be(0);
+            if (fwrite(&tag, sizeof(flv_tag), 1, flv_out) != 1 ||
+                amf_data_write(meta->on_last_second_name, flv_out) < on_last_second_name_size ||
+                amf_data_write(meta->on_last_second, flv_out) < on_last_second_size
+            ) {
+                return ERROR_WRITE;
+            }
 
             /* previous tag size */
-            *(uint32_be*)(out_ptr) = swap_uint32(sizeof(flv_tag) + on_last_second_name_size + on_last_second_size);
-            out_ptr += sizeof(uint32_be);
+            size = swap_uint32(sizeof(flv_tag) + on_last_second_name_size + on_last_second_size);
+            if (fwrite(&size, sizeof(uint32_be), 1, flv_out) != 1) {
+                return ERROR_WRITE;
+            }
 
             have_on_last_second = 1;
         }
 
         /* copy the tag verbatim */
-        memcpy(out_ptr, in_ptr, sizeof(flv_tag) + body_length);
-        out_ptr += sizeof(flv_tag) + body_length;
+        if (fwrite(in_ptr, total_size, 1, flv_out) != 1) {
+            return ERROR_WRITE;
+        }
         
         /* previous tag length */
-        *(uint32_be*)(out_ptr) = swap_uint32(sizeof(flv_tag) + body_length);
-        out_ptr += sizeof(uint32_be);
+        size = swap_uint32(total_size);
+        if (fwrite(&size, sizeof(uint32_be), 1, flv_out) != 1) {
+            return ERROR_WRITE;
+        }
 
-        in_ptr += sizeof(flv_tag) + body_length + sizeof(uint32_be);
+        in_ptr += total_size + sizeof(uint32_be);
     }
     return OK;
 }
@@ -665,22 +684,8 @@ int inject_metadata(const char * in_file, const char * out_file) {
     /*
         open output file
     */
-    FILE * out_file_fd = fopen(out_file, "w+b");
-    if (out_file_fd == NULL) {
-        munmap(flv_in, in_file_info.st_size);
-        amf_data_free(meta.on_last_second_name);
-        amf_data_free(meta.on_last_second);
-        amf_data_free(meta.on_metadata_name);
-        amf_data_free(meta.on_metadata);
-        return ERROR_OPEN_WRITE;
-    }
-    
-    fseek(out_file_fd, info.file_size - 1, SEEK_SET);
-    fputc(0, out_file_fd);
-
-    byte * flv_out = (byte*)mmap(NULL, info.file_size, PROT_WRITE, MAP_SHARED, fileno(out_file_fd), 0);
-    fclose(out_file_fd);
-    if (flv_out == MAP_FAILED) {
+    FILE * flv_out = fopen(out_file, "w+b");
+    if (flv_out == NULL) {
         munmap(flv_in, in_file_info.st_size);
         amf_data_free(meta.on_last_second_name);
         amf_data_free(meta.on_last_second);
@@ -694,8 +699,8 @@ int inject_metadata(const char * in_file, const char * out_file) {
     */
     res = write_flv(flv_in, in_file_info.st_size, flv_out, &info, &meta);
     
+    fclose(flv_out);
     munmap(flv_in, in_file_info.st_size);
-    munmap(flv_out, info.file_size);
     amf_data_free(meta.on_last_second_name);
     amf_data_free(meta.on_last_second);
     amf_data_free(meta.on_metadata_name);
