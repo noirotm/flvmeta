@@ -117,16 +117,16 @@
 			Filter="cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}">
 			<File
-				RelativePath=".\amf.c">
+				RelativePath="..\src\amf.c">
 			</File>
 			<File
-				RelativePath=".\flvmeta.c">
+				RelativePath="..\src\flvmeta.c">
 			</File>
 			<File
-				RelativePath=".\mmap.c">
+				RelativePath="..\src\mmap.c">
 			</File>
 			<File
-				RelativePath=".\types.c">
+				RelativePath="..\src\types.c">
 			</File>
 		</Filter>
 		<Filter
@@ -134,7 +134,7 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
-				RelativePath=".\amf.h">
+				RelativePath="..\src\amf.h">
 			</File>
 			<File
 				RelativePath=".\config.h">
@@ -159,16 +159,16 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\flv.h">
+				RelativePath="..\src\flv.h">
 			</File>
 			<File
-				RelativePath=".\flvmeta.h">
+				RelativePath="..\src\flvmeta.h">
 			</File>
 			<File
-				RelativePath=".\mmap.h">
+				RelativePath="..\src\mmap.h">
 			</File>
 			<File
-				RelativePath=".\types.h">
+				RelativePath="..\src\types.h">
 			</File>
 		</Filter>
 	</Files>

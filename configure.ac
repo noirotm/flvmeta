@@ -1,9 +1,9 @@
-#                                               -*- Autoconf -*-
+# -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
 AC_INIT(flvmeta, 1.1-dev, flvmeta-discussion@googlegroups.com)
-AC_CONFIG_SRCDIR([flvmeta.c])
+AC_CONFIG_SRCDIR([src/flvmeta.c])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
 AC_LANG([C])
@@ -35,5 +35,5 @@ AC_FUNC_MALLOC
 AC_FUNC_STRFTIME
 AC_CHECK_FUNCS([tzset])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT
