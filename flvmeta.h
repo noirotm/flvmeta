@@ -32,6 +32,4 @@
 /* chaine de copyright */
 #define COPYRIGHT_STR "Copyright 2007 Marc Noirot"
 
-#define LONG_COPYRIGHT_STR PACKAGE_STRING " - " COPYRIGHT_STR
-
 #endif /* __FLVMETA_H__ */

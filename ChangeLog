@@ -1,3 +1,6 @@
+2007-10-21 Marc Noirot <marc.noirot@gmail.com>
+	* 1.0.3 Release.
+
 2007-10-11 Marc Noirot <marc.noirot@gmail.com>
 	* flvmeta.c (inject_metadata): Output file is only
 	  opened after input file reading succeeded.

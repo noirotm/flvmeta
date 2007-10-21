@@ -1,3 +1,9 @@
+Version 1.0.3
+  - Bug fix release.
+  - Fixed major bugs in the AMF parser/writer.
+  - Fixed a bug in the video size detection for VP6 alpha.
+  - Fixed minor bugs.
+
 Version 1.0.2
   - Bug fix release.
   - Fixed issues on 64-bits architectures.

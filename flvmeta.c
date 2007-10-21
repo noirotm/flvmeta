@@ -472,7 +472,7 @@ void compute_metadata(const flv_info * info, flv_metadata * meta) {
     amf_data * amf_total_data_size = amf_number_new(0);
     amf_associative_array_add(meta->on_metadata, amf_str("datasize"), amf_total_data_size);
 
-    amf_associative_array_add(meta->on_metadata, amf_str("metadatacreator"), amf_str(LONG_COPYRIGHT_STR));
+    amf_associative_array_add(meta->on_metadata, amf_str("metadatacreator"), amf_str(PACKAGE_STRING));
 
     tzset();
     amf_associative_array_add(meta->on_metadata, amf_str("metadatadate"), amf_date_new((number64)(time(NULL)+daylight*3600)*1000, -(sint16)timezone/60));
