@@ -1,3 +1,8 @@
+2007-10-28 Marc Noirot <marc.noirot@gmail.com>
+	* Added getopt_long support for the Windows build.
+	* Removed the flvdump program. Its functionality
+	  will be part of flvmeta.
+
 2007-10-11 Marc Noirot <marc.noirot@gmail.com>
 	* flvmeta.c (inject_metadata, write_flv): Do not use
 	  memory mapping to write the output file.

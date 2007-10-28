@@ -21,6 +21,7 @@
     along with FLVMeta; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <getopt.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -709,15 +710,65 @@ int inject_metadata(const char * in_file, const char * out_file) {
     return res;
 }
 
+void usage(void) {
+    fprintf(stderr, "%s\n", PACKAGE_STRING);
+    fprintf(stderr, "%s\n", COPYRIGHT_STR);
+    fprintf(stderr, "This is free software; see the source for copying conditions. There is NO\n"
+                    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n");
+    fprintf(stderr, "Usage: flvmeta [COMMAND] [OPTIONS] FILE\n");
+    fprintf(stderr, "\nCommands:\n");
+    fprintf(stderr, " -D, --dump                dump onMetaData tag (default)\n");
+    fprintf(stderr, " -F, --full-dump           dump all tags\n");
+    fprintf(stderr, " -U, --update              update FILE with computed metadata tags\n");
+    fprintf(stderr, "\nOutput control:\n");
+    fprintf(stderr, " -o, --out=FILE            specify the output file name\n");
+    fprintf(stderr, " -n, --no-lastsecond       do not create the onLastSecond tag\n");
+    fprintf(stderr, " -f, --dump-format=TYPE    dump format is of type TYPE\n");
+    fprintf(stderr, "                           TYPE is 'xml' (default), 'json', or 'yaml'.\n");
+    fprintf(stderr, " -j, --json                equivalent to --dump-format=json\n");
+    fprintf(stderr, " -y, --yaml                equivalent to --dump-format=yaml\n");
+    fprintf(stderr, " -x, --xml                 equivalent to --dump-format=xml\n");
+    fprintf(stderr, "\nAdvanced options:\n");
+    fprintf(stderr, " -m, --use-mmap            use memory mapping to read FILE\n");
+    fprintf(stderr, " -v, --verbose             display informative messages\n");
+    fprintf(stderr, "\nMiscellaneous:\n");
+    fprintf(stderr, " -V, --version             print version information and exit\n");
+    fprintf(stderr, " -h, --help                display this help and exit\n");
+    fprintf(stderr, "\nReport bugs to <%s>\n\n", PACKAGE_BUGREPORT);
+}
+
 int main(int argc, char ** argv) {
-    if (argc < 3) {
-        fprintf(stderr, "%s\n", PACKAGE_STRING);
-        fprintf(stderr, "%s\n", COPYRIGHT_STR);
-        fprintf(stderr, "This is free software; see the source for copying conditions. There is NO\n"
-                        "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n");
-        fprintf(stderr, "Usage: flvmeta in_file out_file\n\n");
-        fprintf(stderr, "Report bugs to <%s>\n\n", PACKAGE_BUGREPORT);
+    if (argc < 2) {
+        usage();
         return 1;
+    }
+
+    int option_index = 0;
+    static struct option long_options[] = {
+        { "dump",          1, 0, 0},
+        { "full-dump",     1, 0, 0},
+        { "update",        1, 0, 0},
+        { "out",           1, 0, 0},
+        { "no-lastsecond", 1, 0, 0},
+        { "dump-format",   1, 0, 0},
+        { "json",          1, 0, 0},
+        { "yaml",          1, 0, 0},
+        { "xml",           1, 0, 0},
+        { "use-mmap",      1, 0, 0},
+        { "verbose",       1, 0, 0},
+        { "version",       1, 0, 0},
+        { "help",          1, 0, 0},
+        { 0, 0, 0, 0 }
+    };
+
+
+    int c;
+    while (1) {
+        c = getopt_long (argc, argv, "abc:d:012", long_options, &option_index);
+
+        if (c == -1) {
+            break;
+        }
     }
     
     if (!strcmp(argv[1], argv[2])) {

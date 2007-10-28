@@ -123,6 +123,12 @@
 				RelativePath="..\src\flvmeta.c">
 			</File>
 			<File
+				RelativePath=".\getopt.c">
+			</File>
+			<File
+				RelativePath=".\getopt1.c">
+			</File>
+			<File
 				RelativePath="..\src\mmap.c">
 			</File>
 			<File
@@ -146,7 +152,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Generating config.h..."
-						CommandLine="copy /Y config.h.win config.h"
+						CommandLine="copy /Y config.h.win config.h
+"
 						Outputs="./config.h"/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -154,7 +161,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Generating config.h..."
-						CommandLine="copy /Y config.h.win config.h"
+						CommandLine="copy /Y config.h.win config.h
+"
 						Outputs="config.h"/>
 				</FileConfiguration>
 			</File>
@@ -163,6 +171,12 @@
 			</File>
 			<File
 				RelativePath="..\src\flvmeta.h">
+			</File>
+			<File
+				RelativePath=".\getopt.h">
+			</File>
+			<File
+				RelativePath=".\gettext.h">
 			</File>
 			<File
 				RelativePath="..\src\mmap.h">
