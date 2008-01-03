@@ -29,7 +29,7 @@
 # include <config.h>
 #endif
 
-/* chaine de copyright */
+/* copyright string */
 #define COPYRIGHT_STR "Copyright 2007 Marc Noirot"
 
 #endif /* __FLVMETA_H__ */

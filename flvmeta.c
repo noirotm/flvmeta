@@ -475,7 +475,7 @@ void compute_metadata(const flv_info * info, flv_metadata * meta) {
     amf_associative_array_add(meta->on_metadata, amf_str("metadatacreator"), amf_str(PACKAGE_STRING));
 
     tzset();
-    amf_associative_array_add(meta->on_metadata, amf_str("metadatadate"), amf_date_new((number64)(time(NULL)+daylight*3600)*1000, -(sint16)timezone/60));
+    amf_associative_array_add(meta->on_metadata, amf_str("metadatadate"), amf_date_new((number64)time(NULL)*1000, -(sint16)timezone/60));
     if (info->have_audio) {
         amf_associative_array_add(meta->on_metadata, amf_str("audiocodecid"), amf_number_new((number64)info->audio_codec));
     }
