@@ -1,3 +1,19 @@
+2008-01-04 Marc Noirot <marc.noirot@gmail.com>
+	* configure.ac: 1.0.4 Release.
+	
+	* flvmeta.c (get_flv_info, write_flv): Data tags occuring before the first
+	  audio or video tag were not written into the output file.
+	
+	* all source files: Fixed copyright strings.
+
+2008-01-03 Marc Noirot <marc.noirot@gmail.com>
+	* flvmeta.c (compute_metadata): Fixed a date bug where the
+	  daylight static variable obtained from tzset() was used
+	  to compute UTC times.
+	
+	* flvdump.c: Fixed flvdump so it will report garbage bytes in the
+	  metadata tags, and be more tolerant with malformed files.
+
 2007-10-21 Marc Noirot <marc.noirot@gmail.com>
 	* 1.0.3 Release.
 
@@ -103,6 +119,6 @@
 	A few things need to be polished before an official release.
 
 
-Copyright 2007 Marc Noirot
+Copyright (C) 2007, 2008 Marc Noirot <marc.noirot AT gmail.com>
 Copying and distribution of this file, with or without modification, are
 permitted provided the copyright notice and this notice are preserved.
