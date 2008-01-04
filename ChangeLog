@@ -1,3 +1,13 @@
+2008-01-03 Marc Noirot <marc.noirot@gmail.com>	
+	* flvmeta.c (get_flv_info, write_flv): Data tags occuring before the first
+	  audio or video tag were not written into the output file.
+	
+	* all source files: Fixed copyright strings.
+
+	* flvmeta.c (compute_metadata): Fixed a date bug where the
+	  daylight static variable obtained from tzset() was used
+	  to compute UTC times.
+
 2007-10-28 Marc Noirot <marc.noirot@gmail.com>
 	* Added getopt_long support for the Windows build.
 	* Removed the flvdump program. Its functionality

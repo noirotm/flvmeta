@@ -1,3 +1,9 @@
+Version 1.0.4
+  - Bug fix release.
+  - Fixed a bug where some data tags wouldn't be written.
+  - Fixed a date computation bug related to daylight saving.
+  - Modified flvdump to make it more tolerant to malformed files.
+
 Version 1.0.3
   - Bug fix release.
   - Fixed major bugs in the AMF parser/writer.

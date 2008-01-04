@@ -3,7 +3,7 @@
 
     FLV Metadata updater
 
-    Copyright (C) 2007 Marc Noirot <marc.noirot AT gmail.com>
+    Copyright (C) 2007, 2008 Marc Noirot <marc.noirot AT gmail.com>
 
     This file is part of FLVMeta.
 
@@ -62,7 +62,6 @@ typedef struct __flv_info {
     uint8 have_keyframes;
     uint32 last_keyframe_timestamp;
     uint32 on_metadata_size;
-    byte * first_tag_offset;
     byte * on_metadata_offset;
     uint32 last_timestamp;
     uint32 video_frame_duration;
@@ -239,7 +238,6 @@ int get_flv_info(byte * flv_in, size_t in_size, flv_info * info) {
     info->have_keyframes = 0;
     info->last_keyframe_timestamp = 0;
     info->on_metadata_size = 0;
-    info->first_tag_offset = NULL;
     info->on_metadata_offset = NULL;
     info->last_timestamp = 0;
     info->video_frame_duration = 0;
@@ -287,10 +285,6 @@ int get_flv_info(byte * flv_in, size_t in_size, flv_info * info) {
         body_length = uint24_be_to_uint32(ft->body_length);
         timestamp = uint24_be_to_uint32(ft->timestamp);
 
-        /* address of first tag */
-        if (info->first_tag_offset == NULL) {
-            info->first_tag_offset = in_ptr;
-        }
         in_ptr += sizeof(flv_tag);
 
         /* total tag size check */
@@ -477,7 +471,7 @@ void compute_metadata(flv_info * info, flv_metadata * meta) {
     amf_data * amf_total_data_size = amf_number_new(0);
     amf_associative_array_add(meta->on_metadata, amf_str("datasize"), amf_total_data_size);
 
-    amf_associative_array_add(meta->on_metadata, amf_str("metadatacreator"), amf_str(LONG_COPYRIGHT_STR));
+    amf_associative_array_add(meta->on_metadata, amf_str("metadatacreator"), amf_str(PACKAGE_STRING));
 
     tzset();
     amf_associative_array_add(meta->on_metadata, amf_str("metadatadate"), amf_date_new((number64)time(NULL)*1000, -(sint16)timezone/60));
@@ -593,8 +587,6 @@ int write_flv(byte * flv_in, size_t in_size, FILE * flv_out, const flv_info * in
     }
     
     /* copy the tags verbatim */
-    in_ptr = info->first_tag_offset;
-
     int have_on_last_second = 0;
     while (in_ptr < flv_in + in_size) {
         uint32 body_length;
@@ -749,7 +741,7 @@ void usage(void) {
     fprintf(stderr, "\nCommands:\n");
     fprintf(stderr, " -D, --dump                dump onMetaData tag (default)\n");
     fprintf(stderr, " -F, --full-dump           dump all tags\n");
-    fprintf(stderr, " -U, --update              update FILE with computed metadata tags\n");
+    fprintf(stderr, " -U, --update              update FILE with computed onMetaData tag\n");
     fprintf(stderr, "\nOutput control:\n");
     fprintf(stderr, " -o, --out=FILE            specify the output file name\n");
     fprintf(stderr, " -n, --no-lastsecond       do not create the onLastSecond tag\n");
@@ -764,7 +756,7 @@ void usage(void) {
     fprintf(stderr, "\nMiscellaneous:\n");
     fprintf(stderr, " -V, --version             print version information and exit\n");
     fprintf(stderr, " -h, --help                display this help and exit\n");
-    fprintf(stderr, "\nReport bugs to <%s>\n\n", PACKAGE_BUGREPORT);
+    fprintf(stderr, "\nPlease report bugs to <%s>\n\n", PACKAGE_BUGREPORT);
 }
 
 int main(int argc, char ** argv) {
