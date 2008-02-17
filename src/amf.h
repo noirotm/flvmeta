@@ -102,23 +102,32 @@ typedef struct __amf_node {
     p_amf_node next;
 } amf_node;
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+/* Pluggable backend support */
+typedef size_t (*amf_read_proc)(void * out_buffer, size_t size, void * user_data);
+typedef size_t (*amf_write_proc)(const void * in_buffer, size_t size, void * user_data);
+
+/* read AMF data */
+amf_data * amf_data_read(amf_read_proc read_proc, void * user_data);
+
+/* write AMF data */
+size_t amf_data_write(amf_data * data, amf_write_proc write_proc, void * user_data);
+
 /* generic functions */
 
 /* load AMF data from buffer */
-amf_data * amf_data_decode(byte * buffer, size_t maxbytes, size_t * size);
+amf_data * amf_data_buffer_read(byte * buffer, size_t maxbytes);
 /* load AMF data from stream */
-amf_data * amf_data_read(FILE * stream);
+amf_data * amf_data_file_read(FILE * stream);
 /* AMF data size */
 size_t     amf_data_size(amf_data * data);
-/* put encoded AMF data into a buffer */
-size_t     amf_data_encode(amf_data * data, byte * buffer, size_t maxbytes);
+/* write encoded AMF data into a buffer */
+size_t     amf_data_buffer_write(amf_data * data, byte * buffer, size_t maxbytes);
 /* write encoded AMF data into a stream */
-size_t     amf_data_write(amf_data * data, FILE * stream);
+size_t     amf_data_file_write(amf_data * data, FILE * stream);
 /* get the type of AMF data */
 byte       amf_data_get_type(amf_data * data);
 /* release the memory of AMF data */

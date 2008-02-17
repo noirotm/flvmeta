@@ -158,247 +158,105 @@ static void amf_list_clear(amf_list * list) {
     list->size = 0;
 }
 
-/* decode a number */
-static amf_data * amf_number_decode(byte * buffer, size_t maxbytes, size_t * size) {
-    number64_be val;
-    if (maxbytes >= sizeof(number64_be)) {
-        memcpy(&val, buffer, sizeof(number64_be));
-        *size += sizeof(number64_be);
-        return amf_number_new(swap_number64(val));
-    }
-    return NULL;
-}
+/* structure used to mimic a stream with a memory buffer */
+typedef struct __buffer_context {
+    byte * start_address;
+    byte * current_address;
+    size_t buffer_size;
+} buffer_context;
 
-/* decode a boolean */
-static amf_data * amf_boolean_decode(byte * buffer, size_t maxbytes, size_t * size) {
-    uint8 val;
-    if (maxbytes >= sizeof(uint8)) {
-        memcpy(&val, buffer, sizeof(uint8));
-        *size += sizeof(uint8);
-        return amf_boolean_new(val);
-    }
-    return NULL;
-}
-
-/* decode a string */
-static amf_data * amf_string_decode(byte * buffer, size_t maxbytes, size_t * size) {
-    uint16 strsize;
-    if (maxbytes >= sizeof(uint16)) {
-        memcpy(&strsize, buffer, sizeof(uint16));
-        strsize = swap_uint16(strsize);
-        if ((maxbytes-sizeof(uint16)) >= strsize) {
-            *size += (sizeof(uint16)+strsize);
-            return amf_string_new(buffer+sizeof(uint16), strsize);
-        }
-    }
-    return NULL;
-}
-
-/* decode an object */
-static amf_data * amf_object_decode(byte * buffer, size_t maxbytes, size_t * size) {
-    amf_data * data = amf_object_new();
-    if (data != NULL) {
-        amf_data * name;
-        amf_data * element;
-        size_t s = 0;
-        while (1) {
-            name = amf_string_decode(buffer+s, maxbytes-s, size);
-            if (name != NULL) {
-                s += amf_string_get_size(name) + sizeof(uint16);
-                size_t tmp_size = *size;
-                element = amf_data_decode(buffer+s, maxbytes-s, size);
-                s += *size - tmp_size;
-                if (element != NULL) {
-                    if (amf_object_add(data, name, element) == NULL) {
-                        amf_data_free(name);
-                        amf_data_free(element);
-                        amf_data_free(data);
-                        return NULL;
-                    }
-                }
-                else {
-                    amf_data_free(name);
-                    break;
-                }
-            }
-            else {
-                /* invalid name: error */
-                amf_data_free(data);
-                return NULL;
-            }
-        }
-    }
-    return data;
-}
-
-/* decode an associative array */
-static amf_data * amf_associative_array_decode(byte * buffer, size_t maxbytes, size_t * size) {
-    amf_data * data = amf_associative_array_new();
-    if (data != NULL) {
-        amf_data * name;
-        amf_data * element;
-        if (maxbytes >= sizeof(uint32)) {
-            size_t s = sizeof(uint32); /* we ignore the 32 bits array size marker */
-            *size += s;
-            while(1) {
-                name = amf_data_decode(buffer+s, maxbytes-s, size);
-                if (name != NULL) {
-                    s += amf_string_get_size(name) + sizeof(uint16);
-                    size_t tmp_size = *size;
-                    element = amf_data_decode(buffer+s, maxbytes-s, size);
-                    s += *size - tmp_size;
-                    if (element != NULL) {
-                        if (amf_associative_array_add(data, name, element) == NULL) {
-                            amf_data_free(name);
-                            amf_data_free(element);
-                            amf_data_free(data);
-                            return NULL;
-                        }
-                    }
-                    else {
-                        amf_data_free(name);
-                        break;
-                    }
-                }
-                else {
-                    /* invalid name: error */
-                    amf_data_free(data);
-                    return NULL;
-                }
-            }
-        }
-        else {
-            amf_data_free(data);
-            return NULL;
-        }
-    }
-    return data;
-}
-
-/* decode an array */
-static amf_data * amf_array_decode(byte * buffer, size_t maxbytes, size_t * size) {
-    amf_data * data = amf_array_new();
-    if (data != NULL) {
-        uint32 array_size;
-        if (maxbytes >= sizeof(uint32)) {
-            memcpy(&array_size, buffer, sizeof(uint32));
-            array_size = swap_uint32(array_size);
-
-            size_t i;
-            size_t s = sizeof(uint32);
-            *size += s;
-
-            amf_data * element;
-            for (i = 0; i < array_size; ++i) {
-                size_t tmp_size = *size;
-                element = amf_data_decode(buffer+s, maxbytes-s, size);
-                s += *size - tmp_size;
-
-                if (element != NULL) {
-                    if (amf_array_push(data, element) == NULL) {
-                        amf_data_free(element);
-                        amf_data_free(data);
-                        return NULL;
-                    }
-                }
-                else {
-                    amf_data_free(data);
-                    return NULL;
-                }
-            }
-        }
-        else {
-            amf_data_free(data);
-            return NULL;
-        }
-    }
-    return data;
-}
-
-/* decode a date */
-static amf_data * amf_date_decode(byte * buffer, size_t maxbytes, size_t * size) {
-    number64_be milliseconds;
-    sint16_be timezone;
-    if (maxbytes >= sizeof(number64_be)+sizeof(sint16_be)) {
-        memcpy(&milliseconds, buffer, sizeof(number64_be));
-        memcpy(&timezone, buffer+sizeof(number64_be), sizeof(sint16_be));
-        *size += sizeof(number64_be)+sizeof(sint16_be);
-        return amf_date_new(swap_number64(milliseconds), swap_sint16(timezone));
+/* callback function to mimic fread using a memory buffer */
+static size_t buffer_read(void * out_buffer, size_t size, void * user_data) {
+    buffer_context * ctxt = (buffer_context *)user_data;
+    if (ctxt->current_address >= ctxt->start_address &&
+        ctxt->current_address + size <= ctxt->start_address + ctxt->buffer_size) {
+        
+        memcpy(out_buffer, ctxt->current_address, size);
+        ctxt->current_address += size;
+        return size;
     }
     else {
-        return NULL;
+        return 0;
     }
 }
 
-/* load AMF data from buffer */
-amf_data * amf_data_decode(byte * buffer, size_t maxbytes, size_t * size) {
-    amf_data * data = NULL;
-    if (buffer != NULL && maxbytes > 0) {
-        *size += sizeof(byte);
-        switch (buffer[0]) {
-            case AMF_TYPE_NUMBER:
-                data = amf_number_decode(buffer+1, maxbytes-1, size);
-                break;
-            case AMF_TYPE_BOOLEAN:
-                data = amf_boolean_decode(buffer+1, maxbytes-1, size);
-                break;
-            case AMF_TYPE_STRING:
-                data = amf_string_decode(buffer+1, maxbytes-1, size);
-                break;
-            case AMF_TYPE_OBJECT:
-                data = amf_object_decode(buffer+1, maxbytes-1, size);
-                break;
-            case AMF_TYPE_UNDEFINED:
-                data = amf_undefined_new();
-                break;
-            /*case AMF_TYPE_REFERENCE:*/
-            case AMF_TYPE_ASSOCIATIVE_ARRAY:
-                data = amf_associative_array_decode(buffer+1, maxbytes-1, size);
-                break;
-            case AMF_TYPE_ARRAY:
-                data = amf_array_decode(buffer+1, maxbytes-1, size);
-                break;
-            case AMF_TYPE_DATE:
-                data = amf_date_decode(buffer+1, maxbytes-1, size);
-                break;
-            /*case AMF_TYPE_SIMPLEOBJECT:*/
-            case AMF_TYPE_XML:
-            case AMF_TYPE_CLASS:
-            case AMF_TYPE_TERMINATOR:
-                break; /* end of composite object */
-            default:
-                break;
-        }
+/* callback function to mimic fwrite using a memory buffer */
+static size_t buffer_write(const void * in_buffer, size_t size, void * user_data) {
+    buffer_context * ctxt = (buffer_context *)user_data;
+    if (ctxt->current_address >= ctxt->start_address &&
+        ctxt->current_address + size <= ctxt->start_address + ctxt->buffer_size) {
+        
+        memcpy(ctxt->current_address, in_buffer, size);
+        ctxt->current_address += size;
+        return size;
     }
-    return data;
+    else {
+        return 0;
+    }
+}
+
+/* read AMF data from buffer */
+amf_data * amf_data_buffer_read(byte * buffer, size_t maxbytes) {
+    buffer_context ctxt;
+    ctxt.start_address = ctxt.current_address = buffer;
+    ctxt.buffer_size = maxbytes;
+    return amf_data_read(buffer_read, &ctxt);
+}
+
+/* write AMF data to buffer */
+size_t amf_data_buffer_write(amf_data * data, byte * buffer, size_t maxbytes) {
+    buffer_context ctxt;
+    ctxt.start_address = ctxt.current_address = buffer;
+    ctxt.buffer_size = maxbytes;
+    return amf_data_write(data, buffer_write, &ctxt);
+}
+
+/* callback function to read data from a file stream */
+static size_t file_read(void * out_buffer, size_t size, void * user_data) {
+    return fread(out_buffer, sizeof(byte), size, (FILE *)user_data);
+}
+
+/* callback function to write data to a file stream */
+static size_t file_write(const void * in_buffer, size_t size, void * user_data) {
+    return fwrite(in_buffer, sizeof(byte), size, (FILE *)user_data);
+}
+
+/* load AMF data from a file stream */
+amf_data * amf_data_file_read(FILE * stream) {
+    return amf_data_read(file_read, stream);
+}
+
+/* write AMF data into a file stream */
+size_t amf_data_file_write(amf_data * data, FILE * stream) {
+    return amf_data_write(data, file_write, stream);
 }
 
 /* read a number */
-static amf_data * amf_number_read(FILE * stream) {
+static amf_data * amf_number_read(amf_read_proc read_proc, void * user_data) {
     number64_be val;
-    if (fread(&val, sizeof(number64_be), 1, stream) == 1) {
+    if (read_proc(&val, sizeof(number64_be), user_data) == sizeof(number64_be)) {
         return amf_number_new(swap_number64(val));
     }
     return NULL;
 }
 
 /* read a boolean */
-static amf_data * amf_boolean_read(FILE * stream) {
+static amf_data * amf_boolean_read(amf_read_proc read_proc, void * user_data) {
     uint8 val;
-    if (fread(&val, sizeof(uint8), 1, stream) == 1) {
+    if (read_proc(&val, sizeof(uint8), user_data) == sizeof(uint8)) {
         return amf_boolean_new(val);
     }
     return NULL;
 }
 
 /* read a string */
-static amf_data * amf_string_read(FILE * stream) {
+static amf_data * amf_string_read(amf_read_proc read_proc, void * user_data) {
     uint16_be strsize;
     byte * buffer;
-    if (fread(&strsize, sizeof(uint16_be), 1, stream) == 1) {
+    if (read_proc(&strsize, sizeof(uint16_be), user_data) == sizeof(uint16_be)) {
         strsize = swap_uint16(strsize);
         buffer = (byte*)calloc(strsize, sizeof(byte));
-        if (buffer != NULL && fread(buffer, sizeof(byte), strsize, stream) == strsize) {
+        if (buffer != NULL && read_proc(buffer, strsize, user_data) == strsize) {
             amf_data * data = amf_string_new(buffer, strsize);
             free(buffer);
             return data;
@@ -408,15 +266,15 @@ static amf_data * amf_string_read(FILE * stream) {
 }
 
 /* read an object */
-static amf_data * amf_object_read(FILE * stream) {
+static amf_data * amf_object_read(amf_read_proc read_proc, void * user_data) {
     amf_data * data = amf_object_new();
     if (data != NULL) {
         amf_data * name;
         amf_data * element;
         while (1) {
-            name = amf_string_read(stream);
+            name = amf_string_read(read_proc, user_data);
             if (name != NULL) {
-                element = amf_data_read(stream);
+                element = amf_data_read(read_proc, user_data);
                 if (element != NULL) {
                     if (amf_object_add(data, name, element) == NULL) {
                         amf_data_free(name);
@@ -441,17 +299,18 @@ static amf_data * amf_object_read(FILE * stream) {
 }
 
 /* read an associative array */
-static amf_data * amf_associative_array_read(FILE * stream) {
+static amf_data * amf_associative_array_read(amf_read_proc read_proc, void * user_data) {
     amf_data * data = amf_associative_array_new();
     if (data != NULL) {
         amf_data * name;
         amf_data * element;
-        if (fseek(stream, sizeof(uint32), SEEK_CUR) == 0) {
+        uint32_be size;
+        if (read_proc(&size, sizeof(uint32_be), user_data) == sizeof(uint32_be)) {
             /* we ignore the 32 bits array size marker */
             while(1) {
-                name = amf_string_read(stream);
+                name = amf_string_read(read_proc, user_data);
                 if (name != NULL) {
-                    element = amf_data_read(stream);
+                    element = amf_data_read(read_proc, user_data);
                     if (element != NULL) {
                         if (amf_associative_array_add(data, name, element) == NULL) {
                             amf_data_free(name);
@@ -481,17 +340,17 @@ static amf_data * amf_associative_array_read(FILE * stream) {
 }
 
 /* read an array */
-static amf_data * amf_array_read(FILE * stream) {
+static amf_data * amf_array_read(amf_read_proc read_proc, void * user_data) {
     amf_data * data = amf_array_new();
     if (data != NULL) {
         uint32 array_size;
-        if (fread(&array_size, sizeof(uint32), 1, stream) == 1) {
+        if (read_proc(&array_size, sizeof(uint32), user_data) == sizeof(uint32)) {
             array_size = swap_uint32(array_size);
 
             size_t i;
             amf_data * element;
             for (i = 0; i < array_size; ++i) {
-                element = amf_data_read(stream);
+                element = amf_data_read(read_proc, user_data);
 
                 if (element != NULL) {
                     if (amf_array_push(data, element) == NULL) {
@@ -515,11 +374,11 @@ static amf_data * amf_array_read(FILE * stream) {
 }
 
 /* read a date */
-static amf_data * amf_date_read(FILE * stream) {
+static amf_data * amf_date_read(amf_read_proc read_proc, void * user_data) {
     number64_be milliseconds;
     sint16_be timezone;
-    if (fread(&milliseconds, sizeof(number64_be), 1, stream) == 1 &&
-        fread(&timezone, sizeof(sint16_be), 1, stream) == 1) {
+    if (read_proc(&milliseconds, sizeof(number64_be), user_data) == sizeof(number64_be) &&
+        read_proc(&timezone, sizeof(sint16_be), user_data) == sizeof(sint16_be)) {
         return amf_date_new(swap_number64(milliseconds), swap_sint16(timezone));
     }
     else {
@@ -528,27 +387,27 @@ static amf_data * amf_date_read(FILE * stream) {
 }
 
 /* load AMF data from stream */
-amf_data * amf_data_read(FILE * stream) {
+amf_data * amf_data_read(amf_read_proc read_proc, void * user_data) {
     byte type;
-    if (fread(&type, sizeof(byte), 1, stream) == 1) {
+    if (read_proc(&type, sizeof(byte), user_data) == sizeof(byte)) {
         switch (type) {
             case AMF_TYPE_NUMBER:
-                return amf_number_read(stream);
+                return amf_number_read(read_proc, user_data);
             case AMF_TYPE_BOOLEAN:
-                return amf_boolean_read(stream);
+                return amf_boolean_read(read_proc, user_data);
             case AMF_TYPE_STRING:
-                return amf_string_read(stream);
+                return amf_string_read(read_proc, user_data);
             case AMF_TYPE_OBJECT:
-                return amf_object_read(stream);
+                return amf_object_read(read_proc, user_data);
             case AMF_TYPE_UNDEFINED:
                 return amf_undefined_new();
             /*case AMF_TYPE_REFERENCE:*/
             case AMF_TYPE_ASSOCIATIVE_ARRAY:
-                return amf_associative_array_read(stream);
+                return amf_associative_array_read(read_proc, user_data);
             case AMF_TYPE_ARRAY:
-                return amf_array_read(stream);
+                return amf_array_read(read_proc, user_data);
             case AMF_TYPE_DATE:
-                return amf_date_read(stream);
+                return amf_date_read(read_proc, user_data);
             /*case AMF_TYPE_SIMPLEOBJECT:*/
             case AMF_TYPE_XML:
             case AMF_TYPE_CLASS:
@@ -622,230 +481,33 @@ size_t amf_data_size(amf_data * data) {
     return s;
 }
 
-/* encode a number */
-static size_t amf_number_encode(amf_data * data, byte * buffer, size_t maxbytes) {
-    number64_be val;
-    if (maxbytes >= sizeof(number64_be)) {
-        val = swap_number64(data->number_data);
-        memcpy(buffer, &val, sizeof(number64_be));
-        return sizeof(number64_be);
-    }
-    return 0;
-}
-
-/* encode a boolean */
-static size_t amf_boolean_encode(amf_data * data, byte * buffer, size_t maxbytes) {
-    if (maxbytes >= sizeof(uint8)) {
-        memcpy(buffer, &(data->boolean_data), sizeof(uint8));
-        return sizeof(uint8);
-    }
-    return 0;
-}
-
-/* encode a string */
-static size_t amf_string_encode(amf_data * data, byte * buffer, size_t maxbytes) {
-    uint16_be len;
-    if (maxbytes >= sizeof(uint16)) {
-        len = swap_uint16(data->string_data.size);
-        memcpy(buffer, &len, sizeof(uint16_be));
-        if (maxbytes-sizeof(uint16) >= data->string_data.size) {
-            memcpy(buffer+sizeof(uint16), data->string_data.mbstr, data->string_data.size);
-            return sizeof(uint16) + data->string_data.size;
-        }
-    }
-    return 0;
-}
-
-/* encode an object */
-static size_t amf_object_encode(amf_data * data, byte * buffer, size_t maxbytes) {
-    amf_node * node;
-    size_t size = 0;
-    size_t s;
-    uint16_be filler = swap_uint16(0);
-
-    node = amf_object_first(data);
-    while (node != NULL) {
-        s = amf_string_encode(amf_object_get_name(node), buffer+size, maxbytes-size);
-        if (s == 0) {
-            return 0;
-        }
-        size += s;
-        s = amf_data_encode(amf_object_get_data(node), buffer+size, maxbytes-size);
-        if (s == 0) {
-            return 0;
-        }
-        size += s;
-        node = amf_object_next(node);
-    }
-    
-    if (maxbytes > size+sizeof(uint16_be)+sizeof(uint8)) {
-        /* empty string is the last element */
-        memcpy(buffer+size, &filler, sizeof(uint16_be));
-        /* an object ends with 0x09 */
-        buffer[size+sizeof(uint16_be)] = AMF_TYPE_TERMINATOR;
-        size += sizeof(uint16_be) + sizeof(uint8);
-    }
-    else {
-        size = 0;
-    }
-
-    return size;
-}
-
-/* encode an associative array */
-static size_t amf_associative_array_encode(amf_data * data, byte * buffer, size_t maxbytes) {
-    amf_node * node;
-    size_t size = 0;
-    size_t s;
-    uint32_be len;
-    uint16_be filler = swap_uint16(0);
-
-    len = swap_uint32(data->list_data.size) / 2;
-
-    if (maxbytes >= sizeof(uint32_be)) {
-        memcpy(buffer, &len, sizeof(uint32_be));
-        size = sizeof(uint32_be);
-
-        node = amf_object_first(data);
-        while (node != NULL) {
-            s = amf_string_encode(amf_object_get_name(node), buffer+size, maxbytes-size);
-            if (s == 0) {
-                return 0;
-            }
-            size += s;
-            s = amf_data_encode(amf_object_get_data(node), buffer+size, maxbytes-size);
-            if (s == 0) {
-                return 0;
-            }
-            size += s;
-            node = amf_object_next(node);
-        }
-        
-        if (maxbytes > size+sizeof(uint16_be)+sizeof(uint8)) {
-            /* empty string is the last element */
-            memcpy(buffer+size, &filler, sizeof(uint16_be));
-            /* an object ends with 0x09 */
-            buffer[size+sizeof(uint16_be)] = AMF_TYPE_TERMINATOR;
-            size += sizeof(uint16_be) + sizeof(uint8);
-        }
-        else {
-            size = 0;
-        }
-    }
-    return size;
-}
-
-/* encode an array */
-static size_t amf_array_encode(amf_data * data, byte * buffer, size_t maxbytes) {
-    amf_node * node;
-    size_t size = 0;
-    size_t s;
-    uint32_be len;
-
-    len = swap_uint32(data->list_data.size);
-
-    if (maxbytes >= sizeof(uint32_be)) {
-        memcpy(buffer, &len, sizeof(uint32_be));
-        size = sizeof(uint32_be);
-        
-        node = amf_array_first(data);
-        while (node != NULL) {
-            s = amf_data_encode(amf_array_get(node), buffer+size, maxbytes-size);
-            if (s == 0) {
-                return 0;
-            }
-            size += s;
-            node = amf_array_next(node);
-        }
-    }
-    return size;
-}
-
-/* encode a date */
-static size_t amf_date_encode(amf_data * data, byte * buffer, size_t maxbytes) {
-    number64_be milliseconds = swap_number64(data->date_data.milliseconds);
-    sint16_be timezone = swap_sint16(data->date_data.timezone);
-
-    if (maxbytes >= sizeof(number64_be)+sizeof(sint16_be)) {
-        memcpy(buffer, &milliseconds, sizeof(number64_be));
-        memcpy(buffer+sizeof(number64_be), &timezone, sizeof(sint16_be));
-        return sizeof(number64_be)+sizeof(sint16_be);
-    }
-    return 0;
-}
-
-
-/* AMF data encoding */
-size_t amf_data_encode(amf_data * data, byte * buffer, size_t maxbytes) {
-    size_t size = 0;
-    if (maxbytes > 0 && data != NULL && buffer != NULL) {
-        buffer[0] = data->type;
-        ++size;
-        switch (data->type) {
-            case AMF_TYPE_NUMBER:
-                size += amf_number_encode(data, buffer+1, maxbytes-1);
-                break;
-            case AMF_TYPE_BOOLEAN:
-                size += amf_boolean_encode(data, buffer+1, maxbytes-1);
-                break;
-            case AMF_TYPE_STRING:
-                size += amf_string_encode(data, buffer+1, maxbytes-1);
-                break;
-            case AMF_TYPE_OBJECT:
-                size += amf_object_encode(data, buffer+1, maxbytes-1);
-                break;
-            case AMF_TYPE_UNDEFINED:
-                break;
-            /*case AMF_TYPE_REFERENCE:*/
-            case AMF_TYPE_ASSOCIATIVE_ARRAY:
-                size += amf_associative_array_encode(data, buffer+1, maxbytes-1);
-                break;
-            case AMF_TYPE_ARRAY:
-                size += amf_array_encode(data, buffer+1, maxbytes-1);
-                break;
-            case AMF_TYPE_DATE:
-                size += amf_date_encode(data, buffer+1, maxbytes-1);
-                break;
-            /*case AMF_TYPE_SIMPLEOBJECT:*/
-            case AMF_TYPE_XML:
-            case AMF_TYPE_CLASS:
-            case AMF_TYPE_TERMINATOR:
-                break; /* end of composite object */
-            default:
-                break;
-        }
-    }
-    return size;
-}
-
-
 /* write a number */
-static size_t amf_number_write(amf_data * data, FILE * stream) {
+static size_t amf_number_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
     number64 n = swap_number64(data->number_data);
-    return fwrite(&n, sizeof(number64_be), 1, stream) * sizeof(number64_be);
+    return write_proc(&n, sizeof(number64_be), user_data);
 }
 
 /* write a boolean */
-static size_t amf_boolean_write(amf_data * data, FILE * stream) {
-    return fwrite(&(data->boolean_data), sizeof(uint8), 1, stream) * sizeof(uint8);
+static size_t amf_boolean_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
+    return write_proc(&(data->boolean_data), sizeof(uint8), user_data);
 }
 
 /* write a string */
-static size_t amf_string_write(amf_data * data, FILE * stream) {
+static size_t amf_string_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
     uint16 s;
     size_t w = 0;
     
     s = swap_uint16(data->string_data.size);
-    w = fwrite(&s, sizeof(uint16_be), 1, stream) * sizeof(uint16_be);
+    w = write_proc(&s, sizeof(uint16_be), user_data);
     if (data->string_data.size > 0) {
-        w += fwrite(data->string_data.mbstr, sizeof(byte), (size_t)(data->string_data.size), stream) * sizeof(byte);
+        w += write_proc(data->string_data.mbstr, (size_t)(data->string_data.size), user_data);
     }
     
     return w;
 }
 
 /* write an object */
-static size_t amf_object_write(amf_data * data, FILE * stream) {
+static size_t amf_object_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
     amf_node * node;
     size_t w = 0;
     uint16_be filler = swap_uint16(0);
@@ -853,21 +515,21 @@ static size_t amf_object_write(amf_data * data, FILE * stream) {
 
     node = amf_object_first(data);
     while (node != NULL) {
-        w += amf_string_write(amf_object_get_name(node), stream);
-        w += amf_data_write(amf_object_get_data(node), stream);
+        w += amf_string_write(amf_object_get_name(node), write_proc, user_data);
+        w += amf_data_write(amf_object_get_data(node), write_proc, user_data);
         node = amf_object_next(node);
     }
     
     /* empty string is the last element */
-    w += fwrite(&filler, sizeof(uint16_be), 1, stream) * sizeof(uint16_be);
+    w += write_proc(&filler, sizeof(uint16_be), user_data);
     /* an object ends with 0x09 */
-    w += fwrite(&terminator, sizeof(uint8), 1, stream) * sizeof(uint8);
+    w += write_proc(&terminator, sizeof(uint8), user_data);
 
     return w;
 }
 
 /* write an associative array */
-static size_t amf_associative_array_write(amf_data * data, FILE * stream) {
+static size_t amf_associative_array_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
     amf_node * node;
     size_t w = 0;
     uint32_be s;
@@ -875,33 +537,33 @@ static size_t amf_associative_array_write(amf_data * data, FILE * stream) {
     uint8 terminator = AMF_TYPE_TERMINATOR;
 
     s = swap_uint32(data->list_data.size) / 2;
-    w += fwrite(&s, sizeof(uint32_be), 1, stream) * sizeof(uint32_be);
+    w += write_proc(&s, sizeof(uint32_be), user_data);
     node = amf_associative_array_first(data);
     while (node != NULL) {
-        w += amf_string_write(amf_associative_array_get_name(node), stream);
-        w += amf_data_write(amf_associative_array_get_data(node), stream);
+        w += amf_string_write(amf_associative_array_get_name(node), write_proc, user_data);
+        w += amf_data_write(amf_associative_array_get_data(node), write_proc, user_data);
         node = amf_associative_array_next(node);
     }
     
     /* empty string is the last element */
-    w += fwrite(&filler, sizeof(uint16_be), 1, stream) * sizeof(uint16_be);
+    w += write_proc(&filler, sizeof(uint16_be), user_data);
     /* an object ends with 0x09 */
-    w += fwrite(&terminator, sizeof(uint8), 1, stream) * sizeof(uint8);
+    w += write_proc(&terminator, sizeof(uint8), user_data);
 
     return w;
 }
 
 /* write an array */
-static size_t amf_array_write(amf_data * data, FILE * stream) {
+static size_t amf_array_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
     amf_node * node;
     size_t w = 0;
     uint32_be s;
 
     s = swap_uint32(data->list_data.size);
-    w += fwrite(&s, sizeof(uint32_be), 1, stream) * sizeof(uint32_be);
+    w += write_proc(&s, sizeof(uint32_be), user_data);
     node = amf_array_first(data);
     while (node != NULL) {
-        w += amf_data_write(amf_array_get(node), stream);
+        w += amf_data_write(amf_array_get(node), write_proc, user_data);
         node = amf_array_next(node);
     }
 
@@ -909,48 +571,48 @@ static size_t amf_array_write(amf_data * data, FILE * stream) {
 }
 
 /* write a date */
-static size_t amf_date_write(amf_data * data, FILE * stream) {
+static size_t amf_date_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
     size_t w = 0;
     number64_be milli;
     sint16_be tz;
     
     milli = swap_number64(data->date_data.milliseconds);
-    w += fwrite(&milli, sizeof(number64_be), 1, stream) * sizeof(number64_be);
+    w += write_proc(&milli, sizeof(number64_be), user_data);
     tz = swap_sint16(data->date_data.timezone);
-    w += fwrite(&tz, sizeof(sint16_be), 1, stream) * sizeof(sint16_be);
+    w += write_proc(&tz, sizeof(sint16_be), user_data);
 
     return w;
 }
 
 /* write amf data to stream */
-size_t amf_data_write(amf_data * data, FILE * stream) {
+size_t amf_data_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
     size_t s = 0;
     if (data != NULL) {
-        s += fwrite(&(data->type), sizeof(byte), 1, stream) * sizeof(byte);
+        s += write_proc(&(data->type), sizeof(byte), user_data);
         switch (data->type) {
             case AMF_TYPE_NUMBER:
-                s += amf_number_write(data, stream);
+                s += amf_number_write(data, write_proc, user_data);
                 break;
             case AMF_TYPE_BOOLEAN:
-                s += amf_boolean_write(data, stream);
+                s += amf_boolean_write(data, write_proc, user_data);
                 break;
             case AMF_TYPE_STRING:
-                s += amf_string_write(data, stream);
+                s += amf_string_write(data, write_proc, user_data);
                 break;
             case AMF_TYPE_OBJECT:
-                s += amf_object_write(data, stream);
+                s += amf_object_write(data, write_proc, user_data);
                 break;
             case AMF_TYPE_UNDEFINED:
                 break;
             /*case AMF_TYPE_REFERENCE:*/
             case AMF_TYPE_ASSOCIATIVE_ARRAY:
-                s += amf_associative_array_write(data, stream);
+                s += amf_associative_array_write(data, write_proc, user_data);
                 break;
             case AMF_TYPE_ARRAY:
-                s += amf_array_write(data, stream);
+                s += amf_array_write(data, write_proc, user_data);
                 break;
             case AMF_TYPE_DATE:
-                s += amf_date_write(data, stream);
+                s += amf_date_write(data, write_proc, user_data);
                 break;
             /*case AMF_TYPE_SIMPLEOBJECT:*/
             case AMF_TYPE_XML:
@@ -969,36 +631,21 @@ byte amf_data_get_type(amf_data * data) {
     return (data != NULL) ? data->type : AMF_TYPE_UNDEFINED;
 }
 
-/* data freeing functions */
-static void amf_string_free(amf_data * data) {
-    if (data->string_data.mbstr != NULL) {
-        free(data->string_data.mbstr);
-    }
-}
-
-static void amf_object_free(amf_data * data) {
-    amf_list_clear(&data->list_data);
-}
-
-static void amf_associative_array_free(amf_data * data) {
-    amf_list_clear(&data->list_data);
-}
-
-static void amf_array_free(amf_data * data) {
-    amf_list_clear(&data->list_data);
-}
-
+/* free AMF data */
 void amf_data_free(amf_data * data) {
     if (data != NULL) {
         switch (data->type) {
             case AMF_TYPE_NUMBER: break;
             case AMF_TYPE_BOOLEAN: break;
-            case AMF_TYPE_STRING: amf_string_free(data); break;
-            case AMF_TYPE_OBJECT: amf_object_free(data); break;
+            case AMF_TYPE_STRING: 
+                if (data->string_data.mbstr != NULL) {
+                    free(data->string_data.mbstr);
+                } break;
             case AMF_TYPE_UNDEFINED: break;
             /*case AMF_TYPE_REFERENCE:*/
-            case AMF_TYPE_ASSOCIATIVE_ARRAY: amf_associative_array_free(data); break;
-            case AMF_TYPE_ARRAY: amf_array_free(data); break;
+            case AMF_TYPE_OBJECT:
+            case AMF_TYPE_ASSOCIATIVE_ARRAY:
+            case AMF_TYPE_ARRAY: amf_list_clear(&data->list_data); break;
             case AMF_TYPE_DATE: break;
             /*case AMF_TYPE_SIMPLEOBJECT:*/
             case AMF_TYPE_XML: break;

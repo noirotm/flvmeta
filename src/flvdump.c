@@ -3,7 +3,7 @@
 
     FLV Metadata updater
 
-    Copyright (C) 2007 Marc Noirot <marc.noirot AT gmail.com>
+    Copyright (C) 2007, 2008 Marc Noirot <marc.noirot AT gmail.com>
 
     This file is part of FLVMeta.
 
@@ -31,7 +31,7 @@
 int main(int argc, char ** argv) {
 
     if (argc < 2) {
-        fprintf(stderr, "FLVDump version %s - Copyright 2007 Marc Noirot\n\n",
+        fprintf(stderr, "FLVDump version %s - Copyright (C) 2007, 2008 Marc Noirot\n\n",
             VERSION);
         fprintf(stderr, "Usage: flvdump in_file\n\n");
         fprintf(stderr, "This is free software; see the source for copying conditions. There is NO\n"
@@ -147,17 +147,23 @@ int main(int argc, char ** argv) {
             body_length -= sizeof(vt);
         }
         else if (ft.type == FLV_TAG_TYPE_META) {
-            amf_data * data = amf_data_read(flv_in);
+            amf_data * data = amf_data_file_read(flv_in);
+            size_t data_size = amf_data_size(data);
             printf("* Metadata event name: %s\n", amf_string_get_bytes(data));
             amf_data_free(data);
 
-            data = amf_data_read(flv_in);
+            data = amf_data_file_read(flv_in);
+            data_size += amf_data_size(data);
             printf("* Metadata contents: ");
             amf_data_dump(stdout, data, 0);
             printf("\n");
             amf_data_free(data);
 
-            body_length = 0;
+            body_length -= (uint32)data_size;
+
+            if (body_length > 0) {
+                printf("* Garbage: %i bytes\n", body_length);
+            }
         }
         fseek(flv_in, (long)body_length, SEEK_CUR);
         if (fread(&prev_tag_size, sizeof(uint32_be), 1, flv_in) == 1) {

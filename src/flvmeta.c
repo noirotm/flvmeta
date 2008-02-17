@@ -295,8 +295,7 @@ int get_flv_info(byte * flv_in, size_t in_size, flv_info * info) {
         info->last_timestamp = timestamp;        
 
         if (ft->type == FLV_TAG_TYPE_META) {
-            size_t read_size;
-            amf_data * tag_name = amf_data_decode(in_ptr, (size_t)body_length, &read_size);
+            amf_data * tag_name = amf_data_buffer_read(in_ptr, (size_t)body_length);
             if (tag_name == NULL) {
                 return ERROR_EOF;
             }
@@ -564,8 +563,8 @@ int write_flv(byte * flv_in, size_t in_size, FILE * flv_out, const flv_info * in
     /* write the computed onMetaData tag first if it doesn't exist in the input file */
     if (info->on_metadata_size == 0) {
         if (fwrite(&omft, sizeof(flv_tag), 1, flv_out) != 1 ||
-            amf_data_write(meta->on_metadata_name, flv_out) < on_metadata_name_size ||
-            amf_data_write(meta->on_metadata, flv_out) < on_metadata_size
+            amf_data_file_write(meta->on_metadata_name, flv_out) < on_metadata_name_size ||
+            amf_data_file_write(meta->on_metadata, flv_out) < on_metadata_size
         ) {
             return ERROR_WRITE;
         }
@@ -612,8 +611,8 @@ int write_flv(byte * flv_in, size_t in_size, FILE * flv_out, const flv_info * in
            we write the one we computed instead, discarding the old one */
         if (info->on_metadata_offset == in_ptr) {
             if (fwrite(&omft, sizeof(flv_tag), 1, flv_out) != 1 ||
-                amf_data_write(meta->on_metadata_name, flv_out) < on_metadata_name_size ||
-                amf_data_write(meta->on_metadata, flv_out) < on_metadata_size
+                amf_data_file_write(meta->on_metadata_name, flv_out) < on_metadata_name_size ||
+                amf_data_file_write(meta->on_metadata, flv_out) < on_metadata_size
             ) {
                 return ERROR_WRITE;
             }
@@ -636,8 +635,8 @@ int write_flv(byte * flv_in, size_t in_size, FILE * flv_out, const flv_info * in
                 tag.timestamp_extended = 0;
                 tag.stream_id = uint32_to_uint24_be(0);
                 if (fwrite(&tag, sizeof(flv_tag), 1, flv_out) != 1 ||
-                    amf_data_write(meta->on_last_second_name, flv_out) < on_last_second_name_size ||
-                    amf_data_write(meta->on_last_second, flv_out) < on_last_second_size
+                    amf_data_file_write(meta->on_last_second_name, flv_out) < on_last_second_name_size ||
+                    amf_data_file_write(meta->on_last_second, flv_out) < on_last_second_size
                 ) {
                     return ERROR_WRITE;
                 }

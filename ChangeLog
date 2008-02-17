@@ -1,4 +1,8 @@
-2008-01-03 Marc Noirot <marc.noirot@gmail.com>	
+2008-02-17 Marc Noirot <marc.noirot@gmail.com>
+	* amf.c, amf.h, flvmeta.c: Cleaned up the AMF serializer/deserializer by
+	  using a callback-based mechanism to make the code backend-independant.
+
+2008-01-03 Marc Noirot <marc.noirot@gmail.com>
 	* flvmeta.c (get_flv_info, write_flv): Data tags occuring before the first
 	  audio or video tag were not written into the output file.
 	
