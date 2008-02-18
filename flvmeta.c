@@ -283,7 +283,7 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
         info->last_timestamp = timestamp;
 
         if (ft.type == FLV_TAG_TYPE_META) {
-            amf_data * tag_name = amf_data_read(flv_in);
+            amf_data * tag_name = amf_data_file_read(flv_in);
             if (tag_name == NULL) {
                 return ERROR_EOF;
             }
@@ -559,8 +559,8 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
     /* write the computed onMetaData tag first if it doesn't exist in the input file */
     if (info->on_metadata_size == 0) {
         if (fwrite(&omft, sizeof(flv_tag), 1, flv_out) != 1 ||
-            amf_data_write(meta->on_metadata_name, flv_out) < on_metadata_name_size ||
-            amf_data_write(meta->on_metadata, flv_out) < on_metadata_size
+            amf_data_file_write(meta->on_metadata_name, flv_out) < on_metadata_name_size ||
+            amf_data_file_write(meta->on_metadata, flv_out) < on_metadata_size
         ) {
             return ERROR_WRITE;
         }
@@ -605,8 +605,8 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
            we write the one we computed instead, discarding the old one */
         if (info->on_metadata_offset == offset) {
             if (fwrite(&omft, sizeof(flv_tag), 1, flv_out) != 1 ||
-                amf_data_write(meta->on_metadata_name, flv_out) < on_metadata_name_size ||
-                amf_data_write(meta->on_metadata, flv_out) < on_metadata_size
+                amf_data_file_write(meta->on_metadata_name, flv_out) < on_metadata_name_size ||
+                amf_data_file_write(meta->on_metadata, flv_out) < on_metadata_size
             ) {
                 free(copy_buffer);
                 return ERROR_WRITE;
@@ -633,8 +633,8 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
                 tag.timestamp_extended = 0;
                 tag.stream_id = uint32_to_uint24_be(0);
                 if (fwrite(&tag, sizeof(flv_tag), 1, flv_out) != 1 ||
-                    amf_data_write(meta->on_last_second_name, flv_out) < on_last_second_name_size ||
-                    amf_data_write(meta->on_last_second, flv_out) < on_last_second_size
+                    amf_data_file_write(meta->on_last_second_name, flv_out) < on_last_second_name_size ||
+                    amf_data_file_write(meta->on_last_second, flv_out) < on_last_second_size
                 ) {
                     free(copy_buffer);
                     return ERROR_WRITE;

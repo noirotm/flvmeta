@@ -1,3 +1,8 @@
+2008-02-17 Marc Noirot <marc.noirot@gmail.com>
+	* amf.c, amf.h, flvmeta.c, flvdump.c: Cleaned up the AMF
+	  serializer/deserializer by using a callback-based mechanism to make
+	  the code backend-independant (backported from the trunk).
+
 2008-01-04 Marc Noirot <marc.noirot@gmail.com>
 	* configure.ac: 1.0.4 Release.
 	

@@ -147,12 +147,12 @@ int main(int argc, char ** argv) {
             body_length -= sizeof(vt);
         }
         else if (ft.type == FLV_TAG_TYPE_META) {
-            amf_data * data = amf_data_read(flv_in);
+            amf_data * data = amf_data_file_read(flv_in);
             size_t data_size = amf_data_size(data);
             printf("* Metadata event name: %s\n", amf_string_get_bytes(data));
             amf_data_free(data);
 
-            data = amf_data_read(flv_in);
+            data = amf_data_file_read(flv_in);
             data_size += amf_data_size(data);
             printf("* Metadata contents: ");
             amf_data_dump(stdout, data, 0);
