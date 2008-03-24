@@ -146,27 +146,6 @@
 				RelativePath=".\config.h">
 			</File>
 			<File
-				RelativePath=".\config.h.win">
-				<FileConfiguration
-					Name="Debug|Win32">
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="Generating config.h..."
-						CommandLine="copy /Y config.h.win config.h
-"
-						Outputs="./config.h"/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32">
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="Generating config.h..."
-						CommandLine="copy /Y config.h.win config.h
-"
-						Outputs="config.h"/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\src\flv.h">
 			</File>
 			<File

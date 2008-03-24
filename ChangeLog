@@ -1,3 +1,15 @@
+2008-03-24 Marc Noirot <marc.noirot@gmail.com>
+	* amf.h, amf.c: Added support for the AMF NULL value type.
+
+	* flvmeta.c (compute_vp6_size, compute_vp6_alpha_size): Fixed
+	  a video size computation bug for the VP60 profile, reported
+	  by zouguangxian@gmail.com.
+
+	* msvc/config.h: Removed automatic generation of config.h and
+	  added it as a simple static file in Windows.
+
+	* flvmeta.c: Added -C, -a, and -p command line options.
+
 2008-02-17 Marc Noirot <marc.noirot@gmail.com>
 	* amf.c, amf.h, flvmeta.c: Cleaned up the AMF serializer/deserializer by
 	  using a callback-based mechanism to make the code backend-independant.

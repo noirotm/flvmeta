@@ -35,16 +35,18 @@
 #define AMF_TYPE_BOOLEAN	        ((byte)0x01)
 #define AMF_TYPE_STRING	            ((byte)0x02)
 #define AMF_TYPE_OBJECT	            ((byte)0x03)
+#define AMF_TYPE_NULL               ((byte)0x05)
 #define AMF_TYPE_UNDEFINED	        ((byte)0x06)
 /* #define AMF_TYPE_REFERENCE	    ((byte)0x07) */
 #define AMF_TYPE_ASSOCIATIVE_ARRAY	((byte)0x08)
+#define AMF_TYPE_END                ((byte)0x09)
 #define AMF_TYPE_ARRAY	            ((byte)0x0A)
 #define AMF_TYPE_DATE	            ((byte)0x0B)
 /* #define AMF_TYPE_SIMPLEOBJECT	((byte)0x0D) */
 #define AMF_TYPE_XML	            ((byte)0x0F)
 #define AMF_TYPE_CLASS	            ((byte)0x10)
 
-#define AMF_TYPE_TERMINATOR         ((byte)0x09)
+
 
 
 /* to make VC++ happy... */
@@ -118,6 +120,8 @@ size_t amf_data_write(amf_data * data, amf_write_proc write_proc, void * user_da
 
 /* generic functions */
 
+/* allocate an AMF data object */
+amf_data * amf_data_new(byte type);
 /* load AMF data from buffer */
 amf_data * amf_data_buffer_read(byte * buffer, size_t maxbytes);
 /* load AMF data from stream */
@@ -164,8 +168,11 @@ amf_node * amf_object_prev(amf_node * node);
 amf_data * amf_object_get_name(amf_node * node);
 amf_data * amf_object_get_data(amf_node * node);
 
+/* null functions */
+#define amf_null_new() amf_data_new(AMF_TYPE_NULL)
+
 /* undefined functions */
-amf_data * amf_undefined_new(void);
+#define amf_undefined_new() amf_data_new(AMF_TYPE_UNDEFINED)
 
 /* associative array functions */
 amf_data * amf_associative_array_new(void);

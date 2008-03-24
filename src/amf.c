@@ -195,6 +195,15 @@ static size_t buffer_write(const void * in_buffer, size_t size, void * user_data
     }
 }
 
+/* allocate an AMF data object */
+amf_data * amf_data_new(byte type) {
+    amf_data * data = (amf_data*)malloc(sizeof(amf_data));
+    if (data != NULL) {
+        data->type = type;
+    }
+    return data;
+}
+
 /* read AMF data from buffer */
 amf_data * amf_data_buffer_read(byte * buffer, size_t maxbytes) {
     buffer_context ctxt;
@@ -399,6 +408,8 @@ amf_data * amf_data_read(amf_read_proc read_proc, void * user_data) {
                 return amf_string_read(read_proc, user_data);
             case AMF_TYPE_OBJECT:
                 return amf_object_read(read_proc, user_data);
+            case AMF_TYPE_NULL:
+                return amf_null_new();
             case AMF_TYPE_UNDEFINED:
                 return amf_undefined_new();
             /*case AMF_TYPE_REFERENCE:*/
@@ -411,7 +422,7 @@ amf_data * amf_data_read(amf_read_proc read_proc, void * user_data) {
             /*case AMF_TYPE_SIMPLEOBJECT:*/
             case AMF_TYPE_XML:
             case AMF_TYPE_CLASS:
-            case AMF_TYPE_TERMINATOR:
+            case AMF_TYPE_END:
                 return NULL; /* end of composite object */
             default:
                 break;
@@ -445,6 +456,7 @@ size_t amf_data_size(amf_data * data) {
                 }
                 s += sizeof(uint16) + sizeof(uint8);
                 break;
+            case AMF_TYPE_NULL:
             case AMF_TYPE_UNDEFINED:
                 break;
             /*case AMF_TYPE_REFERENCE:*/
@@ -472,7 +484,7 @@ size_t amf_data_size(amf_data * data) {
             /*case AMF_TYPE_SIMPLEOBJECT:*/
             case AMF_TYPE_XML:
             case AMF_TYPE_CLASS:
-            case AMF_TYPE_TERMINATOR:
+            case AMF_TYPE_END:
                 break; /* end of composite object */
             default:
                 break;
@@ -511,7 +523,7 @@ static size_t amf_object_write(amf_data * data, amf_write_proc write_proc, void 
     amf_node * node;
     size_t w = 0;
     uint16_be filler = swap_uint16(0);
-    uint8 terminator = AMF_TYPE_TERMINATOR;
+    uint8 terminator = AMF_TYPE_END;
 
     node = amf_object_first(data);
     while (node != NULL) {
@@ -534,7 +546,7 @@ static size_t amf_associative_array_write(amf_data * data, amf_write_proc write_
     size_t w = 0;
     uint32_be s;
     uint16_be filler = swap_uint16(0);
-    uint8 terminator = AMF_TYPE_TERMINATOR;
+    uint8 terminator = AMF_TYPE_END;
 
     s = swap_uint32(data->list_data.size) / 2;
     w += write_proc(&s, sizeof(uint32_be), user_data);
@@ -602,6 +614,7 @@ size_t amf_data_write(amf_data * data, amf_write_proc write_proc, void * user_da
             case AMF_TYPE_OBJECT:
                 s += amf_object_write(data, write_proc, user_data);
                 break;
+            case AMF_TYPE_NULL:
             case AMF_TYPE_UNDEFINED:
                 break;
             /*case AMF_TYPE_REFERENCE:*/
@@ -617,7 +630,7 @@ size_t amf_data_write(amf_data * data, amf_write_proc write_proc, void * user_da
             /*case AMF_TYPE_SIMPLEOBJECT:*/
             case AMF_TYPE_XML:
             case AMF_TYPE_CLASS:
-            case AMF_TYPE_TERMINATOR:
+            case AMF_TYPE_END:
                 break; /* end of composite object */
             default:
                 break;
@@ -628,7 +641,7 @@ size_t amf_data_write(amf_data * data, amf_write_proc write_proc, void * user_da
 
 /* data type */
 byte amf_data_get_type(amf_data * data) {
-    return (data != NULL) ? data->type : AMF_TYPE_UNDEFINED;
+    return (data != NULL) ? data->type : AMF_TYPE_NULL;
 }
 
 /* free AMF data */
@@ -641,6 +654,7 @@ void amf_data_free(amf_data * data) {
                 if (data->string_data.mbstr != NULL) {
                     free(data->string_data.mbstr);
                 } break;
+            case AMF_TYPE_NULL: break;
             case AMF_TYPE_UNDEFINED: break;
             /*case AMF_TYPE_REFERENCE:*/
             case AMF_TYPE_OBJECT:
@@ -686,6 +700,9 @@ void amf_data_dump(FILE * stream, amf_data * data, int indent_level) {
                 }
                 fprintf(stream, "%*s", indent_level*4 + 1, "}");
                 break;
+            case AMF_TYPE_NULL:
+                fprintf(stream, "null");
+                break;
             case AMF_TYPE_UNDEFINED:
                 fprintf(stream, "undefined");
                 break;
@@ -730,9 +747,8 @@ void amf_data_dump(FILE * stream, amf_data * data, int indent_level) {
 
 /* number functions */
 amf_data * amf_number_new(number64 value) {
-    amf_data * data = (amf_data*)malloc(sizeof(amf_data));
+    amf_data * data = amf_data_new(AMF_TYPE_NUMBER);
     if (data != NULL) {
-        data->type = AMF_TYPE_NUMBER;
         data->number_data = value;
     }
     return data;
@@ -750,9 +766,8 @@ void amf_number_set_value(amf_data * data, number64 value) {
 
 /* boolean functions */
 amf_data * amf_boolean_new(uint8 value) {
-    amf_data * data = (amf_data*)malloc(sizeof(amf_data));
+    amf_data * data = amf_data_new(AMF_TYPE_BOOLEAN);
     if (data != NULL) {
-        data->type = AMF_TYPE_BOOLEAN;
         data->boolean_data = value;
     }
     return data;
@@ -770,9 +785,8 @@ void amf_boolean_set_value(amf_data * data, uint8 value) {
 
 /* string functions */
 amf_data * amf_string_new(byte * str, uint16 size) {
-    amf_data * data = (amf_data*)malloc(sizeof(amf_data));
+    amf_data * data = amf_data_new(AMF_TYPE_STRING);
     if (data != NULL) {
-        data->type = AMF_TYPE_STRING;
         data->string_data.size = size;
 
         if (size > 0) {
@@ -781,7 +795,7 @@ amf_data * amf_string_new(byte * str, uint16 size) {
                 memcpy(data->string_data.mbstr, str, size);
             }
             else {
-                free(data);
+                amf_data_free(data);
                 return NULL;
             }
         }
@@ -802,9 +816,8 @@ byte * amf_string_get_bytes(amf_data * data) {
 
 /* object functions */
 amf_data * amf_object_new(void) {
-    amf_data * data = (amf_data*)malloc(sizeof(amf_data));
+    amf_data * data = amf_data_new(AMF_TYPE_OBJECT);
     if (data != NULL) {
-        data->type = AMF_TYPE_OBJECT;
         amf_list_init(&data->list_data);
     }
     return data;
@@ -909,21 +922,10 @@ amf_data * amf_object_get_data(amf_node * node) {
     return NULL;
 }
 
-
-/* undefined functions */
-amf_data * amf_undefined_new(void) {
-    amf_data * data = (amf_data*)malloc(sizeof(amf_data));
-    if (data != NULL) {
-        data->type = AMF_TYPE_UNDEFINED;
-    }
-    return data;
-}
-
 /* associative array functions */
 amf_data * amf_associative_array_new(void) {
-    amf_data * data = (amf_data*)malloc(sizeof(amf_data));
-    if (data != NULL) {
-        data->type = AMF_TYPE_ASSOCIATIVE_ARRAY;
+    amf_data * data = amf_data_new(AMF_TYPE_ASSOCIATIVE_ARRAY);
+    if (data != NULL) { 
         amf_list_init(&data->list_data);
     }
     return data;
@@ -931,9 +933,8 @@ amf_data * amf_associative_array_new(void) {
 
 /* array functions */
 amf_data * amf_array_new(void) {
-    amf_data * data = (amf_data*)malloc(sizeof(amf_data));
+    amf_data * data = amf_data_new(AMF_TYPE_ARRAY);
     if (data != NULL) {
-        data->type = AMF_TYPE_ARRAY;
         amf_list_init(&data->list_data);
     }
     return data;
@@ -989,9 +990,8 @@ amf_data * amf_array_insert_after(amf_data * data, amf_node * node, amf_data * e
 
 /* date functions */
 amf_data * amf_date_new(number64 milliseconds, sint16 timezone) {
-    amf_data * data = (amf_data*)malloc(sizeof(amf_data));
+    amf_data * data = amf_data_new(AMF_TYPE_DATE);
     if (data != NULL) {
-        data->type = AMF_TYPE_DATE;
         data->date_data.milliseconds = milliseconds;
         data->date_data.timezone = timezone;
     }

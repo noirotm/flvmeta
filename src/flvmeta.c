@@ -148,9 +148,12 @@ int compute_screen_size(byte * flv_in, size_t size, flv_info * info) {
     compute On2 VP6 video size
 */
 int compute_vp6_size(byte * flv_in, size_t size, flv_info * info) {
-    if (size >= 5) {
-        info->video_width  = (flv_in[4] << 4) - (flv_in[0] >> 4);
-	    info->video_height = (flv_in[3] << 4) - (flv_in[0] & 0x0f);
+    byte offset;
+    if (size >= 7) {
+        /* two bytes offset if VP6 0 */
+        offset = (flv_in[1] & 0x01 || !(flv_in[2] & 0x06)) << 1;
+        info->video_width  = (flv_in[4 + offset] << 4) - (flv_in[0] >> 4);
+        info->video_height = (flv_in[3 + offset] << 4) - (flv_in[0] & 0x0f);
         return OK;
     }
     else {
@@ -162,9 +165,12 @@ int compute_vp6_size(byte * flv_in, size_t size, flv_info * info) {
     compute On2 VP6 with Alpha video size
 */
 int compute_vp6_alpha_size(byte * flv_in, size_t size, flv_info * info) {
-    if (size >= 8) {
-        info->video_width  = (flv_in[7] << 4) - (flv_in[0] >> 4);
-	    info->video_height = (flv_in[6] << 4) - (flv_in[0] & 0x0f);
+    byte offset;
+    if (size >= 10) {
+        /* two bytes offset if VP6 0 */
+        offset = (flv_in[4] & 0x01 || !(flv_in[5] & 0x06)) << 1;
+        info->video_width  = (flv_in[7 + offset] << 4) - (flv_in[0] >> 4);
+        info->video_height = (flv_in[6 + offset] << 4) - (flv_in[0] & 0x0f);
         return OK;
     }
     else {
@@ -257,7 +263,7 @@ int get_flv_info(byte * flv_in, size_t in_size, flv_info * info) {
     }
 
     if (((flv_header*)in_ptr)->signature[0] != 'F' ||
-        ((flv_header*)in_ptr)->signature[1] != 'L' || 
+        ((flv_header*)in_ptr)->signature[1] != 'L' ||
         ((flv_header*)in_ptr)->signature[2] != 'V') {
         return ERROR_NO_FLV;
     }
@@ -292,7 +298,7 @@ int get_flv_info(byte * flv_in, size_t in_size, flv_info * info) {
             return ERROR_EOF;
         }
 
-        info->last_timestamp = timestamp;        
+        info->last_timestamp = timestamp;
 
         if (ft->type == FLV_TAG_TYPE_META) {
             amf_data * tag_name = amf_data_buffer_read(in_ptr, (size_t)body_length);
@@ -372,7 +378,7 @@ int get_flv_info(byte * flv_in, size_t in_size, flv_info * info) {
         }
         else if (ft->type == FLV_TAG_TYPE_AUDIO) {
             flv_audio_tag at = *(in_ptr);
-            
+
             if (info->have_audio != 1) {
                 info->have_audio = 1;
                 info->audio_codec = flv_audio_tag_sound_format(at);
@@ -430,14 +436,14 @@ void compute_metadata(flv_info * info, flv_metadata * meta) {
 
     number64 video_data_rate = ((info->real_video_data_size / 1024.0) * 8.0) / duration;
     amf_associative_array_add(meta->on_metadata, amf_str("videodatarate"), amf_number_new(video_data_rate));
-    
+
     number64 framerate = info->video_frames_number / duration;
     amf_associative_array_add(meta->on_metadata, amf_str("framerate"), amf_number_new(framerate));
 
     if (info->have_audio) {
         number64 audio_data_rate = ((info->real_audio_data_size / 1024.0) * 8.0) / duration;
         amf_associative_array_add(meta->on_metadata, amf_str("audiodatarate"), amf_number_new(audio_data_rate));
-        
+
         number64 audio_khz = 0.0;
         switch (info->audio_rate) {
             case FLV_AUDIO_TAG_SOUND_RATE_5_5: audio_khz = 5500.0; break;
@@ -535,7 +541,7 @@ int write_flv(byte * flv_in, size_t in_size, FILE * flv_out, const flv_info * in
     uint32 on_metadata_name_size;
     uint32 on_metadata_size;
     byte * in_ptr = flv_in;
-    
+
     /* write the flv header */
     if (fwrite(in_ptr, sizeof(flv_header), 1, flv_out) != 1) {
         return ERROR_WRITE;
@@ -584,7 +590,7 @@ int write_flv(byte * flv_in, size_t in_size, FILE * flv_out, const flv_info * in
     else {
         duration = info->last_timestamp + info->video_frame_duration;
     }
-    
+
     /* copy the tags verbatim */
     int have_on_last_second = 0;
     while (in_ptr < flv_in + in_size) {
@@ -594,7 +600,7 @@ int write_flv(byte * flv_in, size_t in_size, FILE * flv_out, const flv_info * in
         if (in_ptr + sizeof(flv_tag) > flv_in + in_size) {
             break;
         }
-        
+
         flv_tag * pft = (flv_tag*)in_ptr;
 
         body_length = uint24_be_to_uint32(pft->body_length);
@@ -654,7 +660,7 @@ int write_flv(byte * flv_in, size_t in_size, FILE * flv_out, const flv_info * in
             if (fwrite(in_ptr, total_size, 1, flv_out) != 1) {
                 return ERROR_WRITE;
             }
-            
+
             /* previous tag length */
             size = swap_uint32(total_size);
             if (fwrite(&size, sizeof(uint32_be), 1, flv_out) != 1) {
@@ -702,7 +708,7 @@ int inject_metadata(const char * in_file, const char * out_file) {
 
     /* debug */
     /* amf_data_dump(stderr, meta.on_metadata, 0); */
-    
+
     /*
         open output file
     */
@@ -715,12 +721,12 @@ int inject_metadata(const char * in_file, const char * out_file) {
         amf_data_free(meta.on_metadata);
         return ERROR_OPEN_WRITE;
     }
-    
+
     /*
         write the output file
     */
     res = write_flv(flv_in, in_file_info.st_size, flv_out, &info, &meta);
-    
+
     fclose(flv_out);
     munmap(flv_in, in_file_info.st_size);
     amf_data_free(meta.on_last_second_name);
@@ -740,12 +746,15 @@ void usage(void) {
     fprintf(stderr, "\nCommands:\n");
     fprintf(stderr, " -D, --dump                dump onMetaData tag (default)\n");
     fprintf(stderr, " -F, --full-dump           dump all tags\n");
+    fprintf(stderr, " -C, --check               check the validity of the input file\n");
     fprintf(stderr, " -U, --update              update FILE with computed onMetaData tag\n");
     fprintf(stderr, "\nOutput control:\n");
     fprintf(stderr, " -o, --out=FILE            specify the output file name\n");
+    fprintf(stderr, " -a, --add=NAME=VALUE      add a metadata string value to the output file\n");
     fprintf(stderr, " -n, --no-lastsecond       do not create the onLastSecond tag\n");
+    fprintf(stderr, " -p, --preserve            preserve metadata tags from the input file\n");
     fprintf(stderr, " -f, --dump-format=TYPE    dump format is of type TYPE\n");
-    fprintf(stderr, "                           TYPE is 'xml' (default), 'json', or 'yaml'.\n");
+    fprintf(stderr, "                           TYPE is 'xml' (default), 'json', or 'yaml'\n");
     fprintf(stderr, " -j, --json                equivalent to --dump-format=json\n");
     fprintf(stderr, " -y, --yaml                equivalent to --dump-format=yaml\n");
     fprintf(stderr, " -x, --xml                 equivalent to --dump-format=xml\n");
@@ -755,7 +764,7 @@ void usage(void) {
     fprintf(stderr, "\nMiscellaneous:\n");
     fprintf(stderr, " -V, --version             print version information and exit\n");
     fprintf(stderr, " -h, --help                display this help and exit\n");
-    fprintf(stderr, "\nPlease report bugs to <%s>\n\n", PACKAGE_BUGREPORT);
+    fprintf(stderr, "\nPlease report bugs to <%s>\n", PACKAGE_BUGREPORT);
 }
 
 int main(int argc, char ** argv) {
@@ -770,6 +779,7 @@ int main(int argc, char ** argv) {
         { "full-dump",     1, 0, 0},
         { "update",        1, 0, 0},
         { "out",           1, 0, 0},
+        { "add",           1, 0, 0},
         { "no-lastsecond", 1, 0, 0},
         { "dump-format",   1, 0, 0},
         { "json",          1, 0, 0},
@@ -782,7 +792,6 @@ int main(int argc, char ** argv) {
         { 0, 0, 0, 0 }
     };
 
-
     int c;
     while (1) {
         c = getopt_long (argc, argv, "abc:d:012", long_options, &option_index);
@@ -791,9 +800,9 @@ int main(int argc, char ** argv) {
             break;
         }
     }
-    
+
     if (!strcmp(argv[1], argv[2])) {
-    	fprintf(stderr, "Error: input file and output file must be different.\n\n");
+        fprintf(stderr, "Error: input file and output file must be different.\n\n");
     }
 
     int errcode = inject_metadata(argv[1], argv[2]);

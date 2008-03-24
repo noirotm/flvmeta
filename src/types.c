@@ -58,6 +58,6 @@ uint24_be uint32_to_uint24_be(uint32 l) {
     r.b0 = (uint8)((l & 0x00FF0000U) >> 16);
     r.b1 = (uint8)((l & 0x0000FF00U) >> 8);
     r.b2 = (uint8) (l & 0x000000FFU);
-#endif
+#endif /* WORDS_BIGENDIAN */
     return r;
 }
