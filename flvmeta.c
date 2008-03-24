@@ -144,11 +144,13 @@ size_t compute_screen_size(FILE * flv_in, flv_info * info) {
     compute On2 VP6 video size
 */
 size_t compute_vp6_size(FILE * flv_in, flv_info * info) {
-    byte header[5];
-    size_t bytes_read = fread(header, 1, 5, flv_in);
-    if (bytes_read == 5) {
-        info->video_width  = (header[4] << 4) - (header[0] >> 4);
-	    info->video_height = (header[3] << 4) - (header[0] & 0x0f);
+    byte header[7], offset;
+    size_t bytes_read = fread(header, 1, 7, flv_in);
+    if (bytes_read == 7) {
+        /* two bytes offset if VP6 0 */
+        offset = (header[1] & 0x01 || !(header[2] & 0x06)) << 1;
+        info->video_width  = (header[4 + offset] << 4) - (header[0] >> 4);
+        info->video_height = (header[3 + offset] << 4) - (header[0] & 0x0f);
     }
     return bytes_read;
 }
@@ -157,11 +159,13 @@ size_t compute_vp6_size(FILE * flv_in, flv_info * info) {
     compute On2 VP6 with Alpha video size
 */
 size_t compute_vp6_alpha_size(FILE * flv_in, flv_info * info) {
-    byte header[8];
-    size_t bytes_read = fread(header, 1, 8, flv_in);
-    if (bytes_read == 8) {
-        info->video_width  = (header[7] << 4) - (header[0] >> 4);
-	    info->video_height = (header[6] << 4) - (header[0] & 0x0f);
+    byte header[10], offset;
+    size_t bytes_read = fread(header, 1, 10, flv_in);
+    if (bytes_read == 10) {
+        /* two bytes offset if VP6 0 */
+        offset = (header[4] & 0x01 || !(header[5] & 0x06)) << 1;
+        info->video_width  = (header[7 + offset] << 4) - (header[0] >> 4);
+        info->video_height = (header[6 + offset] << 4) - (header[0] & 0x0f);
     }
     return bytes_read;
 }
@@ -742,7 +746,7 @@ int main(int argc, char ** argv) {
     }
     
     if (!strcmp(argv[1], argv[2])) {
-    	fprintf(stderr, "Error: input file and output file must be different.\n\n");
+        fprintf(stderr, "Error: input file and output file must be different.\n\n");
     }
 
     int errcode = inject_metadata(argv[1], argv[2]);
