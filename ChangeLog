@@ -1,3 +1,6 @@
+2008-04-02 Marc Noirot <marc.noirot@gmail.com>
+	* configure.ac: 1.0.5 Release.
+
 2008-03-24 Marc Noirot <marc.noirot@gmail.com>
 	* amf.h, amf.c: Added support for the AMF NULL value type.
 

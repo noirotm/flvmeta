@@ -1,3 +1,9 @@
+Version 1.0.5
+  - Bug fix release.
+  - Fixed a bug in the video size detection for VP60.
+  - Added support for the AMF NULL type.
+  - Simplified the AMF parser/writer.
+
 Version 1.0.4
   - Bug fix release.
   - Fixed a bug where some data tags wouldn't be written.
