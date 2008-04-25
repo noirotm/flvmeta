@@ -8,8 +8,12 @@ AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
 AC_LANG([C])
 
+# Checks for check.
+PKG_CHECK_MODULES([CHECK], [check >= 0.9.4])
+
 # Checks for programs.
 AC_PROG_CC
+AM_PROG_CC_C_O
 
 # Checks for libraries.
 
@@ -35,5 +39,5 @@ AC_FUNC_MALLOC
 AC_FUNC_STRFTIME
 AC_CHECK_FUNCS([tzset])
 
-AC_CONFIG_FILES([Makefile src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile tests/Makefile])
 AC_OUTPUT
