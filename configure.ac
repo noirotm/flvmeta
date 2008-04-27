@@ -1,5 +1,5 @@
-# -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
+dnl -*- Autoconf -*-
+dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
 AC_INIT(flvmeta, 1.1-dev, flvmeta-discussion@googlegroups.com)
@@ -8,19 +8,21 @@ AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
 AC_LANG([C])
 
-# Checks for check.
-PKG_CHECK_MODULES([CHECK], [check >= 0.9.4])
-
-# Checks for programs.
+dnl Checks for programs.
 AC_PROG_CC
 AM_PROG_CC_C_O
 
-# Checks for libraries.
+dnl Checks for check.
+PKG_CHECK_MODULES([CHECK], [check >= 0.9.4],
+  [have_check=yes],
+  [have_check=no]
+)
+AM_CONDITIONAL([MAKE_TESTS], [test x$have_check = xyes])
 
-# Checks for header files.
+dnl Checks for header files.
 AC_CHECK_HEADERS([stdlib.h stdio.h string.h])
 
-# Checks for typedefs, structures, and compiler characteristics.
+dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_BIGENDIAN
 AC_TYPE_SIZE_T
@@ -34,10 +36,15 @@ AC_CHECK_SIZEOF([float])
 AC_CHECK_SIZEOF([double])
 AC_CHECK_SIZEOF([long double])
 
-# Checks for library functions.
+dnl Checks for library functions.
 AC_FUNC_MALLOC
 AC_FUNC_STRFTIME
 AC_CHECK_FUNCS([tzset])
 
-AC_CONFIG_FILES([Makefile src/Makefile tests/Makefile])
+dnl Output files
+AC_CONFIG_FILES([ 
+Makefile
+src/Makefile
+tests/Makefile
+])
 AC_OUTPUT

@@ -1,3 +1,14 @@
+2008-04-27 Marc Noirot <marc.noirot@gmail.com>
+	* amf.h, amf.c (amf_str): Transformed the macro into a function for better
+	  type safety and arguments sanity checks.
+
+	* amf.c: Fixed AMF string initialization bugs.
+
+	* check_amf.c: Added tests for AMF numbers, booleans and strings.
+
+	* configure.ac, tests/Makefile.am: Added tests if the machine has
+	  check (http://check.sourceforge.net/) installed.
+
 2008-03-24 Marc Noirot <marc.noirot@gmail.com>
 	* amf.h, amf.c: Added support for the AMF NULL value type.
 

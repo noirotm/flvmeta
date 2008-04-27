@@ -151,9 +151,9 @@ void       amf_boolean_set_value(amf_data * data, uint8 value);
 
 /* string functions */
 amf_data * amf_string_new(byte * str, uint16 size);
+amf_data * amf_str(char * str);
 uint16     amf_string_get_size(amf_data * data);
 byte *     amf_string_get_bytes(amf_data * data);
-#define amf_str(str) amf_string_new((byte*)(str), (uint16)strlen(str))
 
 /* object functions */
 amf_data * amf_object_new(void);

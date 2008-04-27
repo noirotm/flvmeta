@@ -1,5 +1,7 @@
-TESTS = check_amf
-check_PROGRAMS = check_amf
-check_amf_SOURCES = check_amf.c $(top_builddir)/src/amf.h 
-check_amf_CFLAGS = @CHECK_CFLAGS@
-check_amf_LDADD = @CHECK_LIBS@ $(top_builddir)/src/amf.o $(top_builddir)/src/types.o
+if MAKE_TESTS
+  TESTS = check_flvmeta
+  check_PROGRAMS = check_flvmeta
+  check_flvmeta_SOURCES = check_amf.c $(top_srcdir)/src/amf.h
+  check_flvmeta_CFLAGS = -I$(top_srcdir)/src @CHECK_CFLAGS@
+  check_flvmeta_LDADD = @CHECK_LIBS@ $(top_builddir)/src/amf.o $(top_builddir)/src/types.o
+endif

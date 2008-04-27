@@ -170,7 +170,7 @@ static size_t buffer_read(void * out_buffer, size_t size, void * user_data) {
     buffer_context * ctxt = (buffer_context *)user_data;
     if (ctxt->current_address >= ctxt->start_address &&
         ctxt->current_address + size <= ctxt->start_address + ctxt->buffer_size) {
-        
+
         memcpy(out_buffer, ctxt->current_address, size);
         ctxt->current_address += size;
         return size;
@@ -185,7 +185,7 @@ static size_t buffer_write(const void * in_buffer, size_t size, void * user_data
     buffer_context * ctxt = (buffer_context *)user_data;
     if (ctxt->current_address >= ctxt->start_address &&
         ctxt->current_address + size <= ctxt->start_address + ctxt->buffer_size) {
-        
+
         memcpy(ctxt->current_address, in_buffer, size);
         ctxt->current_address += size;
         return size;
@@ -508,13 +508,13 @@ static size_t amf_boolean_write(amf_data * data, amf_write_proc write_proc, void
 static size_t amf_string_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
     uint16 s;
     size_t w = 0;
-    
+
     s = swap_uint16(data->string_data.size);
     w = write_proc(&s, sizeof(uint16_be), user_data);
     if (data->string_data.size > 0) {
         w += write_proc(data->string_data.mbstr, (size_t)(data->string_data.size), user_data);
     }
-    
+
     return w;
 }
 
@@ -531,7 +531,7 @@ static size_t amf_object_write(amf_data * data, amf_write_proc write_proc, void 
         w += amf_data_write(amf_object_get_data(node), write_proc, user_data);
         node = amf_object_next(node);
     }
-    
+
     /* empty string is the last element */
     w += write_proc(&filler, sizeof(uint16_be), user_data);
     /* an object ends with 0x09 */
@@ -556,7 +556,7 @@ static size_t amf_associative_array_write(amf_data * data, amf_write_proc write_
         w += amf_data_write(amf_associative_array_get_data(node), write_proc, user_data);
         node = amf_associative_array_next(node);
     }
-    
+
     /* empty string is the last element */
     w += write_proc(&filler, sizeof(uint16_be), user_data);
     /* an object ends with 0x09 */
@@ -587,7 +587,7 @@ static size_t amf_date_write(amf_data * data, amf_write_proc write_proc, void * 
     size_t w = 0;
     number64_be milli;
     sint16_be tz;
-    
+
     milli = swap_number64(data->date_data.milliseconds);
     w += write_proc(&milli, sizeof(number64_be), user_data);
     tz = swap_sint16(data->date_data.timezone);
@@ -650,7 +650,7 @@ void amf_data_free(amf_data * data) {
         switch (data->type) {
             case AMF_TYPE_NUMBER: break;
             case AMF_TYPE_BOOLEAN: break;
-            case AMF_TYPE_STRING: 
+            case AMF_TYPE_STRING:
                 if (data->string_data.mbstr != NULL) {
                     free(data->string_data.mbstr);
                 } break;
@@ -789,7 +789,7 @@ amf_data * amf_string_new(byte * str, uint16 size) {
     if (data != NULL) {
         data->string_data.size = size;
 
-        if (size > 0) {
+        if (str != NULL && size > 0) {
             data->string_data.mbstr = (byte*)calloc(size+1, sizeof(byte));
             if (data->string_data.mbstr != NULL) {
                 memcpy(data->string_data.mbstr, str, size);
@@ -800,10 +800,15 @@ amf_data * amf_string_new(byte * str, uint16 size) {
             }
         }
         else {
+            data->string_data.size = 0;
             data->string_data.mbstr = NULL;
         }
     }
     return data;
+}
+
+amf_data * amf_str(char * str) {
+    return amf_string_new((byte *)str, (uint16)(str != NULL ? strlen(str) : 0));
 }
 
 uint16 amf_string_get_size(amf_data * data) {
@@ -925,7 +930,7 @@ amf_data * amf_object_get_data(amf_node * node) {
 /* associative array functions */
 amf_data * amf_associative_array_new(void) {
     amf_data * data = amf_data_new(AMF_TYPE_ASSOCIATIVE_ARRAY);
-    if (data != NULL) { 
+    if (data != NULL) {
         amf_list_init(&data->list_data);
     }
     return data;
