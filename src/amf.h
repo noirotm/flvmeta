@@ -46,10 +46,6 @@
 #define AMF_TYPE_XML	            ((byte)0x0F)
 #define AMF_TYPE_CLASS	            ((byte)0x10)
 
-
-
-
-/* to make VC++ happy... */
 typedef struct __amf_node * p_amf_node;
 
 /* string type */

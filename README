@@ -1,9 +1,8 @@
 This is FLVmeta, a metadata injector for Adobe(r) FLV video files.
 
-The package contains two programs:
-- flvdump, an utility to print all informations about an input FLV file,
-- flvmeta, an utility to inject an onMetaData event in FLV files, as well as
-the onLastSecond event.
+The package contains an utility, flvmeta, to inject an onMetaData event in FLV
+files, as well as the onLastSecond event, and to print all informations about
+an input FLV file.
 
 The flvmeta utility is able to compute almost all known metadata tags,
 including the keyframes list.

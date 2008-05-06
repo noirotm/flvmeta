@@ -2,22 +2,22 @@ dnl -*- Autoconf -*-
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(flvmeta, 1.1-dev, flvmeta-discussion@googlegroups.com)
-AC_CONFIG_SRCDIR([src/flvmeta.c])
+AC_INIT([flvmeta], [1.1-dev], [flvmeta-discussion@googlegroups.com])
+AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
 AC_LANG([C])
 
 dnl Checks for programs.
 AC_PROG_CC
-AM_PROG_CC_C_O
+AC_PROG_CC_C_O
 
 dnl Checks for check.
 PKG_CHECK_MODULES([CHECK], [check >= 0.9.4],
   [have_check=yes],
   [have_check=no]
 )
-AM_CONDITIONAL([MAKE_TESTS], [test x$have_check = xyes])
+AM_CONDITIONAL([MAKE_TESTS], [test "$have_check" = yes])
 
 dnl Checks for header files.
 AC_CHECK_HEADERS([stdlib.h stdio.h string.h])

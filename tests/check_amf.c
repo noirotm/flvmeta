@@ -34,18 +34,16 @@ END_TEST
 
 START_TEST(test_amf_number_set_value) {
     amf_number_set_value(data, -512.78);
+    
     fail_unless(amf_number_get_value(data) == -512.78,
         "invalid data value: expected -512.78, got %f", amf_number_get_value(data));
 }
 END_TEST
 
-START_TEST(test_amf_number_get_value_null) {
+START_TEST(test_amf_number_null) {
     fail_unless(amf_number_get_value(NULL) == 0,
-        "invalid data value: expected 0, got %f", amf_number_get_value(data));
-}
-END_TEST
-
-START_TEST(test_amf_number_set_value_null) {
+        "invalid data value: expected 0, got %f", amf_number_get_value(NULL));
+    
     /* just making sure we don't core dump */
     amf_number_set_value(NULL, 12);
 }
@@ -81,13 +79,10 @@ START_TEST(test_amf_boolean_set_value) {
 }
 END_TEST
 
-START_TEST(test_amf_boolean_get_value_null) {
+START_TEST(test_amf_boolean_null) {
     fail_unless(amf_boolean_get_value(NULL) == 0,
         "invalid data value: expected 0, got %d", amf_boolean_get_value(data));
-}
-END_TEST
 
-START_TEST(test_amf_boolean_set_value_null) {
     /* just making sure we don't core dump */
     amf_boolean_set_value(NULL, 12);
 }
@@ -159,13 +154,10 @@ START_TEST(test_amf_string_new_null) {
 }
 END_TEST
 
-START_TEST(test_amf_string_get_size_null) {
+START_TEST(test_amf_string_null) {
     fail_unless(amf_string_get_size(NULL) == 0,
         "invalid string length: expected 0, got %f", amf_string_get_size(data));
-}
-END_TEST
 
-START_TEST(test_amf_string_get_bytes_null) {
     fail_unless(amf_string_get_bytes(NULL) == NULL,
         "string data should be NULL");
 }
@@ -182,8 +174,7 @@ Suite * amf_types_suite(void) {
     tcase_add_checked_fixture(tc_number, setup_amf_number, teardown);
     tcase_add_test(tc_number, test_amf_number_new);
     tcase_add_test(tc_number, test_amf_number_set_value);
-    tcase_add_test(tc_number, test_amf_number_get_value_null);
-    tcase_add_test(tc_number, test_amf_number_set_value_null);
+    tcase_add_test(tc_number, test_amf_number_null);
     suite_add_tcase(s, tc_number);
     
     /* AMF boolean test case */
@@ -191,8 +182,7 @@ Suite * amf_types_suite(void) {
     tcase_add_checked_fixture(tc_boolean, setup_amf_boolean, teardown);
     tcase_add_test(tc_boolean, test_amf_boolean_new);
     tcase_add_test(tc_boolean, test_amf_boolean_set_value);
-    tcase_add_test(tc_boolean, test_amf_boolean_get_value_null);
-    tcase_add_test(tc_boolean, test_amf_boolean_set_value_null);
+    tcase_add_test(tc_boolean, test_amf_boolean_null);
     suite_add_tcase(s, tc_boolean);
    
     /* AMF string test case */
@@ -201,8 +191,7 @@ Suite * amf_types_suite(void) {
     tcase_add_test(tc_string, test_amf_str_null);
     tcase_add_test(tc_string, test_amf_string_new);
     tcase_add_test(tc_string, test_amf_string_new_null);
-    tcase_add_test(tc_string, test_amf_string_get_size_null);
-    tcase_add_test(tc_string, test_amf_string_get_bytes_null);
+    tcase_add_test(tc_string, test_amf_string_null);
     suite_add_tcase(s, tc_string);
 
     return s;
@@ -211,11 +200,10 @@ Suite * amf_types_suite(void) {
 int main(void) {
     int number_failed;
     SRunner * sr = srunner_create(amf_types_suite());
-    srunner_set_log (sr, "check_amf.log");
+    /* srunner_set_log (sr, "check_amf.log"); */
     srunner_run_all(sr, CK_NORMAL);
     number_failed = srunner_ntests_failed(sr);
     srunner_free(sr);
     
     return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
-

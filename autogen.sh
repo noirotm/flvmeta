@@ -4,5 +4,5 @@ if aclocal && autoheader && automake -a && autoconf; then
 else
   echo
   echo "An error occured."
-exit 1
+  exit 1
 fi

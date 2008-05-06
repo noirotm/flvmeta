@@ -66,21 +66,21 @@ extern "C" {
 
 #ifdef WORDS_BIGENDIAN
 
-#define swap_uint16(x) (x)
-#define swap_sint16(x) (x)
-#define swap_uint32(x) (x)
-#define swap_number64(x) (x)
+#  define swap_uint16(x) (x)
+#  define swap_sint16(x) (x)
+#  define swap_uint32(x) (x)
+#  define swap_number64(x) (x)
 
 /* convert big endian 24 bits integers to native integers */
-#define uint24_be_to_uint32(x) (((x).b2 << 16) | ((x).b1 << 8) | (x).b0)
+#  define uint24_be_to_uint32(x) (((x).b2 << 16) | ((x).b1 << 8) | (x).b0)
 
 #else /* WORDS_BIGENDIAN */
 /* swap 16 bits integers */
-#define swap_uint16(x) ((((x) & 0x00FFU) << 8) | (((x) & 0xFF00U) >> 8))
-#define swap_sint16(x) ((((x) & 0x00FF) << 8) | (((x) & 0xFF00) >> 8))
+#  define swap_uint16(x) ((((x) & 0x00FFU) << 8) | (((x) & 0xFF00U) >> 8))
+#  define swap_sint16(x) ((((x) & 0x00FF) << 8) | (((x) & 0xFF00) >> 8))
 
 /* swap 32 bits integers */
-#define swap_uint32(x) ((((x) & 0x000000FFU) << 24) | \
+#  define swap_uint32(x) ((((x) & 0x000000FFU) << 24) | \
     (((x) & 0x0000FF00U) << 8)  | \
     (((x) & 0x00FF0000U) >> 8)  | \
     (((x) & 0xFF000000U) >> 24))
@@ -89,7 +89,7 @@ extern "C" {
 number64 swap_number64(number64);
 
 /* convert big endian 24 bits integers to native integers */
-#define uint24_be_to_uint32(x) (((x).b0 << 16) | ((x).b1 << 8) | (x).b2)
+#  define uint24_be_to_uint32(x) (((x).b0 << 16) | ((x).b1 << 8) | (x).b2)
 
 #endif /* WORDS_BIGENDIAN */
 
