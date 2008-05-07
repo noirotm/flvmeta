@@ -10,7 +10,7 @@ AC_LANG([C])
 
 dnl Checks for programs.
 AC_PROG_CC
-AC_PROG_CC_C_O
+AM_PROG_CC_C_O
 
 dnl Checks for check.
 PKG_CHECK_MODULES([CHECK], [check >= 0.9.4],
