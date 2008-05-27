@@ -1,3 +1,18 @@
+2008-05-28 Marc Noirot <marc.noirot@gmail.com>
+	* configure.ac: 1.0.6 Release.
+
+	* amf.h, amf.c (amf_str): amf_str was transformed from a macro into
+	  a function for better sanity checks.
+
+	* amf.c (amf_string_read): Avoided allocating an empty buffer for
+	  zero-length strings.
+
+	* amf.c (amf_string_new): Avoided copying null strings into newly-created
+	  AMF strings.
+
+	* amf.c (amf_data_dump): Fixed a bug where zero-length strings would
+	  cause fprintf to segfault flvdump in Linux.
+
 2008-04-02 Marc Noirot <marc.noirot@gmail.com>
 	* configure.ac: 1.0.5 Release.
 

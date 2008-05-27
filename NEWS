@@ -1,3 +1,8 @@
+Version 1.0.6
+  - Bug fix release.
+  - Fixed a flvdump crash under Linux caused by incorrect string
+    handling.
+
 Version 1.0.5
   - Bug fix release.
   - Fixed a bug in the video size detection for VP60.
