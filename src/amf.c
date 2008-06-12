@@ -264,11 +264,16 @@ static amf_data * amf_string_read(amf_read_proc read_proc, void * user_data) {
     byte * buffer;
     if (read_proc(&strsize, sizeof(uint16_be), user_data) == sizeof(uint16_be)) {
         strsize = swap_uint16(strsize);
-        buffer = (byte*)calloc(strsize, sizeof(byte));
-        if (buffer != NULL && read_proc(buffer, strsize, user_data) == strsize) {
-            amf_data * data = amf_string_new(buffer, strsize);
-            free(buffer);
-            return data;
+        if (strsize > 0) {
+            buffer = (byte*)calloc(strsize, sizeof(byte));
+            if (buffer != NULL && read_proc(buffer, strsize, user_data) == strsize) {
+                amf_data * data = amf_string_new(buffer, strsize);
+                free(buffer);
+                return data;
+            }
+        }
+        else {
+            return amf_string_new(NULL, 0);
         }
     }
     return NULL;
@@ -685,7 +690,7 @@ void amf_data_dump(FILE * stream, amf_data * data, int indent_level) {
                 fprintf(stream, "%s", (data->boolean_data) ? "true" : "false");
                 break;
             case AMF_TYPE_STRING:
-                fprintf(stream, "%s", data->string_data.mbstr);
+                fprintf(stream, "\'%.*s\'", data->string_data.size, data->string_data.mbstr);
                 break;
             case AMF_TYPE_OBJECT:
                 node = amf_object_first(data);

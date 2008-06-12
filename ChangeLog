@@ -1,8 +1,16 @@
+2008-06-12 Marc Noirot <marc.noirot@gmail.com>
+	* amf.c (amf_string_read): Avoided allocating an empty buffer for
+	  zero-length strings.
+
+	* amf.c (amf_data_dump): Fixed a bug where zero-length strings would
+	  cause fprintf to segfault flvdump in Linux.
+
 2008-04-27 Marc Noirot <marc.noirot@gmail.com>
 	* amf.h, amf.c (amf_str): Transformed the macro into a function for better
 	  type safety and arguments sanity checks.
 
-	* amf.c: Fixed AMF string initialization bugs.
+	* amf.c (amf_string_new): Avoided copying null strings into newly-created
+	  AMF strings.
 
 	* check_amf.c: Added tests for AMF numbers, booleans and strings.
 
