@@ -2,3 +2,4 @@ I would like to thank the following contributors:
 
 Eric Priou <erixtekila@gmail.com> - support and MacOSX builds
 Zou Guangxian <zouguangxian@gmail.com> - VP60 related bug fix
+Raphael Prevost <jaguarwan@gmail.com> - Win32 mmap compatibility layer
