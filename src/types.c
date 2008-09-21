@@ -45,19 +45,13 @@ number64 swap_number64(number64 n) {
            ((c.i & 0xFF00000000000000ULL) >> 56));
     return c.f;
 }
-#endif /* !WORDS_BIGENDIAN */
+#endif /* !defined WORDS_BIGENDIAN */
 
 /* convert native integers into 24 bits big endian integers */
 uint24_be uint32_to_uint24_be(uint32 l) {
     uint24_be r;
-#ifdef WORDS_BIGENDIAN
-    r.b0 = (uint8) (l & 0x000000FFU);
-    r.b1 = (uint8)((l & 0x0000FF00U) >> 8);
-    r.b2 = (uint8)((l & 0x00FF0000U) >> 16);
-#else
     r.b0 = (uint8)((l & 0x00FF0000U) >> 16);
     r.b1 = (uint8)((l & 0x0000FF00U) >> 8);
     r.b2 = (uint8) (l & 0x000000FFU);
-#endif /* WORDS_BIGENDIAN */
     return r;
 }
