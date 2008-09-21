@@ -17,4 +17,3 @@ int main(void) {
 
     return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
-

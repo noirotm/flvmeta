@@ -224,4 +224,3 @@ Suite * flv_suite(void) {
     suite_add_tcase(s, tc_flv_tag);
     return s;
 }
-

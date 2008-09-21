@@ -196,4 +196,3 @@ Suite * amf_types_suite(void) {
 
     return s;
 }
-
