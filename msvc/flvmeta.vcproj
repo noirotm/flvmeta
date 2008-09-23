@@ -120,6 +120,9 @@
 				RelativePath="..\src\amf.c">
 			</File>
 			<File
+				RelativePath="..\src\flv.c">
+			</File>
+			<File
 				RelativePath="..\src\flvmeta.c">
 			</File>
 			<File
