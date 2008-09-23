@@ -120,6 +120,9 @@
 				RelativePath=".\amf.c">
 			</File>
 			<File
+				RelativePath=".\flv.c">
+			</File>
+			<File
 				RelativePath=".\flvmeta.c">
 			</File>
 			<File
@@ -143,7 +146,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Generating config.h..."
-						CommandLine="copy /Y config.h.win config.h"
+						CommandLine="copy /Y config.h.win config.h
+"
 						Outputs="./config.h"/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -151,7 +155,8 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Generating config.h..."
-						CommandLine="copy /Y config.h.win config.h"
+						CommandLine="copy /Y config.h.win config.h
+"
 						Outputs="config.h"/>
 				</FileConfiguration>
 			</File>

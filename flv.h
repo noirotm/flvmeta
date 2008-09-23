@@ -60,23 +60,34 @@ typedef struct __flv_tag {
     /* body comes next */
 } flv_tag;
 
+#define flv_tag_get_timestamp(tag) \
+    (uint24_be_to_uint32((tag).timestamp) + ((tag).timestamp_extended << 24))
+
 /* audio tag */
 #define FLV_AUDIO_TAG_SOUND_TYPE_MONO    0
 #define FLV_AUDIO_TAG_SOUND_TYPE_STEREO  1
 
 #define FLV_AUDIO_TAG_SOUND_SIZE_8       0
-#define FLV_AUDIO_TAG_SOUND_SIZE_16      1 /* unofficial spec says 2 but it's not possible since it's one bit */
+#define FLV_AUDIO_TAG_SOUND_SIZE_16      1
 
 #define FLV_AUDIO_TAG_SOUND_RATE_5_5     0
 #define FLV_AUDIO_TAG_SOUND_RATE_11      1
 #define FLV_AUDIO_TAG_SOUND_RATE_22      2
 #define FLV_AUDIO_TAG_SOUND_RATE_44      3
 
-#define FLV_AUDIO_TAG_SOUND_FORMAT_UNCOMPRESSED      0
-#define FLV_AUDIO_TAG_SOUND_FORMAT_ADPCM             1
-#define FLV_AUDIO_TAG_SOUND_FORMAT_MP3               2
-#define FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER8MONO   5
-#define FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER        6
+#define FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM          0
+#define FLV_AUDIO_TAG_SOUND_FORMAT_ADPCM               1
+#define FLV_AUDIO_TAG_SOUND_FORMAT_MP3                 2
+#define FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM_LE       3
+#define FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER_16_MONO  4
+#define FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER_8_MONO   5
+#define FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER          6
+#define FLV_AUDIO_TAG_SOUND_FORMAT_G711_A              7
+#define FLV_AUDIO_TAG_SOUND_FORMAT_G711_MU             8
+#define FLV_AUDIO_TAG_SOUND_FORMAT_RESERVED            9
+#define FLV_AUDIO_TAG_SOUND_FORMAT_AAC                 10
+#define FLV_AUDIO_TAG_SOUND_FORMAT_MP3_8               14
+#define FLV_AUDIO_TAG_SOUND_FORMAT_DEVICE_SPECIFIC     15
 
 typedef byte flv_audio_tag;
 
@@ -91,6 +102,7 @@ typedef byte flv_audio_tag;
 #define FLV_VIDEO_TAG_CODEC_ON2_VP6         4
 #define FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA   5
 #define FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2 6
+#define FLV_VIDEO_TAG_CODEC_AVC             7
 
 #define FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME               1
 #define FLV_VIDEO_TAG_FRAME_TYPE_INTERFRAME             2
@@ -107,9 +119,8 @@ typedef byte flv_video_tag;
 extern "C" {
 #endif /* __cplusplus */
 
-/* FLV reading and writing functions */
-
-
+/* FLV functions */
+void flv_tag_set_timestamp(flv_tag * tag, uint32 timestamp);
 
 #ifdef __cplusplus
 }

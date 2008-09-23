@@ -24,3 +24,8 @@
 
 #include "flvmeta.h"
 #include "flv.h"
+
+void flv_tag_set_timestamp(flv_tag * tag, uint32 timestamp) {
+    tag->timestamp = uint32_to_uint24_be(timestamp);
+    tag->timestamp_extended = (uint8)((timestamp & 0xFF000000) >> 24);
+}

@@ -81,7 +81,7 @@ int main(int argc, char ** argv) {
 
         uint32 body_length = uint24_be_to_uint32(ft.body_length);
         printf("Body length: %u\n", body_length);
-        printf("Timestamp: %u\n", uint24_be_to_uint32(ft.timestamp));
+        printf("Timestamp: %u\n", flv_tag_get_timestamp(ft));
 
         if (ft.type == FLV_TAG_TYPE_AUDIO) {
             flv_audio_tag at;
@@ -111,11 +111,19 @@ int main(int argc, char ** argv) {
             printf("* Sound rate: %s\n", str);
 
             switch (flv_audio_tag_sound_format(at)) {
-                case FLV_AUDIO_TAG_SOUND_FORMAT_UNCOMPRESSED: str = "Uncompressed"; break;
+                case FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM: str = "Linear PCM"; break;
                 case FLV_AUDIO_TAG_SOUND_FORMAT_ADPCM: str = "ADPCM"; break;
                 case FLV_AUDIO_TAG_SOUND_FORMAT_MP3: str = "MP3"; break;
-                case FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER8MONO: str = "Nellymoser 8kHz mono"; break;
+                case FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM_LE: str = "Linear PCM, little-endian"; break;
+                case FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER_16_MONO: str = "Nellymoser 16-kHz mono"; break;
+                case FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER_8_MONO: str = "Nellymoser 8-kHz mono"; break;
                 case FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER: str = "Nellymoser"; break;
+                case FLV_AUDIO_TAG_SOUND_FORMAT_G711_A: str = "G.711 A-law logarithmic PCM"; break;
+                case FLV_AUDIO_TAG_SOUND_FORMAT_G711_MU: str = "G.711 mu-law logarithmic PCM"; break;
+                case FLV_AUDIO_TAG_SOUND_FORMAT_RESERVED: str = "reserved"; break;
+                case FLV_AUDIO_TAG_SOUND_FORMAT_AAC: str = "AAC"; break;
+                case FLV_AUDIO_TAG_SOUND_FORMAT_MP3_8: str = "MP3 8-Khz"; break;
+                case FLV_AUDIO_TAG_SOUND_FORMAT_DEVICE_SPECIFIC: str = "Device-specific sound"; break;
                 default: str = "Unknown";
             }
             printf("* Sound format: %s\n", str);
@@ -132,6 +140,7 @@ int main(int argc, char ** argv) {
                 case FLV_VIDEO_TAG_CODEC_ON2_VP6: str = "On2 VP6"; break;
                 case FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA: str = "On2 VP6 Alpha"; break;
                 case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2: str = "Screen Video V2"; break;
+                case FLV_VIDEO_TAG_CODEC_AVC: str = "AVC"; break;
                 default: str = "Unknown";
             }
             printf("* Video codec: %s\n", str);

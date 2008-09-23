@@ -1,3 +1,19 @@
+2008-09-23 Marc Noirot <marc.noirot@gmail.com>
+	* flv.h, flv.c (flv_get_timestamp, flv_tag_set_timestamp): Added
+	  the flv_get_timestamp macro and the flv_tag_set_timestamp function
+	  to add support of 32-bit extended timestamps.
+
+	* flvmeta.c, flvdump.c: Added support of 32-bit extended timestamps.
+
+	* flv.h, flvdump.c: Added supports for all the audio and video types
+	  found in the official specification.
+
+	* Makefile.am: Added compilation of flv.c.
+
+	* types.c (uint32_to_uint24_be): Big-endian platforms fix.
+
+	* types.h: Various fixes.
+
 2008-05-28 Marc Noirot <marc.noirot@gmail.com>
 	* configure.ac: 1.0.6 Release.
 

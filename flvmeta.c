@@ -279,7 +279,7 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
         }
 
         body_length = uint24_be_to_uint32(ft.body_length);
-        timestamp = uint24_be_to_uint32(ft.timestamp);
+        timestamp = flv_tag_get_timestamp(ft);
 
         if (info->biggest_tag_body_size < body_length) {
             info->biggest_tag_body_size = body_length;
@@ -556,8 +556,7 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
     flv_tag omft;
     omft.type = FLV_TAG_TYPE_META;
     omft.body_length = uint32_to_uint24_be(on_metadata_name_size + on_metadata_size);
-    omft.timestamp = uint32_to_uint24_be(0);
-    omft.timestamp_extended = 0;
+    flv_tag_set_timestamp(&omft, 0);
     omft.stream_id = uint32_to_uint24_be(0);
     
     /* write the computed onMetaData tag first if it doesn't exist in the input file */
@@ -603,7 +602,7 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
         }
 
         body_length = uint24_be_to_uint32(ft.body_length);
-        timestamp = uint24_be_to_uint32(ft.timestamp);
+        timestamp = flv_tag_get_timestamp(ft);
 
         /* if we're at the offset of the first onMetaData tag in the input file,
            we write the one we computed instead, discarding the old one */
@@ -634,7 +633,7 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
                 tag.type = FLV_TAG_TYPE_META;
                 tag.body_length = uint32_to_uint24_be(on_last_second_name_size + on_last_second_size);
                 tag.timestamp = ft.timestamp;
-                tag.timestamp_extended = 0;
+                tag.timestamp_extended = ft.timestamp_extended;
                 tag.stream_id = uint32_to_uint24_be(0);
                 if (fwrite(&tag, sizeof(flv_tag), 1, flv_out) != 1 ||
                     amf_data_file_write(meta->on_last_second_name, flv_out) < on_last_second_name_size ||
