@@ -1,4 +1,10 @@
 2008-09-23 Marc Noirot <marc.noirot@gmail.com>
+	* flvdump.c: Fixed a bug causing the FLV parsing to lose track
+	  of tags in the case of malformed metadata.
+
+	* flvdump.c: Added invalid timestamp correction.
+
+2008-09-23 Marc Noirot <marc.noirot@gmail.com>
 	* flv.h, flv.c (flv_get_timestamp, flv_tag_set_timestamp): Added
 	  the flv_get_timestamp macro and the flv_tag_set_timestamp function
 	  to add support of 32-bit extended timestamps.

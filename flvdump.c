@@ -65,6 +65,11 @@ int main(int argc, char ** argv) {
     char * str;
     uint32 n = 1;
     uint32 prev_tag_size;
+    
+    /* extended timestamp handling */
+    uint32 prev_timestamp = 0;
+    uint8 timestamp_extended = 0;
+    
     while (!feof(flv_in)) {
         offset = ftell(flv_in);
         if (fread(&ft, sizeof(ft), 1, flv_in) == 0)
@@ -81,7 +86,20 @@ int main(int argc, char ** argv) {
 
         uint32 body_length = uint24_be_to_uint32(ft.body_length);
         printf("Body length: %u\n", body_length);
-        printf("Timestamp: %u\n", flv_tag_get_timestamp(ft));
+        
+        uint32 timestamp = flv_tag_get_timestamp(ft);
+        printf("Timestamp: %u", timestamp);
+        if (timestamp < prev_timestamp) {
+            prev_timestamp = timestamp;
+            timestamp_extended++;
+            timestamp += timestamp_extended << 24;
+            printf(" (should be %u)", timestamp);
+        }
+        else {
+            prev_timestamp = timestamp;
+        }
+        printf("\n");
+
 
         if (ft.type == FLV_TAG_TYPE_AUDIO) {
             flv_audio_tag at;
@@ -127,8 +145,6 @@ int main(int argc, char ** argv) {
                 default: str = "Unknown";
             }
             printf("* Sound format: %s\n", str);
-
-            body_length -= sizeof(at);
         }
         else if (ft.type == FLV_TAG_TYPE_VIDEO) {
             flv_video_tag vt;
@@ -152,8 +168,6 @@ int main(int argc, char ** argv) {
                 default: str = "Unknown";
             }
             printf("* Video frame type: %s\n", str);
-
-            body_length -= sizeof(vt);
         }
         else if (ft.type == FLV_TAG_TYPE_META) {
             amf_data * data = amf_data_file_read(flv_in);
@@ -168,13 +182,14 @@ int main(int argc, char ** argv) {
             printf("\n");
             amf_data_free(data);
 
-            body_length -= (uint32)data_size;
-
-            if (body_length > 0) {
-                printf("* Garbage: %i bytes\n", body_length);
+            if (body_length > data_size) {
+                printf("* Garbage: %i bytes\n", body_length - data_size);
+            }
+            else if (body_length < data_size) {
+                printf("* Missing: %i bytes\n", -(int)(body_length - data_size));
             }
         }
-        fseek(flv_in, (long)body_length, SEEK_CUR);
+        fseek(flv_in, offset + sizeof(flv_tag) + body_length, SEEK_SET);
         if (fread(&prev_tag_size, sizeof(uint32_be), 1, flv_in) == 1) {
             printf("Previous tag size: %u\n", swap_uint32(prev_tag_size));
         }
