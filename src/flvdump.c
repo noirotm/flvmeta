@@ -90,13 +90,13 @@ int main(int argc, char ** argv) {
         uint32 timestamp = flv_tag_get_timestamp(ft);
         printf("Timestamp: %u", timestamp);
         if (timestamp < prev_timestamp) {
-            prev_timestamp = timestamp;
             timestamp_extended++;
+        }
+        prev_timestamp = timestamp;
+        
+        if (timestamp_extended > 0) {
             timestamp += timestamp_extended << 24;
             printf(" (should be %u)", timestamp);
-        }
-        else {
-            prev_timestamp = timestamp;
         }
         printf("\n");
 

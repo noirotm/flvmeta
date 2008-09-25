@@ -1,3 +1,6 @@
+2008-09-25 Marc Noirot <marc.noirot@gmail.com>
+	* flvmeta.c: Added invalid timestamp correction.
+
 2008-09-23 Marc Noirot <marc.noirot@gmail.com>
 	* flvdump.c: Fixed a bug causing the FLV parsing to lose track
 	  of tags in the case of malformed metadata.

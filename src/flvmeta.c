@@ -278,6 +278,10 @@ int get_flv_info(byte * flv_in, size_t in_size, flv_info * info) {
     in_ptr += sizeof(flv_header) + sizeof(uint32_be);
     info->total_prev_tags_size += sizeof(uint32_be);
 
+    /* extended timestamp initialization */
+    uint32 prev_timestamp = 0;
+    uint8 timestamp_extended = 0;
+
     while (in_ptr < flv_in + in_size) {
         flv_tag * ft;
         uint32 body_length;
@@ -290,6 +294,15 @@ int get_flv_info(byte * flv_in, size_t in_size, flv_info * info) {
 
         body_length = uint24_be_to_uint32(ft->body_length);
         timestamp = flv_tag_get_timestamp(*ft);
+
+        /* extended timestamp fixing */
+        if (timestamp < prev_timestamp) {
+            ++timestamp_extended;
+        }
+        prev_timestamp = timestamp;
+        if (timestamp_extended > 0) {
+            timestamp += timestamp_extended << 24;
+        }
 
         in_ptr += sizeof(flv_tag);
 
@@ -590,20 +603,35 @@ int write_flv(byte * flv_in, size_t in_size, FILE * flv_out, const flv_info * in
         duration = info->last_timestamp + info->video_frame_duration;
     }
 
+    /* extended timestamp initialization */
+    uint32 prev_timestamp = 0;
+    uint8 timestamp_extended = 0;
+
     /* copy the tags verbatim */
     int have_on_last_second = 0;
     while (in_ptr < flv_in + in_size) {
         uint32 body_length;
         uint32 timestamp;
+        flv_tag ft;
 
         if (in_ptr + sizeof(flv_tag) > flv_in + in_size) {
             break;
         }
 
-        flv_tag * pft = (flv_tag*)in_ptr;
+        memcpy(&ft, in_ptr, sizeof(flv_tag));
 
-        body_length = uint24_be_to_uint32(pft->body_length);
-        timestamp = flv_tag_get_timestamp(*pft);
+        body_length = uint24_be_to_uint32(ft.body_length);
+        timestamp = flv_tag_get_timestamp(ft);
+
+        /* extended timestamp fixing */
+        if (timestamp < prev_timestamp) {
+            ++timestamp_extended;
+        }
+        prev_timestamp = timestamp;
+        if (timestamp_extended > 0) {
+            timestamp += timestamp_extended << 24;
+        }
+        flv_tag_set_timestamp(&ft, timestamp);
 
         /* check for bogus body_length, that might make us buffer overflow */
         if (in_ptr + sizeof(flv_tag) + body_length + sizeof(uint32_be) > flv_in + in_size) {
@@ -636,8 +664,7 @@ int write_flv(byte * flv_in, size_t in_size, FILE * flv_out, const flv_info * in
                 flv_tag tag;
                 tag.type = FLV_TAG_TYPE_META;
                 tag.body_length = uint32_to_uint24_be(on_last_second_name_size + on_last_second_size);
-                tag.timestamp = pft->timestamp;
-                tag.timestamp_extended = pft->timestamp_extended;
+                flv_tag_set_timestamp(&tag, timestamp);
                 tag.stream_id = uint32_to_uint24_be(0);
                 if (fwrite(&tag, sizeof(flv_tag), 1, flv_out) != 1 ||
                     amf_data_file_write(meta->on_last_second_name, flv_out) < on_last_second_name_size ||
@@ -655,8 +682,10 @@ int write_flv(byte * flv_in, size_t in_size, FILE * flv_out, const flv_info * in
                 have_on_last_second = 1;
             }
 
-            /* copy the tag verbatim */
-            if (fwrite(in_ptr, total_size, 1, flv_out) != 1) {
+            /* copy the tag header (with the timestamp fixed if necessary) */
+            if (fwrite(&ft, sizeof(flv_tag), 1, flv_out) != 1 ||
+            /* copy the rest of the tag verbatim */
+                fwrite(in_ptr + sizeof(flv_tag), body_length, 1, flv_out) != 1) {
                 return ERROR_WRITE;
             }
 
@@ -747,7 +776,7 @@ void usage(void) {
     fprintf(stderr, " -F, --full-dump           dump all tags\n");
     fprintf(stderr, " -C, --check               check the validity of the input file\n");
     fprintf(stderr, " -U, --update              update FILE with computed onMetaData tag\n");
-    fprintf(stderr, "\nOutput control:\n");
+    fprintf(stderr, "\nOutput control options:\n");
     fprintf(stderr, " -o, --out=FILE            specify the output file name\n");
     fprintf(stderr, " -a, --add=NAME=VALUE      add a metadata string value to the output file\n");
     fprintf(stderr, " -n, --no-lastsecond       do not create the onLastSecond tag\n");
