@@ -267,6 +267,10 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
     fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
     info->total_prev_tags_size += sizeof(uint32_be);
 
+    /* extended timestamp initialization */
+    uint32 prev_timestamp = 0;
+    uint8 timestamp_extended = 0;
+
     while (!feof(flv_in)) {
         flv_tag ft;
         uint32 offset;
@@ -280,6 +284,15 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
 
         body_length = uint24_be_to_uint32(ft.body_length);
         timestamp = flv_tag_get_timestamp(ft);
+
+        /* extended timestamp fixing */
+        if (timestamp < prev_timestamp) {
+            ++timestamp_extended;
+        }
+        prev_timestamp = timestamp;
+        if (timestamp_extended > 0) {
+            timestamp += timestamp_extended << 24;
+        }
 
         if (info->biggest_tag_body_size < body_length) {
             info->biggest_tag_body_size = body_length;
@@ -584,6 +597,10 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
         duration = info->last_timestamp + info->video_frame_duration;
     }
 
+    /* extended timestamp initialization */
+    uint32 prev_timestamp = 0;
+    uint8 timestamp_extended = 0;
+
     /* copy the tags verbatim */
     fseek(flv_in, sizeof(flv_header)+sizeof(uint32_be), SEEK_SET);
 
@@ -603,6 +620,16 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
 
         body_length = uint24_be_to_uint32(ft.body_length);
         timestamp = flv_tag_get_timestamp(ft);
+
+        /* extended timestamp fixing */
+        if (timestamp < prev_timestamp) {
+            ++timestamp_extended;
+        }
+        prev_timestamp = timestamp;
+        if (timestamp_extended > 0) {
+            timestamp += timestamp_extended << 24;
+        }
+        flv_tag_set_timestamp(&ft, timestamp);
 
         /* if we're at the offset of the first onMetaData tag in the input file,
            we write the one we computed instead, discarding the old one */

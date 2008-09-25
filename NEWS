@@ -1,3 +1,11 @@
+Version 1.0.7
+  - Added support for extended timestamps.
+    Now flvmeta can read and write FLV files longer than 4:39:37,
+    as well as fix files with incorrect timestamps.
+  - Added support for all codecs from the official specification.
+  - Fixed a bug causing flvdump to lose track of tags in case
+    of invalid metadata.
+
 Version 1.0.6
   - Bug fix release.
   - Fixed a flvdump crash under Linux caused by incorrect string
