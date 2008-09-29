@@ -1,3 +1,6 @@
+2008-09-29 Marc Noirot <marc.noirot@gmail.com>
+	* flv.h, flvdump.c: Added support for JPEG video frames.
+
 2008-09-25 Marc Noirot <marc.noirot@gmail.com>
 	* flvmeta.c: Added invalid timestamp correction.
 
