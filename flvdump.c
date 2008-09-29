@@ -151,6 +151,7 @@ int main(int argc, char ** argv) {
             fread(&vt, sizeof(vt), 1, flv_in);
 
             switch (flv_video_tag_codec_id(vt)) {
+                case FLV_VIDEO_TAG_CODEC_JPEG: str = "JPEG"; break;
                 case FLV_VIDEO_TAG_CODEC_SORENSEN_H263: str = "Sorensen H.263"; break;
                 case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO: str = "Screen Video"; break;
                 case FLV_VIDEO_TAG_CODEC_ON2_VP6: str = "On2 VP6"; break;
