@@ -780,8 +780,12 @@ void usage(void) {
     fprintf(stderr, " -o, --out=FILE            specify the output file name\n");
     fprintf(stderr, " -a, --add=NAME=VALUE      add a metadata string value to the output file\n");
     fprintf(stderr, " -n, --no-lastsecond       do not create the onLastSecond tag\n");
-    fprintf(stderr, " -p, --preserve            preserve metadata tags from the input file\n");
-    fprintf(stderr, " -f, --dump-format=TYPE    dump format is of type TYPE\n");
+    fprintf(stderr, " -p, --preserve            preserve existing onMetadata tags from the input\n");
+    fprintf(stderr, "                           file\n");
+    fprintf(stderr, " -f, --fix                 fix invalid tags from the input file\n");
+    fprintf(stderr, " -i, --ignore              ignore invalid tags from the input file\n");
+    fprintf(stderr, "                           (the default is to stop with an error)\n");
+    fprintf(stderr, " -d, --dump-format=TYPE    dump format is of type TYPE\n");
     fprintf(stderr, "                           TYPE is 'xml' (default), 'json', or 'yaml'\n");
     fprintf(stderr, " -j, --json                equivalent to --dump-format=json\n");
     fprintf(stderr, " -y, --yaml                equivalent to --dump-format=yaml\n");
@@ -791,7 +795,7 @@ void usage(void) {
     fprintf(stderr, " -v, --verbose             display informative messages\n");
     fprintf(stderr, "\nMiscellaneous:\n");
     fprintf(stderr, " -V, --version             print version information and exit\n");
-    fprintf(stderr, " -h, --help                display this help and exit\n");
+    fprintf(stderr, " -h, --help                display this information and exit\n");
     fprintf(stderr, "\nPlease report bugs to <%s>\n", PACKAGE_BUGREPORT);
 }
 
@@ -805,10 +809,14 @@ int main(int argc, char ** argv) {
     static struct option long_options[] = {
         { "dump",          1, 0, 0},
         { "full-dump",     1, 0, 0},
+        { "check",         1, 0, 0},
         { "update",        1, 0, 0},
         { "out",           1, 0, 0},
         { "add",           1, 0, 0},
         { "no-lastsecond", 1, 0, 0},
+        { "preserve",      1, 0, 0},
+        { "fix",           1, 0, 0},
+        { "ignore",        1, 0, 0},
         { "dump-format",   1, 0, 0},
         { "json",          1, 0, 0},
         { "yaml",          1, 0, 0},
