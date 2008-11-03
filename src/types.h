@@ -24,7 +24,10 @@
 #ifndef __TYPES_H__
 #define __TYPES_H__
 
-#include "flvmeta.h"
+/* Configuration of the sources */
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
 
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>

@@ -11,4 +11,6 @@ flvmeta_SOURCES = flvmeta.c \
                   types.c \
                   types.h \
                   flv.c \
-                  flv.h
+                  flv.h \
+                  update.c \
+                  update.h

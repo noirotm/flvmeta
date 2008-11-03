@@ -137,6 +137,9 @@
 			<File
 				RelativePath="..\src\types.c">
 			</File>
+			<File
+				RelativePath="..\src\update.c">
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -165,6 +168,9 @@
 			</File>
 			<File
 				RelativePath="..\src\types.h">
+			</File>
+			<File
+				RelativePath="..\src\update.h">
 			</File>
 		</Filter>
 	</Files>
