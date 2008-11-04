@@ -27,6 +27,6 @@
 #include "flvmeta.h"
 
 /* update metadata from a FLV file into a new one */
-extern "C" int update_metadata(const flvmeta_opts * options);
+extern int update_metadata(const flvmeta_opts * options);
 
 #endif /* __UPDATE_H__ */

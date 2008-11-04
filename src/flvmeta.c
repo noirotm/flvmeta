@@ -113,7 +113,7 @@ int main(int argc, char ** argv) {
     int option_index = 0;
     int option;
     do {
-        option = getopt_long(argc, argv, "DFCUo:a:npfid:jyxmvVh", long_options, &option_index);
+        option = getopt_long(argc, argv, "DFCUa:lpfid:jyxmvVh", long_options, &option_index);
         switch (option) {
             /*
                 commands
@@ -173,13 +173,13 @@ int main(int argc, char ** argv) {
             case 'i': options.error_handling = FLVMETA_IGNORE_ERRORS;   break;
             /* choose dump format */
             case 'd':
-                if (!strcmpi(optarg, "xml")) {
+                if (!strcmp(optarg, "xml")) {
                     options.dump_format = FLVMETA_FORMAT_XML;
                 }
-                else if (!strcmpi(optarg, "json")) {
+                else if (!strcmp(optarg, "json")) {
                     options.dump_format = FLVMETA_FORMAT_JSON;
                 }
-                else if (!strcmpi(optarg, "yaml")) {
+                else if (!strcmp(optarg, "yaml")) {
                     options.dump_format = FLVMETA_FORMAT_YAML;
                 }
                 else {
@@ -191,7 +191,6 @@ int main(int argc, char ** argv) {
             case 'j': options.dump_format = FLVMETA_FORMAT_JSON;    break;
             case 'y': options.dump_format = FLVMETA_FORMAT_XML;     break;
             case 'x': options.dump_format = FLVMETA_FORMAT_YAML;    break;
-
             /*
                 advanced options
             */
@@ -208,7 +207,6 @@ int main(int argc, char ** argv) {
                 help(argv[0]);
                 exit(EXIT_SUCCESS);
                 break;
-
             /* last option */
             case EOF: break;
             /*
@@ -248,7 +246,7 @@ int main(int argc, char ** argv) {
     }
 
     /* execute command */
-    int errcode;
+    int errcode = OK;
     switch (options.command) {
         case FLVMETA_DUMP_COMMAND: break;
         case FLVMETA_FULL_DUMP_COMMAND: break;
