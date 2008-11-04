@@ -693,14 +693,18 @@ static int write_flv(byte * flv_in, size_t in_size, FILE * flv_out, const flv_in
 }
 
 /* copy a FLV file while adding onMetaData and onLastSecond events */
-int update_metadata(const char * in_file, const char * out_file) {
+int update_metadata(const flvmeta_opts * opts) {
     int res;
 
+    if (!strcmp(opts->input_file, opts->output_file)) {
+        return ERROR_SAME_FILE;
+    }
+
     struct stat in_file_info;
-    if (stat(in_file, &in_file_info) != 0 || !(in_file_info.st_mode & (S_IFMT | S_IREAD))) {
+    if (stat(opts->input_file, &in_file_info) != 0 || !(in_file_info.st_mode & (S_IFMT | S_IREAD))) {
         return ERROR_OPEN_READ;
     }
-    FILE * in_file_fd = fopen(in_file, "rb");
+    FILE * in_file_fd = fopen(opts->input_file, "rb");
     if (in_file_fd == NULL) {
         return ERROR_OPEN_READ;
     }
@@ -731,7 +735,7 @@ int update_metadata(const char * in_file, const char * out_file) {
     /*
         open output file
     */
-    FILE * flv_out = fopen(out_file, "w+b");
+    FILE * flv_out = fopen(opts->output_file, "w+b");
     if (flv_out == NULL) {
         munmap(flv_in, in_file_info.st_size);
         amf_data_free(meta.on_last_second_name);

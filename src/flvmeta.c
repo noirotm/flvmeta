@@ -114,7 +114,6 @@ int main(int argc, char ** argv) {
     int option;
     do {
         option = getopt_long(argc, argv, "DFCUo:a:npfid:jyxmvVh", long_options, &option_index);
-
         switch (option) {
             /*
                 commands
@@ -212,7 +211,6 @@ int main(int argc, char ** argv) {
 
             /* last option */
             case EOF: break;
-            
             /*
                 error cases
             */
