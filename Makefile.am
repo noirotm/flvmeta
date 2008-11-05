@@ -1,5 +1,6 @@
 SUBDIRS = src tests
 EXTRA_DIST = autogen.sh \
+             CmakeLists.txt \
              msvc/flvmeta.sln \
              msvc/flvmeta.vcproj \
              msvc/release.bat \

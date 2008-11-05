@@ -14,3 +14,5 @@ flvmeta_SOURCES = flvmeta.c \
                   flv.h \
                   update.c \
                   update.h
+
+EXTRA_DIST = CmakeLists.txt

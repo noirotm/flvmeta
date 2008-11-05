@@ -28,6 +28,8 @@
 
 #ifdef WIN32 /* Win32 compatibility layer */
 
+#include <stdlib.h> /* size_t */
+
 /* This was added only in Windows XP sp2 */
 #ifndef FILE_MAP_EXECUTE
 #define FILE_MAP_EXECUTE 0x0020

@@ -29,6 +29,30 @@
 #include "flvmeta.h"
 #include "update.h"
 
+/*
+    Command-line options
+*/
+static struct option long_options[] = {
+    { "dump",          no_argument,         NULL, 'D'},
+    { "full-dump",     no_argument,         NULL, 'F'},
+    { "check",         no_argument,         NULL, 'C'},
+    { "update",        no_argument,         NULL, 'U'},
+    { "add",           required_argument,   NULL, 'a'},
+    { "no-lastsecond", no_argument,         NULL, 'l'},
+    { "preserve",      no_argument,         NULL, 'p'},
+    { "fix",           no_argument,         NULL, 'f'},
+    { "ignore",        no_argument,         NULL, 'i'},
+    { "dump-format",   required_argument,   NULL, 'd'},
+    { "json",          no_argument,         NULL, 'j'},
+    { "yaml",          no_argument,         NULL, 'y'},
+    { "xml",           no_argument,         NULL, 'x'},
+    { "mmap",          no_argument,         NULL, 'm'},
+    { "verbose",       no_argument,         NULL, 'v'},
+    { "version",       no_argument,         NULL, 'V'},
+    { "help",          no_argument,         NULL, 'h'},
+    { 0, 0, 0, 0 }
+};
+
 void version(void) {
     fprintf(stderr, "%s\n", PACKAGE_STRING);
     fprintf(stderr, "%s\n", COPYRIGHT_STR);
@@ -73,6 +97,8 @@ static void help(const char * name) {
 }
 
 int main(int argc, char ** argv) {
+    int option, option_index, errcode;
+
     /* flvmeta default options */
     static flvmeta_opts options;
     options.command = FLVMETA_DEFAULT_COMMAND;
@@ -85,33 +111,11 @@ int main(int argc, char ** argv) {
     options.dump_format = FLVMETA_FORMAT_XML;
     options.use_mmap = 0;
     options.verbose = 0;
-    
+
     /*
         Command-line parsing
     */
-    static struct option long_options[] = {
-        { "dump",          no_argument,         NULL, 'D'},
-        { "full-dump",     no_argument,         NULL, 'F'},
-        { "check",         no_argument,         NULL, 'C'},
-        { "update",        no_argument,         NULL, 'U'},
-        { "add",           required_argument,   NULL, 'a'},
-        { "no-lastsecond", no_argument,         NULL, 'l'},
-        { "preserve",      no_argument,         NULL, 'p'},
-        { "fix",           no_argument,         NULL, 'f'},
-        { "ignore",        no_argument,         NULL, 'i'},
-        { "dump-format",   required_argument,   NULL, 'd'},
-        { "json",          no_argument,         NULL, 'j'},
-        { "yaml",          no_argument,         NULL, 'y'},
-        { "xml",           no_argument,         NULL, 'x'},
-        { "mmap",          no_argument,         NULL, 'm'},
-        { "verbose",       no_argument,         NULL, 'v'},
-        { "version",       no_argument,         NULL, 'V'},
-        { "help",          no_argument,         NULL, 'h'},
-        { 0, 0, 0, 0 }
-    };
-
-    int option_index = 0;
-    int option;
+    option_index = 0;
     do {
         option = getopt_long(argc, argv, "DFCUa:lpfid:jyxmvVh", long_options, &option_index);
         switch (option) {
@@ -246,7 +250,7 @@ int main(int argc, char ** argv) {
     }
 
     /* execute command */
-    int errcode = OK;
+    errcode = OK;
     switch (options.command) {
         case FLVMETA_DUMP_COMMAND: break;
         case FLVMETA_FULL_DUMP_COMMAND: break;

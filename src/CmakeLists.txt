@@ -1,0 +1,29 @@
+set(flvmeta_src
+    amf.c
+    amf.h
+    flv.c
+    flv.h
+    flvmeta.c
+    flvmeta.h
+    mmap.c
+    mmap.h
+    types.c
+    types.h
+    update.c
+    update.h
+)
+
+add_definitions(-DHAVE_CONFIG_H)
+
+if(WIN32)
+    set(flvmeta_src ${flvmeta_src}
+        ${PROJECT_SOURCE_DIR}/msvc/getopt1.c
+        ${PROJECT_SOURCE_DIR}/msvc/getopt.c
+        ${PROJECT_SOURCE_DIR}/msvc/getopt.h
+        ${PROJECT_SOURCE_DIR}/msvc/gettext.h
+        ${PROJECT_SOURCE_DIR}/msvc/config.h
+    )
+    include_directories(${PROJECT_SOURCE_DIR}/msvc)
+endif(WIN32)
+
+add_executable(flvmeta ${flvmeta_src})

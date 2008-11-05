@@ -148,10 +148,11 @@ static amf_node * amf_list_last(amf_list * list) {
 }
 
 static void amf_list_clear(amf_list * list) {
+    amf_node * tmp;
     amf_node * node = list->first_element;
     while (node != NULL) {
         amf_data_free(node->data);
-        amf_node * tmp = node;
+        tmp = node;
         node = node->next;
         free(tmp);
     }
@@ -355,14 +356,14 @@ static amf_data * amf_associative_array_read(amf_read_proc read_proc, void * use
 
 /* read an array */
 static amf_data * amf_array_read(amf_read_proc read_proc, void * user_data) {
+    size_t i;
+    amf_data * element;
     amf_data * data = amf_array_new();
     if (data != NULL) {
         uint32 array_size;
         if (read_proc(&array_size, sizeof(uint32), user_data) == sizeof(uint32)) {
             array_size = swap_uint32(array_size);
-
-            size_t i;
-            amf_data * element;
+            
             for (i = 0; i < array_size; ++i) {
                 element = amf_data_read(read_proc, user_data);
 
