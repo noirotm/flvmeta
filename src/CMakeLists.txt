@@ -13,6 +13,7 @@ set(flvmeta_src
     update.h
 )
 
+include_directories(${CMAKE_BINARY_DIR})
 add_definitions(-DHAVE_CONFIG_H)
 
 if(WIN32)
@@ -25,5 +26,10 @@ if(WIN32)
     )
     include_directories(${PROJECT_SOURCE_DIR}/msvc)
 endif(WIN32)
+
+# C runtime deprecation in Visual C++ 2005 and later
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
+endif(MSVC)
 
 add_executable(flvmeta ${flvmeta_src})
