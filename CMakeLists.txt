@@ -17,10 +17,20 @@ check_type_size("double"      SIZEOF_DOUBLE)
 check_type_size("float"       SIZEOF_FLOAT)
 check_type_size("long double" SIZEOF_LONG_DOUBLE)
 
+if(WIN32)
+    set(int16_t  1)
+    set(int32_t  1)
+    set(int64_t  1)
+    set(int8_t   1)
+    set(uint16_t 1)
+    set(uint32_t 1)
+    set(uint64_t 1)
+    set(uint8_t  1)
+endif(WIN32)
+
 test_big_endian(IS_BIGENDIAN)
 if(IS_BIGENDIAN)
-  set(WORDS_BIGENDIAN 1)
+    set(WORDS_BIGENDIAN 1)
 endif(IS_BIGENDIAN)
 
 configure_file(config-cmake.h.in ${CMAKE_BINARY_DIR}/config.h)
-

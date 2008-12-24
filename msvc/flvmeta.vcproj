@@ -137,6 +137,9 @@
 				RelativePath="..\src\mmap.c">
 			</File>
 			<File
+				RelativePath="..\src\stream.c">
+			</File>
+			<File
 				RelativePath="..\src\types.c">
 			</File>
 			<File
@@ -167,6 +170,9 @@
 			</File>
 			<File
 				RelativePath="..\src\mmap.h">
+			</File>
+			<File
+				RelativePath="..\src\stream.h">
 			</File>
 			<File
 				RelativePath="..\src\types.h">

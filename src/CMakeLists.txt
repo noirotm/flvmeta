@@ -7,10 +7,13 @@ set(flvmeta_src
     flvmeta.h
     mmap.c
     mmap.h
+    stream.c
+    stream.h
     types.c
     types.h
     update.c
     update.h
+    ${CMAKE_BINARY_DIR}/config.h
 )
 
 include_directories(${CMAKE_BINARY_DIR})
@@ -22,7 +25,6 @@ if(WIN32)
         ${PROJECT_SOURCE_DIR}/msvc/getopt.c
         ${PROJECT_SOURCE_DIR}/msvc/getopt.h
         ${PROJECT_SOURCE_DIR}/msvc/gettext.h
-        ${PROJECT_SOURCE_DIR}/msvc/config.h
     )
     include_directories(${PROJECT_SOURCE_DIR}/msvc)
 endif(WIN32)

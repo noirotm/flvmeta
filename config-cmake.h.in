@@ -61,19 +61,34 @@
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 /* #undef size_t */
 
+/* Define to the type of an integer type of width exactly 16 bits if
+   such a type exists and the standard includes do not define it. */
+#cmakedefine int16_t short int
+
+/* Define to the type of an integer type of width exactly 32 bits if
+   such a type exists and the standard includes do not define it. */
+#cmakedefine int32_t int
+
+/* Define to the type of an integer type of width exactly 64 bits if
+   such a type exists and the standard includes do not define it. */
+#cmakedefine int64_t long long int
+
+/* Define to the type of an integer type of width exactly 8 bits if
+   such a type exists and the standard includes do not define it. */
+#cmakedefine int8_t char
+
 /* Define to the type of an unsigned integer type of width exactly 16 bits if
    such a type exists and the standard includes do not define it. */
-/*#define uint16_t unsigned short int*/
+#cmakedefine uint16_t unsigned short int
 
 /* Define to the type of an unsigned integer type of width exactly 32 bits if
    such a type exists and the standard includes do not define it. */
-/*#define uint32_t unsigned int*/
+#cmakedefine uint32_t unsigned int
 
 /* Define to the type of an unsigned integer type of width exactly 64 bits if
    such a type exists and the standard includes do not define it. */
-/*#define uint64_t unsigned long long int*/
+#cmakedefine uint64_t unsigned long long int
 
 /* Define to the type of an unsigned integer type of width exactly 8 bits if
    such a type exists and the standard includes do not define it. */
-/*#define uint8_t unsigned char*/
-
+#cmakedefine uint8_t unsigned char

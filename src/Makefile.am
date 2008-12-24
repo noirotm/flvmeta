@@ -2,17 +2,17 @@ AM_CFLAGS = -Wall
 
 bin_PROGRAMS = flvmeta
 
-flvmeta_SOURCES = flvmeta.c \
+flvmeta_SOURCES = amf.c \
+                  amf.h \
+                  flv.c \
+                  flv.h \
+                  flvmeta.c \
                   flvmeta.h \
                   mmap.c \
                   mmap.h \
-                  amf.c \
-                  amf.h \
+                  stream.c \
+                  stream.h \
                   types.c \
                   types.h \
-                  flv.c \
-                  flv.h \
                   update.c \
                   update.h
-
-EXTRA_DIST = CmakeLists.txt
