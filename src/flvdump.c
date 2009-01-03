@@ -31,7 +31,7 @@
 int main(int argc, char ** argv) {
 
     if (argc < 2) {
-        fprintf(stderr, "FLVDump version %s - Copyright (C) 2007, 2008 Marc Noirot\n\n",
+        fprintf(stderr, "FLVDump version %s - Copyright (C) 2007, 2008, 2009 Marc Noirot\n\n",
             VERSION);
         fprintf(stderr, "Usage: flvdump in_file\n\n");
         fprintf(stderr, "This is free software; see the source for copying conditions. There is NO\n"

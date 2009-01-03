@@ -20,7 +20,8 @@ include_directories(${CMAKE_BINARY_DIR})
 add_definitions(-DHAVE_CONFIG_H)
 
 if(WIN32)
-    set(flvmeta_src ${flvmeta_src}
+    set(flvmeta_src
+        ${flvmeta_src}
         ${PROJECT_SOURCE_DIR}/msvc/getopt1.c
         ${PROJECT_SOURCE_DIR}/msvc/getopt.c
         ${PROJECT_SOURCE_DIR}/msvc/getopt.h

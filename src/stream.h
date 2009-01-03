@@ -3,7 +3,7 @@
 
     FLV Metadata updater
 
-    Copyright (C) 2007, 2008 Marc Noirot <marc.noirot AT gmail.com>
+    Copyright (C) 2007, 2008, 2009 Marc Noirot <marc.noirot AT gmail.com>
 
     This file is part of FLVMeta.
 
@@ -23,6 +23,8 @@
 */
 #ifndef __STREAM_H__
 #define __STREAM_H__
+
+#include <stdlib.h>
 
 /* Generic stream structure, implemented with callbacks */
 typedef size_t (*stream_read_proc) (void * out_buffer, size_t size, void * user_data);

@@ -47,14 +47,6 @@
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
 
-/* Define to the type of a signed integer type of width exactly 16 bits if
-   such a type exists and the standard includes do not define it. */
-/*#define int16_t signed short int*/
-
-/* Define to the type of a signed integer type of width exactly 32 bits if
-   such a type exists and the standard includes do not define it. */
-/*#define int32_t signed int*/
-
 /* Define to rpl_malloc if the replacement function should be used. */
 /* #undef malloc */
 
