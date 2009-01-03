@@ -3,7 +3,7 @@
 
     FLV Metadata updater
 
-    Copyright (C) 2007, 2008 Marc Noirot <marc.noirot AT gmail.com>
+    Copyright (C) 2007, 2008, 2009 Marc Noirot <marc.noirot AT gmail.com>
 
     This file is part of FLVMeta.
 
