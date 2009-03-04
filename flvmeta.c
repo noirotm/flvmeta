@@ -268,7 +268,9 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
     info->total_prev_tags_size += sizeof(uint32_be);
 
     /* extended timestamp initialization */
-    uint32 prev_timestamp = 0;
+    uint32 prev_timestamp_video = 0;
+    uint32 prev_timestamp_audio = 0;
+    uint32 prev_timestamp_meta = 0;
     uint8 timestamp_extended = 0;
 
     while (!feof(flv_in)) {
@@ -286,10 +288,25 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
         timestamp = flv_tag_get_timestamp(ft);
 
         /* extended timestamp fixing */
-        if (timestamp < prev_timestamp) {
-            ++timestamp_extended;
+        if (ft.type == FLV_TAG_TYPE_META) {
+            if (timestamp < prev_timestamp_meta) {
+                ++timestamp_extended;
+            }
+            prev_timestamp_meta = timestamp;
         }
-        prev_timestamp = timestamp;
+        else if (ft.type == FLV_TAG_TYPE_AUDIO) {
+            if (timestamp < prev_timestamp_audio) {
+                ++timestamp_extended;
+            }
+            prev_timestamp_audio = timestamp;
+        }
+        else if (ft.type == FLV_TAG_TYPE_VIDEO) {
+            if (timestamp < prev_timestamp_video) {
+                ++timestamp_extended;
+            }
+            prev_timestamp_video = timestamp;
+        }
+
         if (timestamp_extended > 0) {
             timestamp += timestamp_extended << 24;
         }

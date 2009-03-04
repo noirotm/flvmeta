@@ -1,3 +1,8 @@
+2009-03-04 Marc Noirot <marc.noirot@gmail.com>
+	* flvmeta.c (get_flv_info): Fixed a bug where two consecutive tags of
+	  different types and with decreasing timestamps would cause extended
+	  timestamps to be incorrectly used for the next tags.
+	
 2008-09-29 Marc Noirot <marc.noirot@gmail.com>
 	* flv.h, flvdump.c: Added support for JPEG video frames.
 
