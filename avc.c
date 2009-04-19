@@ -78,8 +78,10 @@ sint32 exp_golomb_se(bit_buffer * bb) {
     ret = exp_golomb_ue(bb);
     if ((ret & 0x1) == 0) {
         return -(ret >> 1);
-    } 
-    return (ret + 1) >> 1;
+    }
+    else {
+        return (ret + 1) >> 1;
+    }
 }
 
 /* AVC type definitions */
@@ -110,10 +112,7 @@ static void parse_scaling_list(uint32 size, bit_buffer * bb) {
             delta_scale = exp_golomb_se(bb);
             next_scale = (last_scale + delta_scale + 256) % 256;
         }
-        if (next_scale == 0) {
-            last_scale = delta_scale; /* fix ? */
-        }
-        else {
+        if (next_scale != 0) {
             last_scale = next_scale;
         }
     }
