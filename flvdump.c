@@ -140,6 +140,7 @@ int main(int argc, char ** argv) {
                 case FLV_AUDIO_TAG_SOUND_FORMAT_G711_MU: str = "G.711 mu-law logarithmic PCM"; break;
                 case FLV_AUDIO_TAG_SOUND_FORMAT_RESERVED: str = "reserved"; break;
                 case FLV_AUDIO_TAG_SOUND_FORMAT_AAC: str = "AAC"; break;
+                case FLV_AUDIO_TAG_SOUND_FORMAT_SPEEX: str = "Speex"; break;
                 case FLV_AUDIO_TAG_SOUND_FORMAT_MP3_8: str = "MP3 8-Khz"; break;
                 case FLV_AUDIO_TAG_SOUND_FORMAT_DEVICE_SPECIFIC: str = "Device-specific sound"; break;
                 default: str = "Unknown";
@@ -166,6 +167,8 @@ int main(int argc, char ** argv) {
                 case FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME: str = "keyframe"; break;
                 case FLV_VIDEO_TAG_FRAME_TYPE_INTERFRAME: str = "inter frame"; break;
                 case FLV_VIDEO_TAG_FRAME_TYPE_DISPOSABLE_INTERFRAME: str = "disposable inter frame"; break;
+                case FLV_VIDEO_TAG_FRAME_TYPE_GENERATED_KEYFRAME: str = "generated keyframe"; break;
+                case FLV_VIDEO_TAG_FRAME_TYPE_COMMAND_FRAME: str = "video info/command frame"; break;
                 default: str = "Unknown";
             }
             printf("* Video frame type: %s\n", str);

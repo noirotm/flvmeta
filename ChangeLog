@@ -1,3 +1,14 @@
+2009-04-19 Marc Noirot <marc.noirot@gmail.com>
+	* flvmeta.c avc.h avc.c: Added support for AVC video resolution
+	  detection.
+
+	* flv.h flvdump.c: Added support for the Speex codec.
+
+	* flv.h flvdump.c: Added support for rare video frame types.
+
+	* flvmeta.c (compute_metadata): Do not add width and height data
+	  if not detected in the first video frame.
+
 2009-03-04 Marc Noirot <marc.noirot@gmail.com>
 	* flvmeta.c (get_flv_info): Fixed a bug where two consecutive tags of
 	  different types and with decreasing timestamps would cause extended

@@ -86,6 +86,7 @@ typedef struct __flv_tag {
 #define FLV_AUDIO_TAG_SOUND_FORMAT_G711_MU             8
 #define FLV_AUDIO_TAG_SOUND_FORMAT_RESERVED            9
 #define FLV_AUDIO_TAG_SOUND_FORMAT_AAC                 10
+#define FLV_AUDIO_TAG_SOUND_FORMAT_SPEEX               11
 #define FLV_AUDIO_TAG_SOUND_FORMAT_MP3_8               14
 #define FLV_AUDIO_TAG_SOUND_FORMAT_DEVICE_SPECIFIC     15
 
@@ -108,6 +109,8 @@ typedef byte flv_audio_tag;
 #define FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME               1
 #define FLV_VIDEO_TAG_FRAME_TYPE_INTERFRAME             2
 #define FLV_VIDEO_TAG_FRAME_TYPE_DISPOSABLE_INTERFRAME  3
+#define FLV_VIDEO_TAG_FRAME_TYPE_GENERATED_KEYFRAME     4
+#define FLV_VIDEO_TAG_FRAME_TYPE_COMMAND_FRAME          5
 
 typedef byte flv_video_tag;
 

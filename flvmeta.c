@@ -28,6 +28,7 @@
 #include "flvmeta.h"
 #include "flv.h"
 #include "amf.h"
+#include "avc.h"
 
 #define OK                  0
 #define ERROR_OPEN_READ     1
@@ -171,6 +172,14 @@ size_t compute_vp6_alpha_size(FILE * flv_in, flv_info * info) {
 }
 
 /*
+    compute AVC (H.264) video size (experimental)
+*/
+size_t compute_avc_size(FILE * flv_in, flv_info * info) {
+    size_t bytes_read = read_avc_resolution(flv_in, &(info->video_width), &(info->video_height));
+    return bytes_read;
+}
+
+/*
     compute video width and height from the first video frame
 */
 size_t compute_video_size(FILE * flv_in, flv_info * info) {
@@ -189,6 +198,8 @@ size_t compute_video_size(FILE * flv_in, flv_info * info) {
         case FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA:
             bytes_read = compute_vp6_alpha_size(flv_in, info);
             break;
+        case FLV_VIDEO_TAG_CODEC_AVC:
+            bytes_read = compute_avc_size(flv_in, info);
     }
     return bytes_read;
 }
@@ -360,7 +371,7 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
                 info->video_codec = flv_video_tag_codec_id(vt);
                 info->video_first_timestamp = timestamp;
 
-                /* todo: read first video frame to get critical info */
+                /* read first video frame to get critical info */
                 bytes_read = compute_video_size(flv_in, info);
             }
 
@@ -383,8 +394,8 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
             info->video_frames_number++;
 
             /*
-                we assume all video frames have the same size as the first one: probably bogus
-                but only used in case there's no audio in the file
+                we assume all video frames have the same size as the first one:
+                probably bogus but only used in case there's no audio in the file
             */
             if (info->video_frame_duration == 0 && timestamp != 0) {
                 info->video_frame_duration = timestamp;
@@ -457,8 +468,11 @@ void compute_metadata(const flv_info * info, flv_metadata * meta) {
 
     amf_associative_array_add(meta->on_metadata, amf_str("lasttimestamp"), amf_number_new(info->last_timestamp / 1000.0));
     amf_associative_array_add(meta->on_metadata, amf_str("lastkeyframetimestamp"), amf_number_new(info->last_keyframe_timestamp / 1000.0));
-    amf_associative_array_add(meta->on_metadata, amf_str("width"), amf_number_new(info->video_width));
-    amf_associative_array_add(meta->on_metadata, amf_str("height"), amf_number_new(info->video_height));
+    
+    if (info->video_width > 0)
+        amf_associative_array_add(meta->on_metadata, amf_str("width"), amf_number_new(info->video_width));
+    if (info->video_height > 0)
+        amf_associative_array_add(meta->on_metadata, amf_str("height"), amf_number_new(info->video_height));
 
     number64 video_data_rate = ((info->real_video_data_size / 1024.0) * 8.0) / duration;
     amf_associative_array_add(meta->on_metadata, amf_str("videodatarate"), amf_number_new(video_data_rate));

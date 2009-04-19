@@ -120,6 +120,9 @@
 				RelativePath=".\amf.c">
 			</File>
 			<File
+				RelativePath=".\avc.c">
+			</File>
+			<File
 				RelativePath=".\flv.c">
 			</File>
 			<File
@@ -135,6 +138,9 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
 				RelativePath=".\amf.h">
+			</File>
+			<File
+				RelativePath=".\avc.h">
 			</File>
 			<File
 				RelativePath=".\config.h">
