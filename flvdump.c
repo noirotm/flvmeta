@@ -49,7 +49,11 @@ int main(int argc, char ** argv) {
 
     flv_header fh;
 
-    fread(&fh, sizeof(fh), 1, flv_in);
+    if (fread(&fh, sizeof(fh), 1, flv_in) == 0) {
+        fclose(flv_in);
+        fprintf(stderr, "error reading header\n");
+        return 3;
+    }
 
     printf("Magic: %.3s\n", fh.signature);
     printf("Version: %d\n", fh.version);
@@ -103,7 +107,11 @@ int main(int argc, char ** argv) {
 
         if (ft.type == FLV_TAG_TYPE_AUDIO) {
             flv_audio_tag at;
-            fread(&at, sizeof(at), 1, flv_in);
+            if (fread(&at, sizeof(at), 1, flv_in)  == 0) {
+                fclose(flv_in);
+                fprintf(stderr, "error reading audio data\n");
+                return 4;
+            }
 
             switch (flv_audio_tag_sound_type(at)) {
                 case FLV_AUDIO_TAG_SOUND_TYPE_MONO: str = "Mono"; break;
@@ -149,7 +157,11 @@ int main(int argc, char ** argv) {
         }
         else if (ft.type == FLV_TAG_TYPE_VIDEO) {
             flv_video_tag vt;
-            fread(&vt, sizeof(vt), 1, flv_in);
+            if (fread(&vt, sizeof(vt), 1, flv_in)  == 0) {
+                fclose(flv_in);
+                fprintf(stderr, "error reading video data\n");
+                return 5;
+            }
 
             switch (flv_video_tag_codec_id(vt)) {
                 case FLV_VIDEO_TAG_CODEC_JPEG: str = "JPEG"; break;
