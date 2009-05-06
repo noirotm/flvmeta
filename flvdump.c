@@ -21,12 +21,12 @@
     along with FLVMeta; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <stdio.h>
-#include <string.h>
-
 #include "flvmeta.h"
 #include "flv.h"
 #include "amf.h"
+
+#include <stdio.h>
+#include <string.h>
 
 int main(int argc, char ** argv) {
 
@@ -62,10 +62,10 @@ int main(int argc, char ** argv) {
     printf("Offset: %u\n", swap_uint32(fh.offset));
 
     /* skip first empty previous tag size */
-    fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
+    flvmeta_fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
 
     flv_tag ft;
-    long offset;
+    off_t offset;
     char * str;
     uint32 n = 1;
     uint32 prev_tag_size;
@@ -75,11 +75,15 @@ int main(int argc, char ** argv) {
     uint8 timestamp_extended = 0;
     
     while (!feof(flv_in)) {
-        offset = ftell(flv_in);
+        offset = flvmeta_ftell(flv_in);
         if (fread(&ft, sizeof(ft), 1, flv_in) == 0)
             break;
 
+#if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
+        printf("--- Tag #%u at 0x%llX (%lli) ---\n", n++, (sint64)offset, (sint64)offset);
+#else
         printf("--- Tag #%u at 0x%lX (%li) ---\n", n++, offset, offset);
+#endif
         switch (ft.type) {
             case FLV_TAG_TYPE_AUDIO: str = "Audio"; break;
             case FLV_TAG_TYPE_VIDEO: str = "Video"; break;
@@ -205,7 +209,10 @@ int main(int argc, char ** argv) {
                 printf("* Missing: %i bytes\n", -(int)(body_length - data_size));
             }
         }
-        fseek(flv_in, offset + sizeof(flv_tag) + body_length, SEEK_SET);
+        else {
+            break;
+        }
+        flvmeta_fseek(flv_in, offset + sizeof(flv_tag) + body_length, SEEK_SET);
         if (fread(&prev_tag_size, sizeof(uint32_be), 1, flv_in) == 1) {
             printf("Previous tag size: %u\n", swap_uint32(prev_tag_size));
         }

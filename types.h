@@ -48,6 +48,8 @@ typedef struct __uint24 {
 
 typedef uint64_t uint64, uint64_le, uint64_be;
 
+typedef int64_t sint64, sint64_le, sint64_be;
+
 typedef
 #if SIZEOF_FLOAT == 8
 float
@@ -100,6 +102,18 @@ number64 swap_number64(number64);
 
 /* convert native integers into 24 bits big endian integers */
 uint24_be uint32_to_uint24_be(uint32);
+
+/* large file support */
+#ifdef HAVE_FSEEKO
+#  define flvmeta_ftell ftello
+#  define flvmeta_fseek fseeko
+#else
+#  define flvmeta_ftell ftell
+#  define flvmeta_fseek fseek
+#  ifndef off_t
+#    define off_t long
+#  endif
+#endif /* HAVE_FSEEKO */
 
 #ifdef __cplusplus
 }

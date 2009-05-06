@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(flvmeta, 1.0.7, flvmeta-discussion@googlegroups.com)
+AC_INIT(flvmeta, 1.0.8, flvmeta-discussion@googlegroups.com)
 AC_CONFIG_SRCDIR([flvmeta.c])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
@@ -26,9 +26,14 @@ AC_TYPE_INT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_INT32_T
 AC_TYPE_UINT64_T
+AC_TYPE_INT64_T
 AC_CHECK_SIZEOF([float])
 AC_CHECK_SIZEOF([double])
 AC_CHECK_SIZEOF([long double])
+
+# Checks for large file support
+AC_SYS_LARGEFILE
+AC_FUNC_FSEEKO
 
 # Checks for library functions.
 AC_FUNC_MALLOC

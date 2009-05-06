@@ -21,14 +21,14 @@
     along with FLVMeta; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-
 #include "flvmeta.h"
 #include "flv.h"
 #include "amf.h"
 #include "avc.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
 
 #define OK                  0
 #define ERROR_OPEN_READ     1
@@ -61,7 +61,7 @@ typedef struct __flv_info {
     uint8 have_keyframes;
     uint32 last_keyframe_timestamp;
     uint32 on_metadata_size;
-    uint32 on_metadata_offset;
+    off_t on_metadata_offset;
     uint32 biggest_tag_body_size;
     uint32 last_timestamp;
     uint32 video_frame_duration;
@@ -275,7 +275,7 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
     amf_object_add(info->keyframes, amf_str("filepositions"), info->filepositions);
 
     /* skip first empty previous tag size */
-    fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
+    flvmeta_fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
     info->total_prev_tags_size += sizeof(uint32_be);
 
     /* extended timestamp initialization */
@@ -286,11 +286,11 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
 
     while (!feof(flv_in)) {
         flv_tag ft;
-        uint32 offset;
+        off_t offset;
         uint32 body_length;
         uint32 timestamp;
 
-        offset = ftell(flv_in);
+        offset = flvmeta_ftell(flv_in);
         if (fread(&ft, sizeof(flv_tag), 1, flv_in) == 0) {
             break;
         }
@@ -438,7 +438,7 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
         }
 
         body_length += sizeof(uint32); /* skip tag size */
-        fseek(flv_in, (long)body_length, SEEK_CUR);
+        flvmeta_fseek(flv_in, body_length, SEEK_CUR);
     }
 
     return OK;
@@ -633,12 +633,12 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
     uint8 timestamp_extended = 0;
 
     /* copy the tags verbatim */
-    fseek(flv_in, sizeof(flv_header)+sizeof(uint32_be), SEEK_SET);
+    flvmeta_fseek(flv_in, sizeof(flv_header)+sizeof(uint32_be), SEEK_SET);
 
     byte * copy_buffer = (byte *)malloc(info->biggest_tag_body_size);
     int have_on_last_second = 0;
     while (!feof(flv_in)) {
-        uint32 offset;
+        off_t offset;
         uint32 body_length;
         uint32 timestamp;
         flv_tag ft;
@@ -680,7 +680,7 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
                 return ERROR_WRITE;
             }
 
-            fseek(flv_in, body_length + sizeof(uint32_be), SEEK_CUR);
+            flvmeta_fseek(flv_in, body_length + sizeof(uint32_be), SEEK_CUR);
         }
         else {
             /* insert an onLastSecond metadata tag */
@@ -729,7 +729,7 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
                 return ERROR_WRITE;
             }
 
-            fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
+            flvmeta_fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
         }        
     }
 

@@ -51,13 +51,13 @@
 #define PACKAGE_NAME "flvmeta"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "flvmeta 1.0.7"
+#define PACKAGE_STRING "flvmeta 1.0.8"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "flvmeta"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.0.7"
+#define PACKAGE_VERSION "1.0.8"
 
 /* The size of `double', as computed by sizeof. */
 #define SIZEOF_DOUBLE 8
@@ -72,26 +72,31 @@
 #define STDC_HEADERS 1
 
 /* Version number of package */
-#define VERSION "1.0.7"
+#define VERSION "1.0.8"
 
-/* Define to 1 if your processor stores words with the most significant byte
-   first (like Motorola and SPARC, unlike Intel and VAX). */
-/* #undef WORDS_BIGENDIAN */
+/* Number of bits in a file offset, on hosts where this is settable. */
+/* #undef _FILE_OFFSET_BITS */
+
+/* Define to 1 to make fseeko visible on some hosts (e.g. glibc 2.2). */
+/* #undef _LARGEFILE_SOURCE */
+
+/* Define for large files, on AIX-style hosts. */
+/* #undef _LARGE_FILES */
 
 /* Define for Solaris 2.5.1 so the uint32_t typedef from <sys/synch.h>,
    <pthread.h>, or <semaphore.h> is not used. If the typedef was allowed, the
    #define below would cause a syntax error. */
-#define _UINT32_T 1
+/* #undef _UINT32_T */
 
 /* Define for Solaris 2.5.1 so the uint64_t typedef from <sys/synch.h>,
    <pthread.h>, or <semaphore.h> is not used. If the typedef was allowed, the
    #define below would cause a syntax error. */
-#define _UINT64_T 1
+/* #undef _UINT64_T */
 
 /* Define for Solaris 2.5.1 so the uint8_t typedef from <sys/synch.h>,
    <pthread.h>, or <semaphore.h> is not used. If the typedef was allowed, the
    #define below would cause a syntax error. */
-#define _UINT8_T 1
+/* #undef _UINT8_T */
 
 /* Define to empty if `const' does not conform to ANSI C. */
 /* #undef const */
@@ -103,6 +108,10 @@
 /* Define to the type of a signed integer type of width exactly 32 bits if
    such a type exists and the standard includes do not define it. */
 #define int32_t signed int
+
+/* Define to the type of a signed integer type of width exactly 64 bits if
+   such a type exists and the standard includes do not define it. */
+#define int64_t signed long long int
 
 /* Define to rpl_malloc if the replacement function should be used. */
 /* #undef malloc */
