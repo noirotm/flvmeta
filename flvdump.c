@@ -65,7 +65,7 @@ int main(int argc, char ** argv) {
     flvmeta_fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
 
     flv_tag ft;
-    off_t offset;
+    file_offset_t offset;
     char * str;
     uint32 n = 1;
     uint32 prev_tag_size;
@@ -80,9 +80,10 @@ int main(int argc, char ** argv) {
             break;
 
 #if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
-        printf("--- Tag #%u at 0x%llX (%lli) ---\n", n++, (sint64)offset, (sint64)offset);
+        printf("--- Tag #%u at 0x%llX",  n++, (sint64)offset);
+        printf(" (%lli) ---\n", (sint64)offset);
 #else
-        printf("--- Tag #%u at 0x%lX (%li) ---\n", n++, offset, offset);
+        printf("--- Tag #%u at 0x%lX (%li) ---\n", n++, (long unsigned int)offset, (long int)offset);
 #endif
         switch (ft.type) {
             case FLV_TAG_TYPE_AUDIO: str = "Audio"; break;
@@ -203,7 +204,7 @@ int main(int argc, char ** argv) {
             amf_data_free(data);
 
             if (body_length > data_size) {
-                printf("* Garbage: %i bytes\n", body_length - data_size);
+                printf("* Garbage: %i bytes\n", (int)(body_length - data_size));
             }
             else if (body_length < data_size) {
                 printf("* Missing: %i bytes\n", -(int)(body_length - data_size));

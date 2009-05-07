@@ -68,25 +68,25 @@ extern "C" {
 
 #ifdef WORDS_BIGENDIAN
 
-#  define swap_uint16(x) (x)
-#  define swap_sint16(x) (x)
-#  define swap_uint32(x) (x)
-#  define swap_number64(x) (x)
+# define swap_uint16(x) (x)
+# define swap_sint16(x) (x)
+# define swap_uint32(x) (x)
+# define swap_number64(x) (x)
 
 /* convert big endian 24 bits integers to native integers */
-#  define uint24_be_to_uint32(x) ((uint32)(((x).b2 << 16) | \
+# define uint24_be_to_uint32(x) ((uint32)(((x).b2 << 16) | \
     ((x).b1 << 8) | (x).b0))
 
 #else /* !defined WORDS_BIGENDIAN */
 
 /* swap 16 bits integers */
-#  define swap_uint16(x) ((uint16)((((x) & 0x00FFU) << 8) | \
+# define swap_uint16(x) ((uint16)((((x) & 0x00FFU) << 8) | \
     (((x) & 0xFF00U) >> 8)))
-#  define swap_sint16(x) ((sint16)((((x) & 0x00FF) << 8) | \
+# define swap_sint16(x) ((sint16)((((x) & 0x00FF) << 8) | \
     (((x) & 0xFF00) >> 8)))
 
 /* swap 32 bits integers */
-#  define swap_uint32(x) ((uint32)((((x) & 0x000000FFU) << 24) | \
+# define swap_uint32(x) ((uint32)((((x) & 0x000000FFU) << 24) | \
     (((x) & 0x0000FF00U) << 8)  | \
     (((x) & 0x00FF0000U) >> 8)  | \
     (((x) & 0xFF000000U) >> 24)))
@@ -95,7 +95,7 @@ extern "C" {
 number64 swap_number64(number64);
 
 /* convert big endian 24 bits integers to native integers */
-#  define uint24_be_to_uint32(x) ((uint32)(((x).b0 << 16) | \
+# define uint24_be_to_uint32(x) ((uint32)(((x).b0 << 16) | \
     ((x).b1 << 8) | (x).b2))
 
 #endif /* WORDS_BIGENDIAN */
@@ -105,14 +105,29 @@ uint24_be uint32_to_uint24_be(uint32);
 
 /* large file support */
 #ifdef HAVE_FSEEKO
-#  define flvmeta_ftell ftello
-#  define flvmeta_fseek fseeko
-#else
-#  define flvmeta_ftell ftell
-#  define flvmeta_fseek fseek
-#  ifndef off_t
-#    define off_t long
-#  endif
+# define flvmeta_ftell ftello
+# define flvmeta_fseek fseeko
+
+# ifdef WIN32
+
+typedef long long int file_offset_t;
+
+/* Win32 large file support */
+#  include "largefile.h"
+
+# else /* !defined WIN32 */
+
+#  include <sys/types.h> /* off_t */
+typedef off_t file_offset_t;
+
+# endif /* WIN32 */
+
+#else /* !HAVE_SEEKO */
+# define flvmeta_ftell ftell
+# define flvmeta_fseek fseek
+
+typedef long file_offset_t;
+
 #endif /* HAVE_FSEEKO */
 
 #ifdef __cplusplus

@@ -126,6 +126,9 @@
 				RelativePath=".\flvdump.c">
 			</File>
 			<File
+				RelativePath=".\largefile.c">
+			</File>
+			<File
 				RelativePath=".\types.c">
 			</File>
 		</Filter>
@@ -165,6 +168,9 @@
 			</File>
 			<File
 				RelativePath=".\flvmeta.h">
+			</File>
+			<File
+				RelativePath=".\largefile.h">
 			</File>
 			<File
 				RelativePath=".\types.h">

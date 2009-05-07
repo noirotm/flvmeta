@@ -61,7 +61,7 @@ typedef struct __flv_info {
     uint8 have_keyframes;
     uint32 last_keyframe_timestamp;
     uint32 on_metadata_size;
-    off_t on_metadata_offset;
+    file_offset_t on_metadata_offset;
     uint32 biggest_tag_body_size;
     uint32 last_timestamp;
     uint32 video_frame_duration;
@@ -286,7 +286,7 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
 
     while (!feof(flv_in)) {
         flv_tag ft;
-        off_t offset;
+        file_offset_t offset;
         uint32 body_length;
         uint32 timestamp;
 
@@ -382,7 +382,7 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
                 }
                 info->last_keyframe_timestamp = timestamp;
                 amf_array_push(info->times, amf_number_new(timestamp / 1000.0));
-                amf_array_push(info->filepositions, amf_number_new(offset));
+                amf_array_push(info->filepositions, amf_number_new((number64)offset));
 
                 /* is last frame a key frame ? if so, we can seek to end */
                 info->can_seek_to_end = 1;
@@ -638,7 +638,7 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
     byte * copy_buffer = (byte *)malloc(info->biggest_tag_body_size);
     int have_on_last_second = 0;
     while (!feof(flv_in)) {
-        off_t offset;
+        file_offset_t offset;
         uint32 body_length;
         uint32 timestamp;
         flv_tag ft;
