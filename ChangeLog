@@ -1,3 +1,24 @@
+2009-05-08 Marc Noirot <marc.noirot@gmail.com>
+	* configure.ac: 1.0.8 Release.
+
+	* avc.c: Fixed compilation on OSX.
+
+	* config.h.win, largefile.c, largefile.h: Added Large File Support
+	  for Windows. We're using the fgetpos/fsetpos APIs by assuming
+	  the fpos_t type is a 64-bit integer.
+
+	* flvdump.c: Fixed a few compilation warnings.
+
+2009-05-07 Marc Noirot <marc.noirot@gmail.com>
+	* flvdump.c, flvmeta.c, types.h, configure.ac: Added Large File
+	  Support for architectures supporting the ftello function.
+
+	* flvdump.c: Fixed flvdump so it will exit right after reading
+	  an invalid tag instead of going on and eventually crash.
+
+2009-05-02 Marc Noirot <marc.noirot@gmail.com>
+	* flvdump.c: Fixed compilation warnings in GCC 4.3.3.
+
 2009-04-19 Marc Noirot <marc.noirot@gmail.com>
 	* flvmeta.c avc.h avc.c: Added support for AVC video resolution
 	  detection.
@@ -13,7 +34,7 @@
 	* flvmeta.c (get_flv_info): Fixed a bug where two consecutive tags of
 	  different types and with decreasing timestamps would cause extended
 	  timestamps to be incorrectly used for the next tags.
-	
+
 2008-09-29 Marc Noirot <marc.noirot@gmail.com>
 	* flv.h, flvdump.c: Added support for JPEG video frames.
 
@@ -76,17 +97,17 @@
 
 2008-01-04 Marc Noirot <marc.noirot@gmail.com>
 	* configure.ac: 1.0.4 Release.
-	
+
 	* flvmeta.c (get_flv_info, write_flv): Data tags occuring before the first
 	  audio or video tag were not written into the output file.
-	
+
 	* all source files: Fixed copyright strings.
 
 2008-01-03 Marc Noirot <marc.noirot@gmail.com>
 	* flvmeta.c (compute_metadata): Fixed a date bug where the
 	  daylight static variable obtained from tzset() was used
 	  to compute UTC times.
-	
+
 	* flvdump.c: Fixed flvdump so it will report garbage bytes in the
 	  metadata tags, and be more tolerant with malformed files.
 
@@ -103,64 +124,64 @@
 
 	* amf.c (amf_data_decode, amf_data_encode):
 	  Fixed missing break statements.
-	
+
 	* amf.c (amf_string_encode): Forgot to count
 	  the string length prefix size.
 
 2007-10-05 Marc Noirot <marc.noirot@gmail.com>
 	* flvmeta.c (compute_vp6_alpha_size): Fixed read check.
-	
+
 	* flvmeta.c (get_flv_info): Added a file reading check
 	  that had been forgotten.
-	
+
 	* flvmeta.c: A few small fixes.
 
 2007-09-30 Marc Noirot <marc.noirot@gmail.com>
 	* configure.ac: 1.0.2 Release.
-	
+
 	* configure.ac, config.h.win, types.h, types.c:
 	  Fixed integer and float size checking, as well as endianness
 	  checking. This fixes issues on 64-bits architectures.
-	
+
 	* flvdump.c (main): Fixed printf type specifiers.
-	
+
 	* flvmeta.c (get_flv_info): Fixed "times" metadata tag,
 	  which was incorrectly written as "timestamps".
-	
+
 	* flvmeta.c (compute_metadata): Fixed audio delay
 	  computation.
-	
+
 2007-09-24 Marc Noirot <marc.noirot@gmail.com>
 	* configure.ac: 1.0.1 Release.
-	
+
 	* flvmeta.c (compute_metadata, get_flv_info):
 	  Fixed an offset and file size computation error.
-	
+
 	* flvmeta.c (compute_metadata): Audio-related metadata
 	  should not appear when the file has no audio data.
-	
+
 	* Makefile.win: Removed references to flv.c.
 
 2007-09-22 Marc Noirot <marc.noirot@gmail.com>
 	* types.c, types.h: Removed 64 bits integers conversions.
-	
+
 	* types.c (uint32_to_uint24_be): Fixed a few literal unsigned
 	  integers.
 
 2007-09-21 Marc Noirot <marc.noirot@gmail.com>
 	* configure.ac: 1.0 Release.
-	
+
 	* amf.c (amf_data_free): Fixed a memory leak on array objects.
-	
+
 	* config.h.win, configure.ac, flvdump.c, flvmeta.c:
 	  Added bug report mail address.
-	
+
 	* configure.ac: Added a number of language and headers tests.
 	  Marked autoconf minimum version as 2.61.
-	  
+
 	* flvmeta.c (compute_metadata): Fixed video width and height
 	  injection.
-	
+
 	* Makefile.am: Removed the empty flv.c from the sources.
 
 2007-09-20 Marc Noirot <marc.noirot@gmail.com>	
@@ -175,19 +196,19 @@
 
 	* flv.h, flvmeta.c: Fixed the padding in the flv_tag to better
 	  reflect its role.
-	
+
 	* flvmeta.c: Made error messages more uniform.
-	
+
 	* flvmeta.c (compute_h263_size): Added Picture Start Code check.
-	
+
 	* flvdump.c (main): Suppressed a compilation warning.
-	
+
 	* Makefile.am: Added -Wall.
-	
+
 	* Makefile.am: Removed non-existant directory `doc' from EXTRA_DIST.
-	
+
 	* THANKS, TODO: Added.
-	
+
 	* AUTHORS, README, Changelog: Standard stuff.
 
 2007-09-19 Marc Noirot <marc.noirot@gmail.com>
