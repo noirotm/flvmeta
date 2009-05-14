@@ -1,7 +1,3 @@
-Large file support.
-
-##
-
 Full AMF0 support.
 
 ##
@@ -24,3 +20,14 @@ Various speed enhancements.
 
 Command line options.
 
+##
+
+Fix metadata parameters case.
+
+##
+
+Man page.
+
+##
+
+Fix onLastSecond insertion, which should be before the last second.

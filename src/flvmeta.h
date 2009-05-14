@@ -58,8 +58,9 @@
 
 /* dump formats */
 #define FLVMETA_FORMAT_XML          0
-#define FLVMETA_FORMAT_JSON         1
-#define FLVMETA_FORMAT_YAML         2
+#define FLVMETA_FORMAT_RAW          1
+#define FLVMETA_FORMAT_JSON         2
+#define FLVMETA_FORMAT_YAML         3
 
 /* flvmeta options */
 typedef struct __flvmeta_opts {
@@ -71,7 +72,6 @@ typedef struct __flvmeta_opts {
     int preserve_metadata;
     int error_handling;
     int dump_format;
-    int use_mmap;
     int verbose;
 } flvmeta_opts;
 

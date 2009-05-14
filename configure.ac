@@ -32,9 +32,14 @@ AC_TYPE_INT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_INT32_T
 AC_TYPE_UINT64_T
+AC_TYPE_INT64_T
 AC_CHECK_SIZEOF([float])
 AC_CHECK_SIZEOF([double])
 AC_CHECK_SIZEOF([long double])
+
+dnl Checks for large file support
+AC_SYS_LARGEFILE
+AC_FUNC_FSEEKO
 
 dnl Checks for library functions.
 AC_FUNC_MALLOC

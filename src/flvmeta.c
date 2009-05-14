@@ -44,9 +44,9 @@ static struct option long_options[] = {
     { "ignore",        no_argument,         NULL, 'i'},
     { "dump-format",   required_argument,   NULL, 'd'},
     { "json",          no_argument,         NULL, 'j'},
+    { "raw",           no_argument,         NULL, 'r'},
     { "yaml",          no_argument,         NULL, 'y'},
     { "xml",           no_argument,         NULL, 'x'},
-    { "mmap",          no_argument,         NULL, 'm'},
     { "verbose",       no_argument,         NULL, 'v'},
     { "version",       no_argument,         NULL, 'V'},
     { "help",          no_argument,         NULL, 'h'},
@@ -83,12 +83,12 @@ static void help(const char * name) {
     fprintf(stderr, "  -i, --ignore              ignore invalid tags from the input file\n");
     fprintf(stderr, "                            (the default is to stop with an error)\n");
     fprintf(stderr, "  -d, --dump-format=TYPE    dump format is of type TYPE\n");
-    fprintf(stderr, "                            TYPE is 'xml' (default), 'json', or 'yaml'\n");
+    fprintf(stderr, "                            TYPE is 'xml' (default), 'raw', 'json', or 'yaml'\n");
     fprintf(stderr, "  -j, --json                equivalent to --dump-format=json\n");
+    fprintf(stderr, "  -r, --raw                 equivalent to --dump-format=raw\n");
     fprintf(stderr, "  -y, --yaml                equivalent to --dump-format=yaml\n");
     fprintf(stderr, "  -x, --xml                 equivalent to --dump-format=xml\n");
     fprintf(stderr, "\nAdvanced options:\n");
-    fprintf(stderr, "  -m, --mmap                use memory mapping to read FILE\n");
     fprintf(stderr, "  -v, --verbose             display informative messages\n");
     fprintf(stderr, "\nMiscellaneous:\n");
     fprintf(stderr, "  -V, --version             print version information and exit\n");
@@ -109,7 +109,6 @@ int main(int argc, char ** argv) {
     options.preserve_metadata = 0;
     options.error_handling = FLVMETA_EXIT_ON_ERROR;
     options.dump_format = FLVMETA_FORMAT_XML;
-    options.use_mmap = 0;
     options.verbose = 0;
 
     /*
@@ -117,7 +116,7 @@ int main(int argc, char ** argv) {
     */
     option_index = 0;
     do {
-        option = getopt_long(argc, argv, "DFCUa:lpfid:jyxmvVh", long_options, &option_index);
+        option = getopt_long(argc, argv, "DFCUa:lpfid:jyxvVh", long_options, &option_index);
         switch (option) {
             /*
                 commands
@@ -180,6 +179,9 @@ int main(int argc, char ** argv) {
                 if (!strcmp(optarg, "xml")) {
                     options.dump_format = FLVMETA_FORMAT_XML;
                 }
+                if (!strcmp(optarg, "raw")) {
+                    options.dump_format = FLVMETA_FORMAT_RAW;
+                }
                 else if (!strcmp(optarg, "json")) {
                     options.dump_format = FLVMETA_FORMAT_JSON;
                 }
@@ -193,12 +195,12 @@ int main(int argc, char ** argv) {
                 }
                 break;
             case 'j': options.dump_format = FLVMETA_FORMAT_JSON;    break;
+            case 'r': options.dump_format = FLVMETA_FORMAT_RAW;     break;
             case 'y': options.dump_format = FLVMETA_FORMAT_XML;     break;
             case 'x': options.dump_format = FLVMETA_FORMAT_YAML;    break;
             /*
                 advanced options
             */
-            case 'm': options.use_mmap = 1; break;
             case 'v': options.verbose = 1;  break;
             /*
                 Miscellaneous

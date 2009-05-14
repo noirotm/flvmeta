@@ -122,6 +122,9 @@
 				RelativePath="..\src\amf.c">
 			</File>
 			<File
+				RelativePath="..\src\avc.c">
+			</File>
+			<File
 				RelativePath="..\src\flv.c">
 			</File>
 			<File
@@ -132,12 +135,6 @@
 			</File>
 			<File
 				RelativePath=".\getopt1.c">
-			</File>
-			<File
-				RelativePath="..\src\mmap.c">
-			</File>
-			<File
-				RelativePath="..\src\stream.c">
 			</File>
 			<File
 				RelativePath="..\src\types.c">
@@ -154,6 +151,9 @@
 				RelativePath="..\src\amf.h">
 			</File>
 			<File
+				RelativePath="..\src\avc.h">
+			</File>
+			<File
 				RelativePath=".\config.h">
 			</File>
 			<File
@@ -167,12 +167,6 @@
 			</File>
 			<File
 				RelativePath=".\gettext.h">
-			</File>
-			<File
-				RelativePath="..\src\mmap.h">
-			</File>
-			<File
-				RelativePath="..\src\stream.h">
 			</File>
 			<File
 				RelativePath="..\src\types.h">

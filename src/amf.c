@@ -682,7 +682,7 @@ void amf_data_dump(FILE * stream, amf_data * data, int indent_level) {
         amf_node * node;
         time_t time;
         struct tm * t;
-        char datestr[64];
+        char datestr[128];
         switch (data->type) {
             case AMF_TYPE_NUMBER:
                 fprintf(stream, "%f", data->number_data);
@@ -739,7 +739,8 @@ void amf_data_dump(FILE * stream, amf_data * data, int indent_level) {
                 break;
             case AMF_TYPE_DATE:
                 time = amf_date_to_time_t(data);
-                t = gmtime(&time);
+                tzset();
+                t = localtime(&time);
                 strftime(datestr, sizeof(datestr), "%a, %d %b %Y %H:%M:%S %z", t);
                 fprintf(stream, "%s", datestr);
                 break;
@@ -1018,5 +1019,5 @@ sint16 amf_date_get_timezone(amf_data * data) {
 }
 
 time_t amf_date_to_time_t(amf_data * data) {
-    return  (time_t)((data != NULL) ? data->date_data.milliseconds / 1000 + data->date_data.timezone * 60 : 0);
+    return  (time_t)((data != NULL) ? data->date_data.milliseconds / 1000 : 0);
 }

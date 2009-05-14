@@ -1,14 +1,12 @@
 set(flvmeta_src
     amf.c
     amf.h
+    avc.c
+    avc.h
     flv.c
     flv.h
     flvmeta.c
     flvmeta.h
-    mmap.c
-    mmap.h
-    stream.c
-    stream.h
     types.c
     types.h
     update.c

@@ -55,3 +55,39 @@ uint24_be uint32_to_uint24_be(uint32 l) {
     r.b2 = (uint8) (l & 0x000000FFU);
     return r;
 }
+
+#ifdef WIN32
+
+/*
+    These functions assume fpos_t is a 64-bit signed integer
+*/
+
+file_offset_t ftello(FILE * stream) {
+    fpos_t p;
+    if (fgetpos(stream, &p) == 0) {
+        return (file_offset_t)p;
+    }
+    else {
+        return -1LL;
+    }
+}
+
+int fseeko(FILE * stream, file_offset_t offset, int whence) {
+    fpos_t p;
+    if (fgetpos(stream, &p) == 0) {
+        switch (whence) {
+            case SEEK_CUR: p += offset; break;
+            case SEEK_SET: p = offset; break;
+            /*case SEEK_END:; not implemented here */
+            default:
+                return -1;
+        }
+        fsetpos(stream, &p);
+        return 0;
+    }
+    else {
+        return -1;
+    }
+}
+
+#endif /* WIN32 */

@@ -21,12 +21,12 @@
     along with FLVMeta; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <stdio.h>
-#include <string.h>
-
 #include "flvmeta.h"
 #include "flv.h"
 #include "amf.h"
+
+#include <stdio.h>
+#include <string.h>
 
 int main(int argc, char ** argv) {
 
@@ -49,7 +49,11 @@ int main(int argc, char ** argv) {
 
     flv_header fh;
 
-    fread(&fh, sizeof(fh), 1, flv_in);
+    if (fread(&fh, sizeof(fh), 1, flv_in) == 0) {
+        fclose(flv_in);
+        fprintf(stderr, "error reading header\n");
+        return 3;
+    }
 
     printf("Magic: %.3s\n", fh.signature);
     printf("Version: %d\n", fh.version);
@@ -58,10 +62,10 @@ int main(int argc, char ** argv) {
     printf("Offset: %u\n", swap_uint32(fh.offset));
 
     /* skip first empty previous tag size */
-    fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
+    flvmeta_fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
 
     flv_tag ft;
-    long offset;
+    file_offset_t offset;
     char * str;
     uint32 n = 1;
     uint32 prev_tag_size;
@@ -71,11 +75,16 @@ int main(int argc, char ** argv) {
     uint8 timestamp_extended = 0;
     
     while (!feof(flv_in)) {
-        offset = ftell(flv_in);
+        offset = flvmeta_ftell(flv_in);
         if (fread(&ft, sizeof(ft), 1, flv_in) == 0)
             break;
 
-        printf("--- Tag #%u at 0x%lX (%li) ---\n", n++, offset, offset);
+#if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
+        printf("--- Tag #%u at 0x%llX",  n++, (sint64)offset);
+        printf(" (%lli) ---\n", (sint64)offset);
+#else
+        printf("--- Tag #%u at 0x%lX (%li) ---\n", n++, (long unsigned int)offset, (long int)offset);
+#endif
         switch (ft.type) {
             case FLV_TAG_TYPE_AUDIO: str = "Audio"; break;
             case FLV_TAG_TYPE_VIDEO: str = "Video"; break;
@@ -103,7 +112,11 @@ int main(int argc, char ** argv) {
 
         if (ft.type == FLV_TAG_TYPE_AUDIO) {
             flv_audio_tag at;
-            fread(&at, sizeof(at), 1, flv_in);
+            if (fread(&at, sizeof(at), 1, flv_in)  == 0) {
+                fclose(flv_in);
+                fprintf(stderr, "error reading audio data\n");
+                return 4;
+            }
 
             switch (flv_audio_tag_sound_type(at)) {
                 case FLV_AUDIO_TAG_SOUND_TYPE_MONO: str = "Mono"; break;
@@ -140,6 +153,7 @@ int main(int argc, char ** argv) {
                 case FLV_AUDIO_TAG_SOUND_FORMAT_G711_MU: str = "G.711 mu-law logarithmic PCM"; break;
                 case FLV_AUDIO_TAG_SOUND_FORMAT_RESERVED: str = "reserved"; break;
                 case FLV_AUDIO_TAG_SOUND_FORMAT_AAC: str = "AAC"; break;
+                case FLV_AUDIO_TAG_SOUND_FORMAT_SPEEX: str = "Speex"; break;
                 case FLV_AUDIO_TAG_SOUND_FORMAT_MP3_8: str = "MP3 8-Khz"; break;
                 case FLV_AUDIO_TAG_SOUND_FORMAT_DEVICE_SPECIFIC: str = "Device-specific sound"; break;
                 default: str = "Unknown";
@@ -148,7 +162,11 @@ int main(int argc, char ** argv) {
         }
         else if (ft.type == FLV_TAG_TYPE_VIDEO) {
             flv_video_tag vt;
-            fread(&vt, sizeof(vt), 1, flv_in);
+            if (fread(&vt, sizeof(vt), 1, flv_in)  == 0) {
+                fclose(flv_in);
+                fprintf(stderr, "error reading video data\n");
+                return 5;
+            }
 
             switch (flv_video_tag_codec_id(vt)) {
                 case FLV_VIDEO_TAG_CODEC_JPEG: str = "JPEG"; break;
@@ -166,6 +184,8 @@ int main(int argc, char ** argv) {
                 case FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME: str = "keyframe"; break;
                 case FLV_VIDEO_TAG_FRAME_TYPE_INTERFRAME: str = "inter frame"; break;
                 case FLV_VIDEO_TAG_FRAME_TYPE_DISPOSABLE_INTERFRAME: str = "disposable inter frame"; break;
+                case FLV_VIDEO_TAG_FRAME_TYPE_GENERATED_KEYFRAME: str = "generated keyframe"; break;
+                case FLV_VIDEO_TAG_FRAME_TYPE_COMMAND_FRAME: str = "video info/command frame"; break;
                 default: str = "Unknown";
             }
             printf("* Video frame type: %s\n", str);
@@ -184,13 +204,16 @@ int main(int argc, char ** argv) {
             amf_data_free(data);
 
             if (body_length > data_size) {
-                printf("* Garbage: %i bytes\n", body_length - data_size);
+                printf("* Garbage: %i bytes\n", (int)(body_length - data_size));
             }
             else if (body_length < data_size) {
                 printf("* Missing: %i bytes\n", -(int)(body_length - data_size));
             }
         }
-        fseek(flv_in, offset + sizeof(flv_tag) + body_length, SEEK_SET);
+        else {
+            break;
+        }
+        flvmeta_fseek(flv_in, offset + sizeof(flv_tag) + body_length, SEEK_SET);
         if (fread(&prev_tag_size, sizeof(uint32_be), 1, flv_in) == 1) {
             printf("Previous tag size: %u\n", swap_uint32(prev_tag_size));
         }
