@@ -1,3 +1,10 @@
+2009-05-15 Marc Noirot <marc.noirot@gmail.com>
+	* amf.c (amf_data_dump): Fixed date handling in AMF according to
+	  the official spec.
+
+	* flvmeta.c: Fixed large file support so it will work for files
+	  bigger than 4GB.
+
 2009-05-08 Marc Noirot <marc.noirot@gmail.com>
 	* configure.ac: 1.0.8 Release.
 

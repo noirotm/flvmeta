@@ -1,11 +1,3 @@
-Large file support.
-
-##
-
-Using memory mapping to improve the reading speed.
-
-##
-
 Allow user to specify custom metadata tags.
 
 ##
@@ -24,3 +16,10 @@ Various speed enhancements.
 
 Command line options.
 
+##
+
+Fix metadata parameters case.
+
+##
+
+Man page.
