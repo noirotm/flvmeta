@@ -25,7 +25,6 @@
 
 #include "flvmeta.h"
 #include "amf.h"
-#include "types.h"
 
 /* function common to all array types */
 static void amf_list_init(amf_list * list) {

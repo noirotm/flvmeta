@@ -1,36 +1,37 @@
 set(flvmeta_src
-    amf.c
-    amf.h
-    avc.c
-    avc.h
-    flv.c
-    flv.h
-    flvmeta.c
-    flvmeta.h
-    types.c
-    types.h
-    update.c
-    update.h
-    ${CMAKE_BINARY_DIR}/config.h
+  amf.c
+  amf.h
+  avc.c
+  avc.h
+  flv.c
+  flv.h
+  flvmeta.c
+  flvmeta.h
+  types.c
+  types.h
+  update.c
+  update.h
+  ${CMAKE_BINARY_DIR}/config.h
 )
 
-include_directories(${CMAKE_BINARY_DIR})
-add_definitions(-DHAVE_CONFIG_H)
-
+# add support for getopt and gettext in windows
 if(WIN32)
-    set(flvmeta_src
-        ${flvmeta_src}
-        ${PROJECT_SOURCE_DIR}/msvc/getopt1.c
-        ${PROJECT_SOURCE_DIR}/msvc/getopt.c
-        ${PROJECT_SOURCE_DIR}/msvc/getopt.h
-        ${PROJECT_SOURCE_DIR}/msvc/gettext.h
-    )
-    include_directories(${PROJECT_SOURCE_DIR}/msvc)
+  set(flvmeta_src
+    ${flvmeta_src}
+    compat/getopt1.c
+    compat/getopt.c
+    compat/getopt.h
+    compat/gettext.h
+  )
+  include_directories(compat)
 endif(WIN32)
 
-# C runtime deprecation in Visual C++ 2005 and later
-if(MSVC)
-    add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
-endif(MSVC)
-
 add_executable(flvmeta ${flvmeta_src})
+
+if(WIN32)
+  install(TARGETS flvmeta
+    RUNTIME DESTINATION .)
+else(WIN32)
+  install(TARGETS flvmeta
+    RUNTIME DESTINATION bin)
+endif(WIN32)

@@ -1,3 +1,18 @@
+2009-05-27 Marc Noirot <marc.noirot@gmail.com>
+	* CMakeLists.txt, src/CMakeLists.txt: Various fixes and support for
+	  the windows binary distribution generation.
+
+	* Makefile.am, src/Makefile.am: Various fixes.
+
+	* msvc: Made cmake the official Win32 build platform.
+
+	* mmap.c, mmap.h, stream.c, stream.h : Removed unused files, memory
+	  mapping support is not used anymore.
+
+	* amf.c: Fixed header include.
+
+	* types.h, types.c: Cleaned up large file support.
+
 2009-04-17 Marc Noirot <marc.noirot@gmail.com>
 	* flvmeta.c (get_flv_info): Fixed a bug where two consecutive tags of
 	  different types and with decreasing timestamps would cause extended

@@ -6,9 +6,10 @@ an input FLV file.
 
 The flvmeta utility is able to compute almost all known metadata tags,
 including the keyframes list.
-Since version 1.0.7, it is also able to fix very large FLV files with
+As of version 1.0.7, it is also able to fix very large FLV files with
 invalid 24-bit only timestamps to make proper use of 32-bit extended
 timestamps.
+As of version 1.0.8, it can handle arbitrarily large files.
 
 The main goal of this program is to write an alternative to tools like flvtool2.
 It is written in portable C, and should compile on most platforms (it has

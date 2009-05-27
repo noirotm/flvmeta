@@ -33,8 +33,12 @@
 # include <stdint.h>
 #endif
 
+#ifdef HAVE_SYS_TYPES_H
+#  include <sys/types.h> /* off_t */
+#endif
+
 #ifdef HAVE_INTTYPES_H
-#include <inttypes.h>
+# include <inttypes.h>
 #endif
 
 typedef uint8_t byte, uint8, uint8_bitmask;
@@ -115,30 +119,28 @@ uint24_be uint32_to_uint24_be(uint32);
 # define flvmeta_ftell ftello
 # define flvmeta_fseek fseeko
 
+typedef off_t file_offset_t;
+
+#else /* !HAVE_SEEKO */
+
 # ifdef WIN32
 
 typedef long long int file_offset_t;
 
 /* Win32 large file support */
-#include "types.h"
 #include <stdio.h>
 
-file_offset_t ftello(FILE * stream);
-
-int fseeko(FILE * stream, file_offset_t offset, int whence);
+file_offset_t flvmeta_ftell(FILE * stream);
+int flvmeta_fseek(FILE * stream, file_offset_t offset, int whence);
 
 # else /* !defined WIN32 */
 
-#  include <sys/types.h> /* off_t */
-typedef off_t file_offset_t;
-
-# endif /* WIN32 */
-
-#else /* !HAVE_SEEKO */
 # define flvmeta_ftell ftell
 # define flvmeta_fseek fseek
 
 typedef long file_offset_t;
+
+# endif /* WIN32 */
 
 #endif /* HAVE_FSEEKO */
 

@@ -14,3 +14,9 @@ flvmeta_SOURCES = amf.c \
                   types.h \
                   update.c \
                   update.h
+
+EXTRA_DIST =      CMakeLists.txt \
+                  compat/gettext.h \
+                  compat/getopt.h \
+                  compat/getopt.c \
+                  compat/getopt1.c

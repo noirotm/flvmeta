@@ -62,7 +62,7 @@ uint24_be uint32_to_uint24_be(uint32 l) {
     These functions assume fpos_t is a 64-bit signed integer
 */
 
-file_offset_t ftello(FILE * stream) {
+file_offset_t flvmeta_ftell(FILE * stream) {
     fpos_t p;
     if (fgetpos(stream, &p) == 0) {
         return (file_offset_t)p;
@@ -72,7 +72,7 @@ file_offset_t ftello(FILE * stream) {
     }
 }
 
-int fseeko(FILE * stream, file_offset_t offset, int whence) {
+int flvmeta_fseek(FILE * stream, file_offset_t offset, int whence) {
     fpos_t p;
     if (fgetpos(stream, &p) == 0) {
         switch (whence) {
