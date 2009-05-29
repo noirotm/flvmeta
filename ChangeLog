@@ -1,3 +1,12 @@
+2009-05-29 Marc Noirot <marc.noirot@gmail.com>
+	* CMakeLists.txt: Fixed large file support definitions for Win32.
+
+	* update.c: Added support for the --add option.
+
+	* update.c: Added support for the --verbose option.
+
+	* update.c (get_flv_info): Added support for the --ignore option.
+
 2009-05-27 Marc Noirot <marc.noirot@gmail.com>
 	* CMakeLists.txt, src/CMakeLists.txt: Various fixes and support for
 	  the windows binary distribution generation.
