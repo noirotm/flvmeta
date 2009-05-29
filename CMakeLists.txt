@@ -24,6 +24,7 @@ check_type_size("float"       SIZEOF_FLOAT)
 check_type_size("long double" SIZEOF_LONG_DOUBLE)
 
 if(WIN32)
+  add_definitions(-D_FILE_OFFSET_BITS=64)
   set(int16_t  1)
   set(int32_t  1)
   set(int64_t  1)

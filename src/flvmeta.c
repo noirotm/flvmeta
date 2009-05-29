@@ -160,7 +160,7 @@ int main(int argc, char ** argv) {
                     if (eq_pos != NULL) {
                         *eq_pos = 0;
                         if (options.metadata == NULL) {
-                            options.metadata = amf_object_new();
+                            options.metadata = amf_associative_array_new();
                         }
                         amf_object_add(options.metadata, amf_str(optarg), amf_str(eq_pos + 1));
                     }
