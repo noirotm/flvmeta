@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<flv xmlns="http://schemas.flvmeta.org/FLV/" xmlns:amf="http://schemas.flvmeta.org/AMF0/" hasAudio="1" hasVideo="1">
+  <tag type="scriptData" dataSize="8974" timestamp="0">
+    <ScriptDataObject name="onMetadata">
+      <amf:boolean name="hasMetadata" value="true"/>
+      <amf:boolean name="hasVideo" value="true"/>
+      <amf:boolean name="hasAudio" value="true"/>
+      <amf:number name="duration" value="597.56"/>
+      <amf:string name="metadatacreator">flvmeta 1.0.8</amf:string>
+      <amf:boolean name="hascuepoints" value="false"/>
+      <amf:array name="cuepoints"></amf:array>
+      <amf:associativeArray name="keyframes">
+        <amf:array name="times">
+          <amf:number value="0.0"/>
+          <amf:number value="0.2"/>
+        </amf:array>
+        <amf:array name="filepositions">
+          <amf:number value="3142.0"/>
+          <amf:number value="3221.0"/>
+        </amf:array>
+      </amf:associativeArray>
+    </ScriptDataObject>
+  </tag>
+  <tag type="audio" dataSize="56450" timestamp="0">
+    <audioData format="MP3" rate="44" size="8" type="stereo"/>
+  </tag>
+  <tag type="video" dataSize="34789" timestamp="0">
+    <videoData frameType="keyframe" codecID="Sorenson H.263"/>
+  </tag>
+</flv>

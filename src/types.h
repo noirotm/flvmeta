@@ -41,6 +41,8 @@
 # include <inttypes.h>
 #endif
 
+#include <stdio.h>
+
 typedef uint8_t byte, uint8, uint8_bitmask;
 
 typedef uint16_t uint16, uint16_be, uint16_le;
@@ -128,8 +130,6 @@ typedef off_t file_offset_t;
 typedef long long int file_offset_t;
 
 /* Win32 large file support */
-#include <stdio.h>
-
 file_offset_t flvmeta_ftell(FILE * stream);
 int flvmeta_fseek(FILE * stream, file_offset_t offset, int whence);
 
@@ -143,6 +143,13 @@ typedef long file_offset_t;
 # endif /* WIN32 */
 
 #endif /* HAVE_FSEEKO */
+
+/* file offset printf specifier */
+#if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
+# define FILE_OFFSET_PRINTF_FORMAT "ll"
+#else
+# define FILE_OFFSET_PRINTF_FORMAT "l"
+#endif
 
 #ifdef __cplusplus
 }

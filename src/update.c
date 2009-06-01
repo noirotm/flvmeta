@@ -29,7 +29,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <time.h>
 
 typedef struct __flv_info {
@@ -446,13 +445,7 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
             else if (opts->error_handling == FLVMETA_IGNORE_ERRORS) {
                 /* let's continue the parsing */
                 if (opts->verbose) {
-                    fprintf(stdout, "Warning: invalid tag at 0x"
-#if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
-                        "%llX"
-#else
-                        "%lX"
-#endif
-                        "\n", offset);
+                    fprintf(stdout, "Warning: invalid tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
                 }
                 info->total_prev_tags_size += sizeof(uint32_be);
             }
@@ -608,7 +601,7 @@ static void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta
     }
 
     total_data_size = info->video_data_size + info->audio_data_size + info->meta_data_size + new_on_metadata_size;
-    if (!info->have_on_last_second) {
+    if (!info->have_on_last_second && opts->insert_onlastsecond) {
         total_data_size += (uint32)on_last_second_size;
     }
     amf_number_set_value(amf_total_data_size, (number64)total_data_size);
@@ -739,7 +732,7 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
         }
         else {
             /* insert an onLastSecond metadata tag */
-            if (!have_on_last_second && !info->have_on_last_second && (duration - timestamp) <= 1000) {
+            if (opts->insert_onlastsecond && !have_on_last_second && !info->have_on_last_second && (duration - timestamp) <= 1000) {
                 flv_tag tag;
                 uint32 on_last_second_name_size = (uint32)amf_data_size(meta->on_last_second_name);
                 uint32 on_last_second_size = (uint32)amf_data_size(meta->on_last_second);
@@ -799,7 +792,6 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
 /* copy a FLV file while adding onMetaData and onLastSecond events */
 int update_metadata(const flvmeta_opts * opts) {
     int res;
-    struct stat in_file_info;
     FILE * flv_in;
     FILE * flv_out;
     flv_info info;
@@ -809,9 +801,6 @@ int update_metadata(const flvmeta_opts * opts) {
         return ERROR_SAME_FILE;
     }
     
-    if (stat(opts->input_file, &in_file_info) != 0 || !(in_file_info.st_mode & (S_IFMT | S_IREAD))) {
-        return ERROR_OPEN_READ;
-    }
     flv_in = fopen(opts->input_file, "rb");
     if (flv_in == NULL) {
         return ERROR_OPEN_READ;

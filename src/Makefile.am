@@ -6,10 +6,14 @@ flvmeta_SOURCES = amf.c \
                   amf.h \
                   avc.c \
                   avc.h \
+                  dump.c \
+                  dump.h \
                   flv.c \
                   flv.h \
                   flvmeta.c \
                   flvmeta.h \
+                  json.c \
+                  json.h \
                   types.c \
                   types.h \
                   update.c \

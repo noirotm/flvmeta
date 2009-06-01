@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema targetNamespace="http://schemas.flvmeta.org/FLV/"
+    elementFormDefault="qualified"
+    xmlns="http://schemas.flvmeta.org/FLV/"
+    xmlns:amf="http://schemas.flvmeta.org/AMF0/"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+>
+  <xs:import namespace="http://schemas.flvmeta.org/AMF0/" schemaLocation="Amf0.xsd"/>
+
+  <xs:element name="flv">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="tag" type="tFlvTag" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="version" use="optional" fixed="1" />
+      <xs:attribute name="hasVideo" use="optional" type="xs:boolean" default="1"/>
+      <xs:attribute name="hasAudio" use="optional" type="xs:boolean" default="1"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="ScriptDataObject">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="amf:tNamedObject"/>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="tFlvTag">
+    <xs:choice>
+      <xs:element name="videoData" type="tVideoData"/>
+      <xs:element name="audioData" type="tAudioData"/>
+      <xs:element ref="ScriptDataObject" />
+    </xs:choice>
+    <xs:attribute name="type" type="tTagType" use="required"/>
+    <xs:attribute name="dataSize" type="xs:nonNegativeInteger" use="optional"/>
+    <xs:attribute name="timestamp" type="xs:nonNegativeInteger" use="required"/>
+    <xs:attribute name="streamID" type="xs:nonNegativeInteger" use="optional" fixed="0"/>
+    <xs:attribute name="offset" type="xs:nonNegativeInteger" use="required"/>
+  </xs:complexType>
+
+  <xs:simpleType name="tTagType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="audio"/>
+      <xs:enumeration value="video"/>
+      <xs:enumeration value="scriptData"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:complexType name="tAudioData">
+    <xs:attribute name="format" use="required" type="tAudioFormat"/>
+    <xs:attribute name="rate" use="required" type="tAudioRate"/>
+    <xs:attribute name="size" use="required" type="tAudioSize"/>
+    <xs:attribute name="type" use="required" type="tAudioType"/>
+  </xs:complexType>
+
+  <xs:simpleType name="tAudioFormat">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Linear PCM, platform endian"/>
+      <xs:enumeration value="ADPCM"/>
+      <xs:enumeration value="MP3"/>
+      <xs:enumeration value="Linear PCM, little endian"/>
+      <xs:enumeration value="Nellymoser 16-kHz mono"/>
+      <xs:enumeration value="Nellymoser 8-kHz mono"/>
+      <xs:enumeration value="Nellymoser"/>
+      <xs:enumeration value="G.711 A-law logarithmic PCM"/>
+      <xs:enumeration value="G.711 mu-law logarithmic PCM"/>
+      <xs:enumeration value="AAC"/>
+      <xs:enumeration value="Speex"/>
+      <xs:enumeration value="MP3 8-Khz"/>
+      <xs:enumeration value="Device-specific sound"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="tAudioRate">
+    <xs:restriction base="xs:float">
+      <xs:enumeration value="5.5"/>
+      <xs:enumeration value="11"/>
+      <xs:enumeration value="22"/>
+      <xs:enumeration value="44"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="tAudioSize">
+    <xs:restriction base="xs:integer">
+      <xs:enumeration value="8"/>
+      <xs:enumeration value="16"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="tAudioType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="mono"/>
+      <xs:enumeration value="stereo"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="tVideoData">
+    <xs:attribute name="frameType" use="required" type="tFrameType"/>
+    <xs:attribute name="codecID" use="required" type="tVideoCodec"/>
+  </xs:complexType>
+
+  <xs:simpleType name="tFrameType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="keyframe"/>
+      <xs:enumeration value="inter frame"/>
+      <xs:enumeration value="disposable inter frame"/>
+      <xs:enumeration value="generated keyframe"/>
+      <xs:enumeration value="video info/command frame"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="tVideoCodec">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="JPEG"/>
+      <xs:enumeration value="Sorenson H.263"/>
+      <xs:enumeration value="Screen video"/>
+      <xs:enumeration value="On2 VP6"/>
+      <xs:enumeration value="On2 VP6 with alpha channel"/>
+      <xs:enumeration value="Screen video version 2"/>
+      <xs:enumeration value="AVC"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

@@ -3,10 +3,14 @@ set(flvmeta_src
   amf.h
   avc.c
   avc.h
+  dump.c
+  dump.h
   flv.c
   flv.h
   flvmeta.c
   flvmeta.h
+  json.c
+  json.h
   types.c
   types.h
   update.c
@@ -26,7 +30,7 @@ if(WIN32)
   include_directories(compat)
 endif(WIN32)
 
-add_executable(flvmeta ${flvmeta_src})
+add_executable(flvmeta ${flvmeta_src} ${XML_SCHEMAS})
 
 if(WIN32)
   install(TARGETS flvmeta

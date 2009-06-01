@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema targetNamespace="http://schemas.flvmeta.org/AMF0/"
+    xmlns:amf="http://schemas.flvmeta.org/AMF0/"
+    elementFormDefault="qualified"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+>
+  <xs:group name="tData">
+    <xs:choice>
+      <xs:element name="number" type="amf:tNumber"/>
+      <xs:element name="boolean" type="amf:tBoolean"/>
+      <xs:element name="string" type="amf:tString"/>
+      <xs:element name="longString" type="amf:tLongString"/>
+      <xs:element name="xmlDocument" type="amf:tXmlDocument"/>
+      <xs:element name="object" type="amf:tObject"/>
+      <xs:element name="array" type="amf:tArray"/>
+      <xs:element name="null" type="amf:tNull"/>
+      <xs:element name="undefined" type="amf:tUndefined"/>
+      <xs:element name="associativeArray" type="amf:tAssociativeArray"/>
+      <xs:element name="date" type="amf:tDate"/>
+      <xs:element name="typedObject" type="amf:tTypedObject"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:group name="tNamedData">
+    <xs:choice>
+      <xs:element name="number" type="amf:tNamedNumber"/>
+      <xs:element name="boolean" type="amf:tNamedBoolean"/>
+      <xs:element name="string" type="amf:tNamedString"/>
+      <xs:element name="longString" type="amf:tNamedLongString"/>
+      <xs:element name="xmlDocument" type="amf:tNamedXmlDocument"/>
+      <xs:element name="object" type="amf:tNamedObject"/>
+      <xs:element name="array" type="amf:tNamedArray"/>
+      <xs:element name="null" type="amf:tNamedNull"/>
+      <xs:element name="undefined" type="amf:tNamedUndefined"/>
+      <xs:element name="associativeArray" type="amf:tNamedAssociativeArray"/>
+      <xs:element name="date" type="amf:tNamedDate"/>
+      <xs:element name="typedObject" type="amf:tNamedTypedObject"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:complexType name="tNumber">
+    <xs:attribute name="value" type="xs:double" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="tNamedNumber">
+    <xs:complexContent>
+      <xs:extension base="amf:tNumber">
+        <xs:attribute name="name" type="amf:tString" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="tBoolean">
+    <xs:attribute name="value" type="xs:boolean" use="required"/>
+  </xs:complexType>
+
+
+  <xs:complexType name="tNamedBoolean">
+    <xs:complexContent>
+      <xs:extension base="amf:tBoolean">
+        <xs:attribute name="name" type="amf:tString" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:simpleType name="tString">
+    <xs:restriction base="xs:string">
+      <xs:maxLength value="65535"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="tNamedString">
+    <xs:simpleContent>
+      <xs:extension base="amf:tString">
+        <xs:attribute name="name" type="amf:tString" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="tLongString">
+    <xs:restriction base="xs:string"/>
+  </xs:simpleType>
+
+  <xs:complexType name="tNamedLongString">
+    <xs:simpleContent>
+      <xs:extension base="amf:tLongString">
+        <xs:attribute name="name" type="amf:tString" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="tXmlDocument">
+    <xs:sequence>
+      <xs:any/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tNamedXmlDocument">
+    <xs:complexContent>
+      <xs:extension base="amf:tXmlDocument">
+        <xs:attribute name="name" type="amf:tString" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  
+  <xs:complexType name="tObject">
+    <xs:group ref="amf:tNamedData" minOccurs="0" maxOccurs="unbounded"/>
+  </xs:complexType>
+
+  <xs:complexType name="tNamedObject">
+    <xs:complexContent>
+      <xs:extension base="amf:tObject">
+        <xs:attribute name="name" type="amf:tString" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="tArray">
+    <xs:group ref="amf:tData" minOccurs="0" maxOccurs="unbounded"/>
+  </xs:complexType>
+
+  <xs:complexType name="tNamedArray">
+    <xs:complexContent>
+      <xs:extension base="amf:tArray">
+        <xs:attribute name="name" type="amf:tString" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="tNull"/>
+
+  <xs:complexType name="tNamedNull">
+    <xs:complexContent>
+      <xs:extension base="amf:tNull">
+        <xs:attribute name="name" type="amf:tString" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="tUndefined"/>
+
+  <xs:complexType name="tNamedUndefined">
+    <xs:complexContent>
+      <xs:extension base="amf:tUndefined">
+        <xs:attribute name="name" type="amf:tString" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="tAssociativeArray">
+    <xs:complexContent>
+      <xs:extension base="amf:tObject"/>
+    </xs:complexContent>
+  </xs:complexType>
+  
+  <xs:complexType name="tNamedAssociativeArray">
+    <xs:complexContent>
+      <xs:extension base="amf:tNamedObject"/>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="tDate">
+    <xs:attribute name="value" type="xs:dateTime" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="tNamedDate">
+    <xs:complexContent>
+      <xs:extension base="amf:tDate">
+        <xs:attribute name="name" type="amf:tString" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="tTypedObject">
+    <xs:complexContent>
+      <xs:extension base="amf:tObject">
+        <xs:attribute name="className" type="amf:tString" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="tNamedTypedObject">
+    <xs:complexContent>
+      <xs:extension base="amf:tTypedObject">
+        <xs:attribute name="name" type="amf:tString" use="required"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  
+</xs:schema>

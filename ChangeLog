@@ -1,3 +1,19 @@
+2009-06-01 Marc Noirot <marc.noirot@gmail.com>
+	* Amf0.xsd, flv.xsd: Added XML schemas for FLV and AMF0.
+
+	* amf.c, amf.h: Added an event based AMF iterator (incomplete).
+
+	* json.c, json.h: Added and fixed the msjson JSON parser.
+
+	* dump.c: Partially implemented XML FLV file dump.
+
+	* flv.c, flv.h: Implemented a full FLV parsing API, with stream
+	  objects and an event based API.
+
+	* flvdump.c: Deleted flvdump.c.
+
+	* update.c: Added support for the -l, --no-lastsecond option.
+
 2009-05-29 Marc Noirot <marc.noirot@gmail.com>
 	* CMakeLists.txt: Fixed large file support definitions for Win32.
 

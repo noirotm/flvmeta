@@ -25,6 +25,7 @@
 #define __FLV_H__
 
 #include "types.h"
+#include "amf.h"
 
 /* flv file format structure and definitions */
 #pragma pack(push, 1)
@@ -123,8 +124,50 @@ typedef byte flv_video_tag;
 extern "C" {
 #endif /* __cplusplus */
 
-/* FLV functions */
+/* FLV helper functions */
 void flv_tag_set_timestamp(flv_tag * tag, uint32 timestamp);
+
+/* FLV stream */
+#define FLV_STREAM_STATE_START          0
+#define FLV_STREAM_STATE_TAG            1
+#define FLV_STREAM_STATE_TAG_BODY       2
+#define FLV_STREAM_STATE_PREV_TAG_SIZE  3
+
+typedef struct __flv_stream {
+    FILE * flvin;
+    uint8 state;
+    flv_tag current_tag;
+    file_offset_t current_tag_offset;
+    uint32 current_tag_body_length;
+} flv_stream;
+
+/* FLV stream functions */
+flv_stream * flv_open(const char * file);
+int flv_read_header(flv_stream * stream, flv_header * header);
+int flv_read_prev_tag_size(flv_stream * stream, uint32 * prev_tag_size);
+int flv_read_tag(flv_stream * stream, flv_tag * tag);
+int flv_read_audio_tag(flv_stream * stream, flv_audio_tag * tag);
+int flv_read_video_tag(flv_stream * stream, flv_video_tag * tag);
+int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data);
+size_t flv_read_tag_body(flv_stream * stream, byte * buffer, size_t buffer_size);
+void flv_reset(flv_stream * stream);
+void flv_close(flv_stream * stream);
+
+/* FLV event based parser */
+typedef struct __flv_parser {
+    flv_stream * stream;
+    void * user_data;
+    int (* on_header)(flv_header * header, struct __flv_parser * parser);
+    int (* on_tag)(flv_tag * tag, struct __flv_parser * parser);
+    int (* on_metadata_tag)(flv_tag * tag, amf_data * name, amf_data * data, struct __flv_parser * parser);
+    int (* on_audio_tag)(flv_tag * tag, flv_audio_tag audio_tag, struct __flv_parser * parser);
+    int (* on_video_tag)(flv_tag * tag, flv_video_tag audio_tag, struct __flv_parser * parser);
+    int (* on_unknown_tag)(flv_tag * tag, struct __flv_parser * parser);
+    int (* on_prev_tag_size)(uint32 size, struct __flv_parser * parser);
+    int (* on_stream_end)(struct __flv_parser * parser);
+} flv_parser;
+
+int flv_parse(const char * file, flv_parser * parser);
 
 #ifdef __cplusplus
 }

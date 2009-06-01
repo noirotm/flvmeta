@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include "flvmeta.h"
+#include "dump.h"
 #include "update.h"
 
 /*
@@ -254,8 +255,8 @@ int main(int argc, char ** argv) {
     /* execute command */
     errcode = OK;
     switch (options.command) {
-        case FLVMETA_DUMP_COMMAND: break;
-        case FLVMETA_FULL_DUMP_COMMAND: break;
+        case FLVMETA_DUMP_COMMAND: errcode = dump_metadata(&options); break;
+        case FLVMETA_FULL_DUMP_COMMAND: errcode = dump_flv_file(&options); break;
         case FLVMETA_CHECK_COMMAND: break;
         case FLVMETA_UPDATE_COMMAND: errcode = update_metadata(&options); break;
     }

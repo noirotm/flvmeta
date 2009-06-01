@@ -1018,5 +1018,69 @@ sint16 amf_date_get_timezone(amf_data * data) {
 }
 
 time_t amf_date_to_time_t(amf_data * data) {
-    return  (time_t)((data != NULL) ? data->date_data.milliseconds / 1000 : 0);
+    return (time_t)((data != NULL) ? data->date_data.milliseconds / 1000 : 0);
+}
+
+/* event based parser */
+int amf_parse(amf_data * data, amf_parser * parser) {
+    amf_data * name, * d;
+    amf_node * node;
+    int retval;
+    
+    if (data == NULL) {
+        return ERROR_EOF;
+    }
+
+    if (parser->on_data != NULL) {
+        retval = parser->on_data(data, parser->current_object_name, parser);
+    }
+
+    switch (data->type) {
+        case AMF_TYPE_NUMBER:
+        case AMF_TYPE_BOOLEAN:
+        case AMF_TYPE_STRING:
+        case AMF_TYPE_NULL:
+        case AMF_TYPE_UNDEFINED:
+        /*case AMF_TYPE_REFERENCE:*/
+        case AMF_TYPE_DATE:
+        /*case AMF_TYPE_SIMPLEOBJECT:*/
+        case AMF_TYPE_XML:
+            break;
+
+        case AMF_TYPE_OBJECT:
+            node = amf_object_first(data);
+            while (node != NULL) {
+                name = amf_object_get_name(node);
+                d = amf_object_get_data(node);
+                amf_parse(d, parser);
+                node = amf_object_next(node);
+            }
+            break;
+        case AMF_TYPE_ASSOCIATIVE_ARRAY:
+            node = amf_associative_array_first(data);
+            while (node != NULL) {
+                name = amf_associative_array_get_name(node);
+                d = amf_associative_array_get_data(node);
+                amf_parse(d, parser);
+                node = amf_associative_array_next(node);
+            }
+            break;
+        case AMF_TYPE_ARRAY:
+            node = amf_array_first(data);
+            while (node != NULL) {
+                d = amf_array_get(node);
+                amf_parse(d, parser);
+                node = amf_array_next(node);
+            }
+            break;
+        case AMF_TYPE_CLASS:
+            break;
+        default: break;
+    }
+
+    if (parser->on_data_end != NULL) {
+        retval = parser->on_data_end(data, parser);
+    }
+
+    return OK;
 }
