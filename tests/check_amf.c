@@ -28,7 +28,7 @@ START_TEST(test_amf_number_new) {
         "invalid data size: expected 9, got %d", amf_data_size(data));
 
     fail_unless(amf_number_get_value(data) == 0,
-        "invalid data value: expected 3.14159, got %f", amf_number_get_value(data));
+        "invalid data value: expected 0, got %f", amf_number_get_value(data));
 }
 END_TEST
 

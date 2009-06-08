@@ -30,7 +30,7 @@ if(WIN32)
   include_directories(compat)
 endif(WIN32)
 
-add_executable(flvmeta ${flvmeta_src} ${XML_SCHEMAS})
+add_executable(flvmeta ${flvmeta_src})
 
 if(WIN32)
   install(TARGETS flvmeta

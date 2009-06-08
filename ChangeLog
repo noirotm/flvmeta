@@ -1,3 +1,20 @@
+2009-06-08 Marc Noirot <marc.noirot@gmail.com>
+	* flvmeta.c (main): Fixed error messages showing bad filenames.
+
+	* update.c (write_flv): Fixed timestamp handling again.
+
+	* update.c (write_flv): Improved invalid file handling, specifically
+	  in the case there is invalid data after the last tag.
+
+	* update.c (get_flv_info): Fixed invalid information reading
+	  when reading invalid tags which could potentially lead to
+	  memory overflow and creation of invalid files.
+
+	* src/CMakeLists.txt: Removed unused XSD schema variable.
+
+	* tests/check_amf.c (test_amf_number_new): Fixed invalid test
+	  message.
+
 2009-06-01 Marc Noirot <marc.noirot@gmail.com>
 	* Amf0.xsd, flv.xsd: Added XML schemas for FLV and AMF0.
 

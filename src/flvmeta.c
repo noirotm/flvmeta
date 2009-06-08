@@ -264,12 +264,12 @@ int main(int argc, char ** argv) {
     /* error report */
     switch (errcode) {
         case ERROR_SAME_FILE: fprintf(stderr, "%s: input file and output file must be different\n", argv[0]); break;
-        case ERROR_OPEN_READ: fprintf(stderr, "%s: cannot open %s for reading\n", argv[0], argv[1]); break;
-        case ERROR_OPEN_WRITE: fprintf(stderr, "%s: cannot open %s for writing\n", argv[0], argv[2]); break;
-        case ERROR_NO_FLV: fprintf(stderr, "%s: %s is not a valid FLV file\n", argv[0], argv[1]); break;
+        case ERROR_OPEN_READ: fprintf(stderr, "%s: cannot open %s for reading\n", argv[0], options.input_file); break;
+        case ERROR_OPEN_WRITE: fprintf(stderr, "%s: cannot open %s for writing\n", argv[0], options.output_file); break;
+        case ERROR_NO_FLV: fprintf(stderr, "%s: %s is not a valid FLV file\n", argv[0], options.input_file); break;
         case ERROR_EOF: fprintf(stderr, "%s: unexpected end of file\n", argv[0]); break;
         case ERROR_INVALID_TAG: fprintf(stderr, "%s: invalid FLV tag\n", argv[0]); break;
-        case ERROR_WRITE: fprintf(stderr, "%s: unable to write to %s\n", argv[0], argv[2]); break;
+        case ERROR_WRITE: fprintf(stderr, "%s: unable to write to %s\n", argv[0], options.output_file); break;
     }
 
     return errcode;

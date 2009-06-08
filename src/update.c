@@ -326,10 +326,15 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
             timestamp += timestamp_extended << 24;
         }
 
-        if (info->biggest_tag_body_size < body_length) {
-            info->biggest_tag_body_size = body_length;
+        /* update the info struct only if the tag is valid */
+        if (ft.type == FLV_TAG_TYPE_META
+        || ft.type == FLV_TAG_TYPE_AUDIO
+        || ft.type == FLV_TAG_TYPE_VIDEO) {
+            if (info->biggest_tag_body_size < body_length) {
+                info->biggest_tag_body_size = body_length;
+            }
+            info->last_timestamp = timestamp;
         }
-        info->last_timestamp = timestamp;
 
         if (ft.type == FLV_TAG_TYPE_META) {
             amf_data * tag_name = amf_data_file_read(flv_in);
@@ -621,7 +626,9 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
     uint32_be size;
     uint32 on_metadata_name_size;
     uint32 on_metadata_size;
-    uint32 prev_timestamp;
+    uint32 prev_timestamp_video;
+    uint32 prev_timestamp_audio;
+    uint32 prev_timestamp_meta;
     uint8 timestamp_extended;
     byte * copy_buffer;
     uint32 duration;
@@ -677,16 +684,19 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
     }
 
     /* extended timestamp initialization */
-    prev_timestamp = 0;
+    prev_timestamp_video = 0;
+    prev_timestamp_audio = 0;
+    prev_timestamp_meta = 0;
     timestamp_extended = 0;
 
     /* copy the tags verbatim */
     flvmeta_fseek(flv_in, sizeof(flv_header)+sizeof(uint32_be), SEEK_SET);
 
-    copy_buffer = (byte *)malloc(info->biggest_tag_body_size);
+    copy_buffer = (byte *)malloc(info->biggest_tag_body_size + sizeof(flv_tag));
     have_on_last_second = 0;
     while (!feof(flv_in)) {
         file_offset_t offset;
+        size_t read_body;
         uint32 body_length;
         uint32 timestamp;
         flv_tag ft;
@@ -701,10 +711,25 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
         timestamp = flv_tag_get_timestamp(ft);
 
         /* extended timestamp fixing */
-        if (timestamp < prev_timestamp) {
-            ++timestamp_extended;
+        if (ft.type == FLV_TAG_TYPE_META) {
+            if (timestamp < prev_timestamp_meta) {
+                ++timestamp_extended;
+            }
+            prev_timestamp_meta = timestamp;
         }
-        prev_timestamp = timestamp;
+        else if (ft.type == FLV_TAG_TYPE_AUDIO) {
+            if (timestamp < prev_timestamp_audio) {
+                ++timestamp_extended;
+            }
+            prev_timestamp_audio = timestamp;
+        }
+        else if (ft.type == FLV_TAG_TYPE_VIDEO) {
+            if (timestamp < prev_timestamp_video) {
+                ++timestamp_extended;
+            }
+            prev_timestamp_video = timestamp;
+        }
+
         if (timestamp_extended > 0) {
             timestamp += timestamp_extended << 24;
         }
@@ -760,12 +785,30 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
             }
 
             /* copy the tag verbatim */
-            if (fread(copy_buffer, 1, body_length, flv_in) < body_length) {
-                free(copy_buffer);
-                return ERROR_EOF;
+            read_body = fread(copy_buffer, 1, body_length, flv_in);
+            if (read_body < body_length) {
+                /* we have reached end of file on an incomplete tag */
+                if (opts->error_handling == FLVMETA_EXIT_ON_ERROR) {
+                    return ERROR_EOF;
+                }
+                else if (opts->error_handling == FLVMETA_FIX_ERRORS) {
+                    /* the tag is bogus, just omit it,
+                       even though it will make the whole file length
+                       calculation wrong, and the metadata inaccurate */
+                    /* TODO : fix it by handling that problem in the first pass */
+                    return OK;
+                }
+                else if (opts->error_handling == FLVMETA_IGNORE_ERRORS) {
+                    /* just copy the whole tag and exit */
+                    flvmeta_fseek(flv_in, offset, SEEK_SET);
+                    read_body = fread(copy_buffer, 1, sizeof(flv_tag) + read_body, flv_in);
+                    fwrite(copy_buffer, 1, read_body, flv_out);
+                    free(copy_buffer);
+                    return OK;
+                }
             }
-            if (fwrite(&ft, sizeof(flv_tag), 1, flv_out) != 1 ||
-                fwrite(copy_buffer, 1, body_length, flv_out) < body_length) {
+            if (fwrite(&ft, sizeof(flv_tag), 1, flv_out) != 1
+            || fwrite(copy_buffer, 1, body_length, flv_out) < body_length) {
                 free(copy_buffer);
                 return ERROR_WRITE;
             }
