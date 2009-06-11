@@ -37,7 +37,7 @@ static struct option long_options[] = {
     { "dump",          no_argument,         NULL, 'D'},
     { "full-dump",     no_argument,         NULL, 'F'},
     { "check",         no_argument,         NULL, 'C'},
-    { "update",        no_argument,         NULL, 'U'},
+    { "inject",        no_argument,         NULL, 'I'},
     { "add",           required_argument,   NULL, 'a'},
     { "no-lastsecond", no_argument,         NULL, 'l'},
     { "preserve",      no_argument,         NULL, 'p'},
@@ -74,8 +74,8 @@ static void help(const char * name) {
     fprintf(stderr, "  -D, --dump                dump onMetaData tag (default without output file)\n");
     fprintf(stderr, "  -F, --full-dump           dump all tags\n");
     fprintf(stderr, "  -C, --check               check the validity of the input file\n");
-    fprintf(stderr, "  -U, --update              update FILE with computed onMetaData tag (default\n");
-    fprintf(stderr, "                            with output file)\n");
+    fprintf(stderr, "  -I, --inject              inject computed onMetaData tag from FILE\n");
+    fprintf(stderr, "                            into OUTPUT_FILE (default with output file)\n");
     fprintf(stderr, "\nOutput control options:\n");
     fprintf(stderr, "  -a, --add=NAME=VALUE      add a metadata string value to the output file\n");
     fprintf(stderr, "  -l, --no-lastsecond       do not create the onLastSecond tag\n");
@@ -117,7 +117,7 @@ int main(int argc, char ** argv) {
     */
     option_index = 0;
     do {
-        option = getopt_long(argc, argv, "DFCUa:lpfid:jyxvVh", long_options, &option_index);
+        option = getopt_long(argc, argv, "DFCIa:lpfid:jyxvVh", long_options, &option_index);
         switch (option) {
             /*
                 commands
@@ -143,7 +143,7 @@ int main(int argc, char ** argv) {
                 }
                 options.command = FLVMETA_CHECK_COMMAND;
                 break;
-            case 'U':
+            case 'I':
                 if (options.command != FLVMETA_DEFAULT_COMMAND) {
                     fprintf(stderr, "%s: only one command can be specified -- %s\n", argv[0], argv[optind]);
                     exit(EXIT_FAILURE);

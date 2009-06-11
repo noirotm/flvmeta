@@ -1,3 +1,6 @@
+2009-06-11 Marc Noirot <marc.noirot@gmail.com>
+	* flvmeta.c (main): Modified the update command into inject.
+
 2009-06-08 Marc Noirot <marc.noirot@gmail.com>
 	* flvmeta.c (main): Fixed error messages showing bad filenames.
 
