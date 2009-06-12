@@ -1,5 +1,5 @@
 /*
-    $Id: update.h 38 2008-01-04 17:08:05Z marc.noirot $
+    $Id$
 
     FLV Metadata updater
 

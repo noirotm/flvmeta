@@ -1,5 +1,5 @@
 /*
-    $Id: flvmeta.c 87 2009-05-07 23:23:18Z marc.noirot $
+    $Id$
 
     FLV Metadata updater
 
