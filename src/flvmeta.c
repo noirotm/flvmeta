@@ -28,7 +28,7 @@
 
 #include "flvmeta.h"
 #include "dump.h"
-#include "update.h"
+#include "inject.h"
 
 /*
     Command-line options
@@ -148,7 +148,7 @@ int main(int argc, char ** argv) {
                     fprintf(stderr, "%s: only one command can be specified -- %s\n", argv[0], argv[optind]);
                     exit(EXIT_FAILURE);
                 }
-                options.command = FLVMETA_UPDATE_COMMAND;
+                options.command = FLVMETA_INJECT_COMMAND;
                 break;
             /*
                 options
@@ -246,7 +246,7 @@ int main(int argc, char ** argv) {
 
     /* determine command if default */
     if (options.command == FLVMETA_DEFAULT_COMMAND && options.output_file != NULL) {
-        options.command = FLVMETA_UPDATE_COMMAND;
+        options.command = FLVMETA_INJECT_COMMAND;
     }
     else if (options.command == FLVMETA_DEFAULT_COMMAND && options.output_file == NULL) {
         options.command = FLVMETA_DUMP_COMMAND;
@@ -258,7 +258,7 @@ int main(int argc, char ** argv) {
         case FLVMETA_DUMP_COMMAND: errcode = dump_metadata(&options); break;
         case FLVMETA_FULL_DUMP_COMMAND: errcode = dump_flv_file(&options); break;
         case FLVMETA_CHECK_COMMAND: break;
-        case FLVMETA_UPDATE_COMMAND: errcode = update_metadata(&options); break;
+        case FLVMETA_INJECT_COMMAND: errcode = inject_metadata(&options); break;
     }
 
     /* error report */

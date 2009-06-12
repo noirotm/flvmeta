@@ -25,7 +25,7 @@
 #include "flv.h"
 #include "amf.h"
 #include "avc.h"
-#include "update.h"
+#include "inject.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -832,8 +832,8 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
     return OK;
 }
 
-/* copy a FLV file while adding onMetaData and onLastSecond events */
-int update_metadata(const flvmeta_opts * opts) {
+/* copy a FLV file while adding onMetaData and optionnally onLastSecond events */
+int inject_metadata(const flvmeta_opts * opts) {
     int res;
     FILE * flv_in;
     FILE * flv_out;

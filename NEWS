@@ -1,3 +1,15 @@
+Version 1.0.8 (2009-05-08)
+  - Added support for arbitrary large files (2GB+).
+  - Added support for AVC (H.264) video resolution detection.
+  - Added support for the Speex codec and rarely met video frame types.
+  - Fixed a bug where two consecutive tags of different types and
+    with decreasing timestamps would cause extended timestamps
+    to be incorrectly used for the next tags.
+  - Fixed a bug where zero would be used as video height and width
+    if video resolution could not be detected.
+  - Fixed a bug causing flvdump to crash after reading invalid tags.
+    Flvdump now exits after the first invalid tag read.
+
 Version 1.0.7
   - Added support for extended timestamps.
     Now flvmeta can read and write FLV files longer than 4:39'37",

@@ -13,8 +13,8 @@ set(flvmeta_src
   json.h
   types.c
   types.h
-  update.c
-  update.h
+  inject.c
+  inject.h
   ${CMAKE_BINARY_DIR}/config.h
 )
 

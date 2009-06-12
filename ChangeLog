@@ -1,4 +1,7 @@
 2009-06-11 Marc Noirot <marc.noirot@gmail.com>
+	* update.h, update.c: Renamed into inject.c and inject.h.
+
+2009-06-11 Marc Noirot <marc.noirot@gmail.com>
 	* flvmeta.c (main): Modified the update command into inject.
 
 2009-06-08 Marc Noirot <marc.noirot@gmail.com>
