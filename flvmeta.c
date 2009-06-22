@@ -327,10 +327,15 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
             timestamp += timestamp_extended << 24;
         }
 
-        if (info->biggest_tag_body_size < body_length) {
-            info->biggest_tag_body_size = body_length;
+        /* update the info struct only if the tag is valid */
+        if ((ft.type == FLV_TAG_TYPE_META
+        || ft.type == FLV_TAG_TYPE_AUDIO
+        || ft.type == FLV_TAG_TYPE_VIDEO)) {
+            if (info->biggest_tag_body_size < body_length) {
+                info->biggest_tag_body_size = body_length;
+            }
+            info->last_timestamp = timestamp;
         }
-        info->last_timestamp = timestamp;
 
         if (ft.type == FLV_TAG_TYPE_META) {
             amf_data * tag_name = amf_data_file_read(flv_in);
@@ -594,7 +599,9 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
     uint32_be size;
     uint32 on_metadata_name_size;
     uint32 on_metadata_size;
-    uint32 prev_timestamp;
+    uint32 prev_timestamp_video;
+    uint32 prev_timestamp_audio;
+    uint32 prev_timestamp_meta;
     uint8 timestamp_extended;
     byte * copy_buffer;
     uint32 duration;
@@ -646,7 +653,9 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
     }
 
     /* extended timestamp initialization */
-    prev_timestamp = 0;
+    prev_timestamp_video = 0;
+    prev_timestamp_audio = 0;
+    prev_timestamp_meta = 0;
     timestamp_extended = 0;
 
     /* copy the tags verbatim */
@@ -670,10 +679,25 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
         timestamp = flv_tag_get_timestamp(ft);
 
         /* extended timestamp fixing */
-        if (timestamp < prev_timestamp) {
-            ++timestamp_extended;
+        if (ft.type == FLV_TAG_TYPE_META) {
+            if (timestamp < prev_timestamp_meta) {
+                ++timestamp_extended;
+            }
+            prev_timestamp_meta = timestamp;
         }
-        prev_timestamp = timestamp;
+        else if (ft.type == FLV_TAG_TYPE_AUDIO) {
+            if (timestamp < prev_timestamp_audio) {
+                ++timestamp_extended;
+            }
+            prev_timestamp_audio = timestamp;
+        }
+        else if (ft.type == FLV_TAG_TYPE_VIDEO) {
+            if (timestamp < prev_timestamp_video) {
+                ++timestamp_extended;
+            }
+            prev_timestamp_video = timestamp;
+        }
+
         if (timestamp_extended > 0) {
             timestamp += timestamp_extended << 24;
         }
