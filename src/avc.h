@@ -32,7 +32,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-size_t read_avc_resolution(FILE * f, uint32 * width, uint32 * height);
+size_t read_avc_resolution(FILE * f, uint32 body_length, uint32 * width, uint32 * height);
 
 #ifdef __cplusplus
 }

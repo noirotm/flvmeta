@@ -198,13 +198,18 @@ static void parse_sps(byte * sps, size_t sps_size, uint32 * width, uint32 * heig
     Tries to read the resolution of the current video packet.
     We assume to be at the first byte of the video data.
 */
-size_t read_avc_resolution(FILE * f, uint32 * width, uint32 * height) {
+size_t read_avc_resolution(FILE * f, uint32 body_length, uint32 * width, uint32 * height) {
     size_t bytes_read;
     byte avc_packet_type;
     uint24 composition_time;
     AVCDecoderConfigurationRecord adcr;
     uint16 sps_size;
     byte * sps_buffer;
+
+    /* make sure we have enough bytes to read in the current tag */
+    if (body_length < sizeof(byte) + sizeof(uint24) + sizeof(AVCDecoderConfigurationRecord)) {
+        return 0;
+    }
 
     /* determine whether we're reading an AVCDecoderConfigurationRecord */
     bytes_read = fread(&avc_packet_type, 1, 1, f);
