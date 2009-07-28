@@ -73,9 +73,11 @@ static void help(const char * name) {
     fprintf(stderr, "\nCommands:\n");
     fprintf(stderr, "  -D, --dump                dump onMetaData tag (default without output file)\n");
     fprintf(stderr, "  -F, --full-dump           dump all tags\n");
-    fprintf(stderr, "  -C, --check               check the validity of the input file\n");
+    fprintf(stderr, "  -C, --check               check the validity of FILE\n");
     fprintf(stderr, "  -I, --inject              inject computed onMetaData tag from FILE\n");
     fprintf(stderr, "                            into OUTPUT_FILE (default with output file)\n");
+    fprintf(stderr, "  -A, --extract-audio       extract raw audio data into OUTPUT_FILE\n");
+    fprintf(stderr, "  -V, --extract-video       extract raw video data into OUTPUT_FILE\n");
     fprintf(stderr, "\nOutput control options:\n");
     fprintf(stderr, "  -a, --add=NAME=VALUE      add a metadata string value to the output file\n");
     fprintf(stderr, "  -l, --no-lastsecond       do not create the onLastSecond tag\n");

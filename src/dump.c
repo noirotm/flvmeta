@@ -38,7 +38,7 @@ typedef struct __xml_dump_status {
 
 static int xml_on_header(flv_header * header, flv_parser * parser) {
     puts("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>");
-    printf("<flv hasVideo=\"%s\" hasAudio=\"%s\" version=\"%i\">\n",
+    printf("<flv xmlns=\"http://schemas.flvmeta.org/FLV/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/\" hasVideo=\"%s\" hasAudio=\"%s\" version=\"%i\">\n",
         flv_header_has_video(*header) ? "true" : "false",
         flv_header_has_audio(*header) ? "true" : "false",
         header->version);
@@ -51,11 +51,11 @@ static int xml_on_tag(flv_tag * tag, flv_parser * parser) {
     switch (tag->type) {
         case FLV_TAG_TYPE_AUDIO: str = "audio"; break;
         case FLV_TAG_TYPE_VIDEO: str = "video"; break;
-        case FLV_TAG_TYPE_META: str = "metadata"; break;
+        case FLV_TAG_TYPE_META: str = "scriptData"; break;
         default: str = "Unknown";
     }
 
-    printf("  <tag type=\"%s\" timestamp=\"%i\" bodyLength=\"%i\"",
+    printf("  <tag type=\"%s\" timestamp=\"%i\" dataSize=\"%i\"",
         str,
         flv_tag_get_timestamp(*tag),
         uint24_be_to_uint32(tag->body_length));
