@@ -61,12 +61,12 @@ static void xml_amf_data_dump(amf_data * data, int indent_level) {
             case AMF_TYPE_STRING:
                 printf("<amf:string>");
                 /* check whether the string contains xml characters, if so, CDATA it */
-                markers = has_xml_markers(amf_string_get_bytes(data), amf_string_get_size(data));
+                markers = has_xml_markers((char*)amf_string_get_bytes(data), amf_string_get_size(data));
                 if (markers) {
                     printf("<![CDATA[");
                 }
                 /* do not print more than the actual length of string */
-                printf("%.*s", amf_string_get_bytes(data), amf_string_get_bytes(data));
+                printf("%.*s", (int)amf_string_get_size(data), amf_string_get_bytes(data));
                 if (markers) {
                     printf("]]>");
                 }
@@ -246,7 +246,7 @@ static int xml_on_header_metadata_only(flv_header * header, flv_parser * parser)
 }
 
 static int xml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
-    if (!strcmp(amf_string_get_bytes(name), "onMetaData")) {
+    if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
         puts("<ScriptDataObject name=\"onMetaData\" xmlns=\"http://schemas.flvmeta.org/FLV/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/\">");
         /* dump AMF data as XML, we start from level 3, meaning 6 indentations characters */
         xml_amf_data_dump(data, 1);
