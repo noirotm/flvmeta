@@ -28,11 +28,100 @@
 #include <stdio.h>
 #include <string.h>
 
-/* XML metadata dumping */
-typedef struct __xml_dump_status {
-    uint8 level;
-} xml_dump_status;
+/* does the given string have XML tag markers ? */
+static int has_xml_markers(const char * str, int len) {
+    int i;
+    for (i = 0; i < len; i++) {
+        if (str[i] == '<' || str[i] == '>') {
+            return 1;
+        }
+    }
+    return 0;
+}
 
+/* XML metadata dumping */
+static void xml_amf_data_dump(amf_data * data, int indent_level) {
+    if (data != NULL) {
+        amf_node * node;
+        time_t time;
+        struct tm * t;
+        char datestr[128];
+        int markers;
+
+        /* print indentation spaces */
+        printf("%*s", indent_level * 2, "");
+
+        switch (data->type) {
+            case AMF_TYPE_NUMBER:
+                printf("<amf:number value=\"%.12g\"/>\n", data->number_data);
+                break;
+            case AMF_TYPE_BOOLEAN:
+                printf("<amf:boolean value=\"%s\"/>\n", (data->boolean_data) ? "true" : "false");
+                break;
+            case AMF_TYPE_STRING:
+                printf("<amf:string>");
+                /* check whether the string contains xml characters, if so, CDATA it */
+                markers = has_xml_markers(amf_string_get_bytes(data), amf_string_get_size(data));
+                if (markers) {
+                    printf("<![CDATA[");
+                }
+                /* do not print more than the actual length of string */
+                printf("%.*s", amf_string_get_bytes(data), amf_string_get_bytes(data));
+                if (markers) {
+                    printf("]]>");
+                }
+                puts("</amf:string>");
+                break;
+            case AMF_TYPE_OBJECT:
+                puts("<amf:object>");
+                node = amf_object_first(data);
+                while (node != NULL) {
+                    printf("%*s<amf:element name=\"%s\">\n", (indent_level + 1) * 2, "", amf_string_get_bytes(amf_object_get_name(node)));
+                    xml_amf_data_dump(amf_object_get_data(node), indent_level + 2);
+                    node = amf_object_next(node);
+                    printf("%*s</amf:element>\n", (indent_level + 1) * 2, "");
+                }
+                printf("%*s</amf:object>\n", indent_level * 2, "");
+                break;
+            case AMF_TYPE_NULL:
+                puts("<amf:null/>");
+                break;
+            case AMF_TYPE_UNDEFINED:
+                puts("<amf:undefined/>");
+                break;
+            case AMF_TYPE_ASSOCIATIVE_ARRAY:
+                puts("<amf:associativeArray>");
+                node = amf_associative_array_first(data);
+                while (node != NULL) {
+                    printf("%*s<amf:element name=\"%s\">\n", (indent_level + 1) * 2, "", amf_string_get_bytes(amf_associative_array_get_name(node)));
+                    xml_amf_data_dump(amf_associative_array_get_data(node), indent_level + 2);
+                    node = amf_associative_array_next(node);
+                    printf("%*s</amf:element>\n", (indent_level + 1) * 2, "");
+                }
+                printf("%*s</amf:associativeArray>\n", indent_level * 2, "");
+                break;
+            case AMF_TYPE_ARRAY:
+                puts("<amf:array>");
+                node = amf_array_first(data);
+                while (node != NULL) {
+                    xml_amf_data_dump(amf_array_get(node), indent_level + 1);
+                    node = amf_array_next(node);
+                }
+                printf("%*s</amf:array>\n", indent_level * 2, "");
+                break;
+            case AMF_TYPE_DATE:
+                time = amf_date_to_time_t(data);
+                tzset();
+                t = localtime(&time);
+                strftime(datestr, sizeof(datestr), "%Y-%m-%dT%H:%M:%S", t);
+                printf("<amf:date value=\"%s\"/>\n", datestr);
+                break;
+            case AMF_TYPE_XML: break;
+            case AMF_TYPE_CLASS: break;
+            default: break;
+        }
+    }
+}
 
 /* XML FLV file full dump callbacks */
 
@@ -70,15 +159,15 @@ static int xml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser
 
     switch (flv_video_tag_codec_id(vt)) {
         case FLV_VIDEO_TAG_CODEC_JPEG: str = "JPEG"; break;
-        case FLV_VIDEO_TAG_CODEC_SORENSEN_H263: str = "Sorensen H.263"; break;
-        case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO: str = "Screen Video"; break;
+        case FLV_VIDEO_TAG_CODEC_SORENSEN_H263: str = "Sorenson H.263"; break;
+        case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO: str = "Screen video"; break;
         case FLV_VIDEO_TAG_CODEC_ON2_VP6: str = "On2 VP6"; break;
-        case FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA: str = "On2 VP6 Alpha"; break;
-        case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2: str = "Screen Video V2"; break;
+        case FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA: str = "On2 VP6 with alpha channel"; break;
+        case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2: str = "Screen video version 2"; break;
         case FLV_VIDEO_TAG_CODEC_AVC: str = "AVC"; break;
         default: str = "Unknown";
     }
-    printf("    <videoData codec=\"%s\"", str);
+    printf("    <videoData codecID=\"%s\"", str);
 
     switch (flv_video_tag_frame_type(vt)) {
         case FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME: str = "keyframe"; break;
@@ -97,30 +186,30 @@ static int xml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser
     char * str;
 
     switch (flv_audio_tag_sound_type(at)) {
-        case FLV_AUDIO_TAG_SOUND_TYPE_MONO: str = "Mono"; break;
-        case FLV_AUDIO_TAG_SOUND_TYPE_STEREO: str = "Stereo"; break;
+        case FLV_AUDIO_TAG_SOUND_TYPE_MONO: str = "mono"; break;
+        case FLV_AUDIO_TAG_SOUND_TYPE_STEREO: str = "stereo"; break;
         default: str = "Unknown";
     }
     printf("    <audioData type=\"%s\"", str);
 
     switch (flv_audio_tag_sound_size(at)) {
-        case FLV_AUDIO_TAG_SOUND_SIZE_8: str = "8 bits"; break;
-        case FLV_AUDIO_TAG_SOUND_SIZE_16: str = "16 bits"; break;
+        case FLV_AUDIO_TAG_SOUND_SIZE_8: str = "8"; break;
+        case FLV_AUDIO_TAG_SOUND_SIZE_16: str = "16"; break;
         default: str = "Unknown";
     }
     printf(" size=\"%s\"", str);
 
     switch (flv_audio_tag_sound_rate(at)) {
-        case FLV_AUDIO_TAG_SOUND_RATE_5_5: str = "5.5 kHz"; break;
-        case FLV_AUDIO_TAG_SOUND_RATE_11: str = "11 kHz"; break;
-        case FLV_AUDIO_TAG_SOUND_RATE_22: str = "22 kHz"; break;
-        case FLV_AUDIO_TAG_SOUND_RATE_44: str = "44 kHz"; break;
+        case FLV_AUDIO_TAG_SOUND_RATE_5_5: str = "5.5"; break;
+        case FLV_AUDIO_TAG_SOUND_RATE_11: str = "11"; break;
+        case FLV_AUDIO_TAG_SOUND_RATE_22: str = "22"; break;
+        case FLV_AUDIO_TAG_SOUND_RATE_44: str = "44"; break;
         default: str = "Unknown";
     }
     printf(" rate=\"%s\"", str);
 
     switch (flv_audio_tag_sound_format(at)) {
-        case FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM: str = "Linear PCM"; break;
+        case FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM: str = "Linear PCM, platform endian"; break;
         case FLV_AUDIO_TAG_SOUND_FORMAT_ADPCM: str = "ADPCM"; break;
         case FLV_AUDIO_TAG_SOUND_FORMAT_MP3: str = "MP3"; break;
         case FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM_LE: str = "Linear PCM, little-endian"; break;
@@ -142,6 +231,27 @@ static int xml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser
 }
 
 static int xml_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
+    printf("    <ScriptDataObject name=\"%s\">\n", amf_string_get_bytes(name));
+    /* dump AMF data as XML, we start from level 3, meaning 6 indentations characters */
+    xml_amf_data_dump(data, 3);
+    puts("    </ScriptDataObject>");
+    return OK;
+}
+
+/* XML FLV file metadata dump callbacks */
+
+static int xml_on_header_metadata_only(flv_header * header, flv_parser * parser) {
+    puts("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>");
+    return OK;
+}
+
+static int xml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
+    if (!strcmp(amf_string_get_bytes(name), "onMetaData")) {
+        puts("<ScriptDataObject name=\"onMetaData\" xmlns=\"http://schemas.flvmeta.org/FLV/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/\">");
+        /* dump AMF data as XML, we start from level 3, meaning 6 indentations characters */
+        xml_amf_data_dump(data, 1);
+        printf("</ScriptDataObject>");
+    }
     return OK;
 }
 
@@ -158,22 +268,26 @@ static int xml_on_stream_end(flv_parser * parser) {
 
 /* dump metadata from a FLV file */
 int dump_metadata(const flvmeta_opts * options) {
-    /*flv_parser parser;
-    
+    flv_parser parser;
+    memset(&parser, 0, sizeof(flv_parser));
+
     switch (options->dump_format) {
+        case FLVMETA_FORMAT_XML:
+            parser.on_header = xml_on_header_metadata_only;
+            parser.on_metadata_tag = xml_on_metadata_tag_only;
+            break;
+    }
 
-    }*/
-
-    return OK;
+    return flv_parse(options->input_file, &parser);
 }
 
 /* dump the full contents of an FLV file */
 int dump_flv_file(const flvmeta_opts * options) {
     flv_parser parser;
+    memset(&parser, 0, sizeof(flv_parser));
 
     switch (options->dump_format) {
         case FLVMETA_FORMAT_XML:
-            memset(&parser, 0, sizeof(flv_parser));
             parser.on_header = xml_on_header;
             parser.on_tag = xml_on_tag;
             parser.on_audio_tag = xml_on_audio_tag;

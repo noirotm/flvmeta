@@ -20,9 +20,8 @@
 
   <xs:element name="ScriptDataObject">
     <xs:complexType>
-      <xs:complexContent>
-        <xs:extension base="amf:tNamedObject"/>
-      </xs:complexContent>
+      <xs:group ref="amf:tData" />
+      <xs:attribute name="name" use="required" type="xs:string" />
     </xs:complexType>
   </xs:element>
 
@@ -65,6 +64,7 @@
       <xs:enumeration value="Nellymoser"/>
       <xs:enumeration value="G.711 A-law logarithmic PCM"/>
       <xs:enumeration value="G.711 mu-law logarithmic PCM"/>
+      <xs:enumeration value="reserved"/>
       <xs:enumeration value="AAC"/>
       <xs:enumeration value="Speex"/>
       <xs:enumeration value="MP3 8-Khz"/>

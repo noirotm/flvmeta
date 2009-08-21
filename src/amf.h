@@ -204,15 +204,6 @@ number64   amf_date_get_milliseconds(amf_data * data);
 sint16     amf_date_get_timezone(amf_data * data);
 time_t     amf_date_to_time_t(amf_data * data);
 
-/* event based parser */
-typedef struct __amf_parser {
-    void * user_data;
-    char * current_object_name;
-    int (* on_data)(amf_data * data, char * name, struct __amf_parser * parser);
-    int (* on_data_end)(amf_data * data, struct __amf_parser * parser);
-} amf_parser;
-int amf_parse(amf_data * data, amf_parser * parser);
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -1,20 +1,42 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ScriptDataObject name="onMetadata" xmlns="http://schemas.flvmeta.org/FLV/" xmlns:amf="http://schemas.flvmeta.org/AMF0/">
-  <amf:boolean name="hasMetadata" value="true"/>
-  <amf:boolean name="hasVideo" value="true"/>
-  <amf:boolean name="hasAudio" value="true"/>
-  <amf:number name="duration" value="597.56"/>
-  <amf:string name="metadatacreator">flvmeta 1.0.8</amf:string>
-  <amf:boolean name="hascuepoints" value="false"/>
-  <amf:array name="cuepoints"></amf:array>
-  <amf:associativeArray name="keyframes">
-    <amf:array name="times">
-      <amf:number value="0.0"/>
-      <amf:number value="0.2"/>
-    </amf:array>
-    <amf:array name="filepositions">
-      <amf:number value="3142.0"/>
-      <amf:number value="3221.0"/>
-    </amf:array>
+  <amf:associativeArray>
+    <amf:element name="hasMetadata">
+      <amf:boolean value="true"/>
+    </amf:element>
+    <amf:element name="hasVideo">
+      <amf:boolean value="true"/>
+    </amf:element>
+    <amf:element name="hasAudio">
+      <amf:boolean value="true"/>
+    </amf:element>
+    <amf:element name="duration">
+      <amf:number value="597.56"/>
+    </amf:element>
+    <amf:element name="metadatacreator">
+      <amf:string>flvmeta 1.0.8</amf:string>
+    </amf:element>
+    <amf:element name="hascuepoints">
+      <amf:boolean value="false"/>
+    </amf:element>
+    <amf:element name="cuepoints">
+      <amf:array/>
+    </amf:element>
+    <amf:element name="keyframes">
+      <amf:associativeArray>
+        <amf:element name="times">
+          <amf:array>
+            <amf:number value="0.0"/>
+            <amf:number value="0.2"/>
+          </amf:array>
+        </amf:element>
+        <amf:element name="filepositions">
+          <amf:array>
+            <amf:number value="3142.0"/>
+            <amf:number value="3221.0"/>
+          </amf:array>
+        </amf:element>
+      </amf:associativeArray>
+    </amf:element>
   </amf:associativeArray>
 </ScriptDataObject>
