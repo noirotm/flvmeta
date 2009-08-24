@@ -239,6 +239,7 @@ int main(int argc, char ** argv) {
     else {
         fprintf(stderr, "%s: no input file\n", argv[0]);
         usage(argv[0]);
+        exit(EXIT_FAILURE);
     }
 
     /* output filename */
