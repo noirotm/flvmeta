@@ -231,10 +231,10 @@ static int xml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser
 }
 
 static int xml_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
-    printf("    <ScriptDataObject name=\"%s\">\n", amf_string_get_bytes(name));
+    printf("    <scriptDataObject name=\"%s\">\n", amf_string_get_bytes(name));
     /* dump AMF data as XML, we start from level 3, meaning 6 indentations characters */
     xml_amf_data_dump(data, 3);
-    puts("    </ScriptDataObject>");
+    puts("    </scriptDataObject>");
     return OK;
 }
 
@@ -247,10 +247,10 @@ static int xml_on_header_metadata_only(flv_header * header, flv_parser * parser)
 
 static int xml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
     if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
-        puts("<ScriptDataObject name=\"onMetaData\" xmlns=\"http://schemas.flvmeta.org/FLV/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/\">");
+        puts("<scriptDataObject name=\"onMetaData\" xmlns=\"http://schemas.flvmeta.org/FLV/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/\">");
         /* dump AMF data as XML, we start from level 3, meaning 6 indentations characters */
         xml_amf_data_dump(data, 1);
-        printf("</ScriptDataObject>");
+        printf("</scriptDataObject>");
     }
     return OK;
 }

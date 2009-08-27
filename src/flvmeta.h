@@ -29,17 +29,17 @@
 # include <config.h>
 #endif
 
-#include "amf.h"
+#include "flv.h"
 
 /* copyright string */
 #define COPYRIGHT_STR "Copyright (C) 2007, 2008, 2009 Marc Noirot <marc.noirot AT gmail.com>"
 
 /* error statuses */
-#define OK                  0
-#define ERROR_OPEN_READ     1
-#define ERROR_OPEN_WRITE    2
-#define ERROR_NO_FLV        3
-#define ERROR_EOF           4
+#define OK                  FLV_OK
+#define ERROR_OPEN_READ     FLV_ERROR_OPEN_READ
+#define ERROR_NO_FLV        FLV_ERROR_NO_FLV
+#define ERROR_EOF           FLV_ERROR_EOF
+#define ERROR_OPEN_WRITE    4
 #define ERROR_INVALID_TAG   5
 #define ERROR_WRITE         6
 #define ERROR_SAME_FILE     7

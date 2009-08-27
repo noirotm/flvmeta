@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <flv xmlns="http://schemas.flvmeta.org/FLV/" xmlns:amf="http://schemas.flvmeta.org/AMF0/" hasAudio="1" hasVideo="1">
   <tag type="scriptData" dataSize="8974" timestamp="0" offset="21">
-    <ScriptDataObject name="onMetadata">
+    <scriptDataObject name="onMetadata">
       <amf:associativeArray>
         <amf:element name="encodingDate">
           <amf:date value="2009-05-07T12:23:45"/>
@@ -50,7 +50,7 @@
           </amf:associativeArray>
         </amf:element>
       </amf:associativeArray>
-    </ScriptDataObject>
+    </scriptDataObject>
   </tag>
   <tag type="audio" dataSize="56450" timestamp="0" offset="222">
     <audioData format="MP3" rate="44" size="8" type="stereo"/>

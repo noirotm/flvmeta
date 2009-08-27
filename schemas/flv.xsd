@@ -18,7 +18,7 @@
     </xs:complexType>
   </xs:element>
 
-  <xs:element name="ScriptDataObject">
+  <xs:element name="scriptDataObject">
     <xs:complexType>
       <xs:group ref="amf:tData" />
       <xs:attribute name="name" use="required" type="xs:string" />
@@ -29,7 +29,7 @@
     <xs:choice>
       <xs:element name="videoData" type="tVideoData"/>
       <xs:element name="audioData" type="tAudioData"/>
-      <xs:element ref="ScriptDataObject" />
+      <xs:element ref="scriptDataObject" />
     </xs:choice>
     <xs:attribute name="type" type="tTagType" use="required"/>
     <xs:attribute name="dataSize" type="xs:nonNegativeInteger" use="optional"/>

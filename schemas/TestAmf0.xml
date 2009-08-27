@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ScriptDataObject name="onMetadata" xmlns="http://schemas.flvmeta.org/FLV/" xmlns:amf="http://schemas.flvmeta.org/AMF0/">
+<scriptDataObject name="onMetadata" xmlns="http://schemas.flvmeta.org/FLV/" xmlns:amf="http://schemas.flvmeta.org/AMF0/">
   <amf:associativeArray>
     <amf:element name="hasMetadata">
       <amf:boolean value="true"/>
@@ -39,4 +39,4 @@
       </amf:associativeArray>
     </amf:element>
   </amf:associativeArray>
-</ScriptDataObject>
+</scriptDataObject>

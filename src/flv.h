@@ -24,8 +24,19 @@
 #ifndef __FLV_H__
 #define __FLV_H__
 
+/* Configuration of the sources */
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include "types.h"
 #include "amf.h"
+
+/* error statuses */
+#define FLV_OK                  0
+#define FLV_ERROR_OPEN_READ     1
+#define FLV_ERROR_NO_FLV        2
+#define FLV_ERROR_EOF           3
 
 /* flv file format structure and definitions */
 #pragma pack(push, 1)
