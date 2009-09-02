@@ -5,3 +5,4 @@ Zou Guangxian <zouguangxian@gmail.com> - VP60 related bug fix
 Raphael Prevost <jaguarwan@gmail.com> - Win32 mmap compatibility layer
 nicmail777@yahoo.com - malformed metadata related bug fix
 Robert M. Hall, II <rhall@impossibilities.com> - sample files to implement extended timestamp support
+podawan@gmail.com - extended timestamp related bug report
