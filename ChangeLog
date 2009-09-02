@@ -1,3 +1,13 @@
+2009-09-02 Marc Noirot <marc.noirot@gmail.com>
+	* configure.ac: 1.0.10 Release.
+
+	* amf.c (amf_data_dump): Fixed amf_data_dump numeric format.
+
+	* flvmeta.c, flvdump.c: Fixed extended timestamp handling.
+
+	* avc.c, avc.h: Fixed video resolution detection causing a crash 
+	  in the case the video tag data body has less data than required.
+
 2009-06-22 Marc Noirot <marc.noirot@gmail.com>
 	* configure.ac: 1.0.9 Release.
 
@@ -9,7 +19,7 @@
 	  reading invalid tags to potentially lead to
 	  memory overflow and creation of invalid files.
 
-    * flvmeta.c (write_flv): Fixed extended timestamp handling.
+	* flvmeta.c (write_flv): Fixed extended timestamp handling.
 
 2009-05-15 Marc Noirot <marc.noirot@gmail.com>
 	* amf.c (amf_data_dump): Fixed date handling in AMF according to
