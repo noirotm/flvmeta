@@ -71,8 +71,12 @@ int main(int argc, char ** argv) {
     uint32 prev_tag_size;
     
     /* extended timestamp handling */
-    uint32 prev_timestamp = 0;
-    uint8 timestamp_extended = 0;
+    uint32 prev_timestamp_video = 0;
+    uint32 prev_timestamp_audio = 0;
+    uint32 prev_timestamp_meta = 0;
+    uint8 timestamp_extended_video = 0;
+    uint8 timestamp_extended_audio = 0;
+    uint8 timestamp_extended_meta = 0;
     
     while (!feof(flv_in)) {
         offset = flvmeta_ftell(flv_in);
@@ -98,17 +102,39 @@ int main(int argc, char ** argv) {
         
         uint32 timestamp = flv_tag_get_timestamp(ft);
         printf("Timestamp: %u", timestamp);
-        if (timestamp < prev_timestamp) {
-            timestamp_extended++;
-        }
-        prev_timestamp = timestamp;
-        
-        if (timestamp_extended > 0) {
-            timestamp += timestamp_extended << 24;
-            printf(" (should be %u)", timestamp);
-        }
-        printf("\n");
 
+        if (ft.type == FLV_TAG_TYPE_META) {
+            if (timestamp < prev_timestamp_meta) {
+                ++timestamp_extended_meta;
+            }
+            prev_timestamp_meta = timestamp;
+            if (timestamp_extended_meta > 0) {
+                timestamp += (timestamp_extended_meta << 24);
+                printf(" (should be %u)", timestamp);
+            }
+        }
+        else if (ft.type == FLV_TAG_TYPE_AUDIO) {
+            if (timestamp < prev_timestamp_audio) {
+                ++timestamp_extended_audio;
+            }
+            prev_timestamp_audio = timestamp;
+            if (timestamp_extended_audio > 0) {
+                timestamp += (timestamp_extended_audio << 24);
+                printf(" (should be %u)", timestamp);
+            }
+        }
+        else if (ft.type == FLV_TAG_TYPE_VIDEO) {
+            if (timestamp < prev_timestamp_video) {
+                ++timestamp_extended_video;
+            }
+            prev_timestamp_video = timestamp;
+            if (timestamp_extended_video > 0) {
+                timestamp += (timestamp_extended_video << 24);
+                printf(" (should be %u)", timestamp);
+            }
+        }
+
+        printf("\n");
 
         if (ft.type == FLV_TAG_TYPE_AUDIO) {
             flv_audio_tag at;

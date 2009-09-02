@@ -684,7 +684,7 @@ void amf_data_dump(FILE * stream, amf_data * data, int indent_level) {
         char datestr[128];
         switch (data->type) {
             case AMF_TYPE_NUMBER:
-                fprintf(stream, "%f", data->number_data);
+                fprintf(stream, "%.12g", data->number_data);
                 break;
             case AMF_TYPE_BOOLEAN:
                 fprintf(stream, "%s", (data->boolean_data) ? "true" : "false");

@@ -84,9 +84,16 @@ typedef struct __flv_metadata {
 /*
     compute Sorensen H.263 video size
 */
-size_t compute_h263_size(FILE * flv_in, flv_info * info) {
+static size_t compute_h263_size(FILE * flv_in, flv_info * info, uint32 body_length) {
     byte header[9];
-    size_t bytes_read = fread(header, 1, 9, flv_in);
+    size_t bytes_read;
+
+    /* make sure we have enough bytes to read in the current tag */
+    if (body_length < 9) {
+        return 0;
+    }
+
+    bytes_read = fread(header, 1, 9, flv_in);
     if (bytes_read == 9) {
         uint32 psc = uint24_be_to_uint32(*(uint24_be *)(header)) >> 7;
         if (psc == 1) {
@@ -131,9 +138,16 @@ size_t compute_h263_size(FILE * flv_in, flv_info * info) {
 /*
     compute Screen video size
 */
-size_t compute_screen_size(FILE * flv_in, flv_info * info) {
+static size_t compute_screen_size(FILE * flv_in, flv_info * info, uint32 body_length) {
     byte header[4];
-    size_t bytes_read = fread(header, 1, 4, flv_in);
+    size_t bytes_read;
+
+    /* make sure we have enough bytes to read in the current tag */
+    if (body_length < 4) {
+        return 0;
+    }
+
+    bytes_read = fread(header, 1, 4, flv_in);
     if (bytes_read == 4) {
         info->video_width  = ((header[0] & 0x0f) << 8) + header[1];
         info->video_height = ((header[2] & 0x0f) << 8) + header[3];
@@ -144,9 +158,16 @@ size_t compute_screen_size(FILE * flv_in, flv_info * info) {
 /*
     compute On2 VP6 video size
 */
-size_t compute_vp6_size(FILE * flv_in, flv_info * info) {
+static size_t compute_vp6_size(FILE * flv_in, flv_info * info, uint32 body_length) {
     byte header[7], offset;
-    size_t bytes_read = fread(header, 1, 7, flv_in);
+    size_t bytes_read;
+
+    /* make sure we have enough bytes to read in the current tag */
+    if (body_length < 7) {
+        return 0;
+    }
+
+    bytes_read = fread(header, 1, 7, flv_in);
     if (bytes_read == 7) {
         /* two bytes offset if VP6 0 */
         offset = (header[1] & 0x01 || !(header[2] & 0x06)) << 1;
@@ -159,9 +180,16 @@ size_t compute_vp6_size(FILE * flv_in, flv_info * info) {
 /*
     compute On2 VP6 with Alpha video size
 */
-size_t compute_vp6_alpha_size(FILE * flv_in, flv_info * info) {
+static size_t compute_vp6_alpha_size(FILE * flv_in, flv_info * info, uint32 body_length) {
     byte header[10], offset;
-    size_t bytes_read = fread(header, 1, 10, flv_in);
+    size_t bytes_read;
+
+    /* make sure we have enough bytes to read in the current tag */
+    if (body_length < 10) {
+        return 0;
+    }
+
+    bytes_read = fread(header, 1, 10, flv_in);
     if (bytes_read == 10) {
         /* two bytes offset if VP6 0 */
         offset = (header[4] & 0x01 || !(header[5] & 0x06)) << 1;
@@ -174,32 +202,31 @@ size_t compute_vp6_alpha_size(FILE * flv_in, flv_info * info) {
 /*
     compute AVC (H.264) video size (experimental)
 */
-size_t compute_avc_size(FILE * flv_in, flv_info * info) {
-    size_t bytes_read = read_avc_resolution(flv_in, &(info->video_width), &(info->video_height));
-    return bytes_read;
+static size_t compute_avc_size(FILE * flv_in, flv_info * info, uint32 body_length) {
+    return read_avc_resolution(flv_in, body_length, &(info->video_width), &(info->video_height));
 }
 
 /*
     compute video width and height from the first video frame
 */
-size_t compute_video_size(FILE * flv_in, flv_info * info) {
+static size_t compute_video_size(FILE * flv_in, flv_info * info, uint32 body_length) {
     size_t bytes_read = 0;
     switch (info->video_codec) {
         case FLV_VIDEO_TAG_CODEC_SORENSEN_H263:
-            bytes_read = compute_h263_size(flv_in, info);
+            bytes_read = compute_h263_size(flv_in, info, body_length);
             break;
         case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO:
         case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2:
-            bytes_read = compute_screen_size(flv_in, info);
+            bytes_read = compute_screen_size(flv_in, info, body_length);
             break;
         case FLV_VIDEO_TAG_CODEC_ON2_VP6:
-            bytes_read = compute_vp6_size(flv_in, info);
+            bytes_read = compute_vp6_size(flv_in, info, body_length);
             break;
         case FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA:
-            bytes_read = compute_vp6_alpha_size(flv_in, info);
+            bytes_read = compute_vp6_alpha_size(flv_in, info, body_length);
             break;
         case FLV_VIDEO_TAG_CODEC_AVC:
-            bytes_read = compute_avc_size(flv_in, info);
+            bytes_read = compute_avc_size(flv_in, info, body_length);
     }
     return bytes_read;
 }
@@ -227,7 +254,10 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
     uint32 prev_timestamp_video;
     uint32 prev_timestamp_audio;
     uint32 prev_timestamp_meta;
-    uint8 timestamp_extended;
+    uint8 timestamp_extended_video;
+    uint8 timestamp_extended_audio;
+    uint8 timestamp_extended_meta;
+    uint8 have_video_size;
 
     info->have_video = 0;
     info->have_audio = 0;
@@ -287,7 +317,10 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
     prev_timestamp_video = 0;
     prev_timestamp_audio = 0;
     prev_timestamp_meta = 0;
-    timestamp_extended = 0;
+    timestamp_extended_video = 0;
+    timestamp_extended_audio = 0;
+    timestamp_extended_meta = 0;
+    have_video_size = 0;
 
     while (!feof(flv_in)) {
         flv_tag ft;
@@ -306,25 +339,30 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
         /* extended timestamp fixing */
         if (ft.type == FLV_TAG_TYPE_META) {
             if (timestamp < prev_timestamp_meta) {
-                ++timestamp_extended;
+                ++timestamp_extended_meta;
             }
             prev_timestamp_meta = timestamp;
+            if (timestamp_extended_meta > 0) {
+                timestamp += timestamp_extended_meta << 24;
+            }
         }
         else if (ft.type == FLV_TAG_TYPE_AUDIO) {
             if (timestamp < prev_timestamp_audio) {
-                ++timestamp_extended;
+                ++timestamp_extended_audio;
             }
             prev_timestamp_audio = timestamp;
+            if (timestamp_extended_audio > 0) {
+                timestamp += timestamp_extended_audio << 24;
+            }
         }
         else if (ft.type == FLV_TAG_TYPE_VIDEO) {
             if (timestamp < prev_timestamp_video) {
-                ++timestamp_extended;
+                ++timestamp_extended_video;
             }
             prev_timestamp_video = timestamp;
-        }
-
-        if (timestamp_extended > 0) {
-            timestamp += timestamp_extended << 24;
+            if (timestamp_extended_video > 0) {
+                timestamp += timestamp_extended_video << 24;
+            }
         }
 
         /* update the info struct only if the tag is valid */
@@ -381,9 +419,16 @@ int get_flv_info(FILE * flv_in, flv_info * info) {
                 info->have_video = 1;
                 info->video_codec = flv_video_tag_codec_id(vt);
                 info->video_first_timestamp = timestamp;
+            }
 
+            if (have_video_size != 1) {
                 /* read first video frame to get critical info */
-                bytes_read = compute_video_size(flv_in, info);
+                bytes_read = compute_video_size(flv_in, info, body_length - sizeof(flv_video_tag));
+                if (bytes_read > 0 && info->video_width > 0 && info->video_width > 0) {
+                    have_video_size = 1;
+                }
+                /* if we cannot fetch that information from the first tag, we'll try
+                   for each following video tag */
             }
 
             /* add keyframe to list */
@@ -602,7 +647,9 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
     uint32 prev_timestamp_video;
     uint32 prev_timestamp_audio;
     uint32 prev_timestamp_meta;
-    uint8 timestamp_extended;
+    uint8 timestamp_extended_video;
+    uint8 timestamp_extended_audio;
+    uint8 timestamp_extended_meta;
     byte * copy_buffer;
     uint32 duration;
     flv_tag omft;
@@ -656,7 +703,9 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
     prev_timestamp_video = 0;
     prev_timestamp_audio = 0;
     prev_timestamp_meta = 0;
-    timestamp_extended = 0;
+    timestamp_extended_video = 0;
+    timestamp_extended_audio = 0;
+    timestamp_extended_meta = 0;
 
     /* copy the tags verbatim */
     flvmeta_fseek(flv_in, sizeof(flv_header)+sizeof(uint32_be), SEEK_SET);
@@ -681,26 +730,32 @@ int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_me
         /* extended timestamp fixing */
         if (ft.type == FLV_TAG_TYPE_META) {
             if (timestamp < prev_timestamp_meta) {
-                ++timestamp_extended;
+                ++timestamp_extended_meta;
             }
             prev_timestamp_meta = timestamp;
+            if (timestamp_extended_meta > 0) {
+                timestamp += timestamp_extended_meta << 24;
+            }
         }
         else if (ft.type == FLV_TAG_TYPE_AUDIO) {
             if (timestamp < prev_timestamp_audio) {
-                ++timestamp_extended;
+                ++timestamp_extended_audio;
             }
             prev_timestamp_audio = timestamp;
+            if (timestamp_extended_audio > 0) {
+                timestamp += timestamp_extended_audio << 24;
+            }
         }
         else if (ft.type == FLV_TAG_TYPE_VIDEO) {
             if (timestamp < prev_timestamp_video) {
-                ++timestamp_extended;
+                ++timestamp_extended_video;
             }
             prev_timestamp_video = timestamp;
+            if (timestamp_extended_video > 0) {
+                timestamp += timestamp_extended_video << 24;
+            }
         }
 
-        if (timestamp_extended > 0) {
-            timestamp += timestamp_extended << 24;
-        }
         flv_tag_set_timestamp(&ft, timestamp);
 
         /* if we're at the offset of the first onMetaData tag in the input file,
