@@ -648,7 +648,7 @@ static void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta
         /* for each tag in the original metadata, we add it if it does not exist */
         amf_node * node = amf_associative_array_first(info->original_on_metadata);
         while (node != NULL) {
-            char * name = amf_string_get_bytes(amf_associative_array_get_name(node));
+            char * name = (char *)amf_string_get_bytes(amf_associative_array_get_name(node));
             if (amf_associative_array_get(meta->on_metadata, name) == NULL) {
                 /* add metadata */
                 amf_associative_array_add(meta->on_metadata, name, amf_data_clone(amf_associative_array_get_data(node)));

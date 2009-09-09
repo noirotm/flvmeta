@@ -300,7 +300,7 @@ static amf_data * amf_object_read(amf_read_proc read_proc, void * user_data) {
             if (name != NULL) {
                 element = amf_data_read(read_proc, user_data);
                 if (element != NULL) {
-                    if (amf_object_add(data, amf_string_get_bytes(name), element) == NULL) {
+                    if (amf_object_add(data, (char *)amf_string_get_bytes(name), element) == NULL) {
                         amf_data_free(name);
                         amf_data_free(element);
                         amf_data_free(data);
@@ -336,7 +336,7 @@ static amf_data * amf_associative_array_read(amf_read_proc read_proc, void * use
                 if (name != NULL) {
                     element = amf_data_read(read_proc, user_data);
                     if (element != NULL) {
-                        if (amf_associative_array_add(data, amf_string_get_bytes(name), element) == NULL) {
+                        if (amf_associative_array_add(data, (char *)amf_string_get_bytes(name), element) == NULL) {
                             amf_data_free(name);
                             amf_data_free(element);
                             amf_data_free(data);
@@ -668,7 +668,7 @@ amf_data * amf_data_clone(amf_data * data) {
             case AMF_TYPE_BOOLEAN: return amf_boolean_new(amf_boolean_get_value(data));
             case AMF_TYPE_STRING:
                 if (data->string_data.mbstr != NULL) {
-                    return amf_string_new(strdup(amf_string_get_bytes(data)), amf_string_get_size(data));
+                    return amf_string_new((byte *)strdup((char *)amf_string_get_bytes(data)), amf_string_get_size(data));
                 }
                 else {
                     return amf_str(NULL);

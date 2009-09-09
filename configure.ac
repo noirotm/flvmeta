@@ -51,5 +51,6 @@ AC_CONFIG_FILES([
 Makefile
 src/Makefile
 tests/Makefile
+schemas/Makefile
 ])
 AC_OUTPUT
