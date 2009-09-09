@@ -165,7 +165,7 @@ int main(int argc, char ** argv) {
                         if (options.metadata == NULL) {
                             options.metadata = amf_associative_array_new();
                         }
-                        amf_object_add(options.metadata, amf_str(optarg), amf_str(eq_pos + 1));
+                        amf_associative_array_add(options.metadata, optarg, amf_str(eq_pos + 1));
                     }
                     else {
                         fprintf(stderr, "%s: invalid metadata format -- %s\n", argv[0], optarg);
