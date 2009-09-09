@@ -633,29 +633,23 @@ static void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta
         amf_associative_array_add(meta->on_metadata, "audiodelay", amf_number_new((number64)audio_delay));
     }
     amf_associative_array_add(meta->on_metadata, "canSeekToEnd", amf_boolean_new(info->can_seek_to_end));
-    amf_associative_array_add(meta->on_metadata, "hasCuePoints", amf_boolean_new(0));
-    amf_associative_array_add(meta->on_metadata, "cuePoints", amf_array_new());
+    
+    /* only add empty cuepoints if we don't preserve existing tags OR if the existing tags don't have cuepoints */
+    if (opts->preserve_metadata == 0
+    || (opts->preserve_metadata == 1 && amf_associative_array_get(info->original_on_metadata, "cuePoints") == NULL)) {
+        amf_associative_array_add(meta->on_metadata, "hasCuePoints", amf_boolean_new(0));
+        amf_associative_array_add(meta->on_metadata, "cuePoints", amf_array_new());
+    }
     amf_associative_array_add(meta->on_metadata, "hasKeyframes", amf_boolean_new(info->have_keyframes));
     amf_associative_array_add(meta->on_metadata, "keyframes", info->keyframes);
 
     /* merge metadata from input file if we specified the preserve option */
     if (opts->preserve_metadata) {
-        /* for each tag in the original metadata, we replace the new one with it, or add it if it does not exist */
+        /* for each tag in the original metadata, we add it if it does not exist */
         amf_node * node = amf_associative_array_first(info->original_on_metadata);
         while (node != NULL) {
             char * name = amf_string_get_bytes(amf_associative_array_get_name(node));
-
-            /* there are some tags we need to ignore anyways, namely everything related to keyframes */
-            if (!strcmp(name, "keyframes")) {
-                node = amf_associative_array_next(node);
-                continue;
-            }
-
-            if (amf_associative_array_get(meta->on_metadata, name) != NULL) {
-                /* replace metadata */
-                amf_associative_array_set(meta->on_metadata, name, amf_data_clone(amf_associative_array_get_data(node)));
-            }
-            else {
+            if (amf_associative_array_get(meta->on_metadata, name) == NULL) {
                 /* add metadata */
                 amf_associative_array_add(meta->on_metadata, name, amf_data_clone(amf_associative_array_get_data(node)));
             }
