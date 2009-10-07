@@ -23,21 +23,15 @@
 
 \note error handling is only in a very rudimentary form.
 \author Rui Maciel	rui_maciel@users.sourceforge.net
-\version v0.9
+\version v1.1
 */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
 
-#include <wchar.h>
-
 #ifdef HAVE_STDINT_H
 # include <stdint.h>
-#endif
-
-#ifndef SIZE_MAX
-# define SIZE_MAX 0xffffffff
 #endif
 
 #ifndef JSON_H
@@ -78,7 +72,7 @@ The error messages produced by the JSON parsers
 /**
 The JSON document tree node, which is a basic JSON type
 **/
-	struct json_value
+	typedef struct json_value
 	{
 		enum json_value_type type;	/*!< the type of node */
 		char *text;	/*!< The text stored by the node. It stores UTF-8 strings and is used exclusively by the JSON_STRING and JSON_NUMBER node types */
@@ -89,10 +83,7 @@ The JSON document tree node, which is a basic JSON type
 		struct json_value *parent;	/*!< The pointer pointing to the parent node in the document tree */
 		struct json_value *child;	/*!< The pointer pointing to the first child node in the document tree */
 		struct json_value *child_end;	/*!< The pointer pointing to the last child node in the document tree */
-	};
-
-
-	typedef struct json_value json_t;
+	} json_t;
 
 
 /**
@@ -118,8 +109,8 @@ The structure which holds the pointers to the functions that will be called by t
 		int (*close_object) ();
 		int (*open_array) ();
 		int (*close_array) ();
-		int (*new_string) (char * text);
-		int (*new_number) (char * text);
+		int (*new_string) (char *text);
+		int (*new_number) (char *text);
 		int (*new_true) ();
 		int (*new_false) ();
 		int (*new_null) ();
@@ -251,9 +242,9 @@ Strips all JSON white spaces from the text string
 /**
 Formats a JSON markup text contained in the given string
 @param text a JSON formatted document
-@return a char string holding the formated document
+@return a pointer to a char string holding the formated document
 **/
-	char *json_format_string (char *text);
+	char *json_format_string (const char *text);
 
 
 /**
@@ -261,7 +252,7 @@ Outputs a new UTF8 c-string which replaces all characters that must be escaped w
 @param text an UTF8 char text string
 @return an UTF-8 c-string holding the same text string but with escaped characters
 **/
-	char *json_escape (char * text);
+	char *json_escape (char *text);
 
 
 /**
@@ -275,7 +266,7 @@ struct json_parsing_info
 /**
 Produces a document tree sequentially from a JSON markup text fragment
 @param info the information necessary to resume parsing any incomplete document
-@param buffer a c-string containing a JSON document fragment
+@param buffer a null-terminated c-string containing a JSON document fragment
 @return a code describing how the operation ended up
 **/
 	enum json_error json_parse_fragment (struct json_parsing_info *info, char *buffer);
@@ -287,7 +278,7 @@ Produces a document tree from a JSON markup text string that contains a complete
 @param text a c-string containing a complete JSON text document
 @return a pointer to the new document tree or NULL if some error occurred
 **/
-	enum json_error json_parse_document (json_t **root, char *text);
+	enum json_error json_parse_document (json_t ** root, char *text);
 
 
 /**

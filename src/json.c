@@ -22,10 +22,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 #include <memory.h>
-#include <string.h>
-#include <wchar.h>
 
 
 enum LEX_VALUE
@@ -49,12 +48,14 @@ enum LEX_VALUE
 
 /* rc_string part */
 
-#define RSTRING_INCSTEP 3
+#define RSTRING_INCSTEP 5
+#define RSTRING_DEFAULT 8
 
 struct rui_cstring
 {
-	char *text;	/*<! char c-string */
-	size_t max;	/*<! usable memory allocated to text minus the space for the nul character */
+	char *text;		/*<! char c-string */
+	size_t length;		/*<! put in place to avoid strlen() calls */
+	size_t max;		/*<! usable memory allocated to text minus the space for the nul character */
 };
 
 typedef struct rui_cstring rcstring;
@@ -74,13 +75,15 @@ rcs_create (size_t length)
 		return NULL;
 
 	rcs->max = length;
+	rcs->length = 0;
 
-	rcs->text = calloc (rcs->max + 1, sizeof (char));
+	rcs->text = malloc ((rcs->max + 1) * sizeof (char));
 	if (rcs->text == NULL)
 	{
 		free (rcs);
 		return NULL;
 	}
+	rcs->text[0] = '\0';
 
 	return rcs;
 }
@@ -110,7 +113,7 @@ rcs_resize (rcstring * rcs, size_t length)
 	char *temp;
 	assert (rcs != NULL);
 
-	temp = realloc (rcs->text, sizeof (char) * (length + 1));	/* length plus L'\0' */
+	temp = realloc (rcs->text, sizeof (char) * (length + 1));	/* length plus '\0' */
 	if (temp == NULL)
 	{
 		free (rcs);
@@ -118,7 +121,7 @@ rcs_resize (rcstring * rcs, size_t length)
 	}
 	rcs->text = temp;
 	rcs->max = length;
-	rcs->text[rcs->max] = L'\0';
+	rcs->text[rcs->max] = '\0';
 	return RS_OK;
 }
 
@@ -126,20 +129,17 @@ rcs_resize (rcstring * rcs, size_t length)
 rstring_code
 rcs_catcs (rcstring * pre, const char *pos, const size_t length)
 {
-	size_t pre_length;
-
 	assert (pre != NULL);
 	assert (pos != NULL);
 
-	pre_length = strlen (pre->text);
-
-	if (pre->max < pre_length + length)
+	if (pre->max < pre->length + length)
 	{
-		if (rcs_resize (pre, pre_length + length + 5) != RS_OK)
+		if (rcs_resize (pre, pre->length + length + RSTRING_INCSTEP) != RS_OK)
 			return RS_MEMORY;
 	}
-	strncpy (pre->text + pre_length, pos, length);
-	pre->text[pre_length + length] = '\0';
+	strncpy (pre->text + pre->length, pos, length);
+	pre->text[pre->length + length] = '\0';
+	pre->length += length;
 	return RS_OK;
 }
 
@@ -147,19 +147,16 @@ rcs_catcs (rcstring * pre, const char *pos, const size_t length)
 rstring_code
 rcs_catc (rcstring * pre, const char c)
 {
-	size_t pre_length;
-
 	assert (pre != NULL);
 
-	pre_length = strlen (pre->text);
-	if (pre->max <= pre_length)
+	if (pre->max <= pre->length)
 	{
-		pre->max += RSTRING_INCSTEP;
-		if (rcs_resize (pre, pre->max) != RS_OK)
+		if (rcs_resize (pre, pre->max + RSTRING_INCSTEP) != RS_OK)
 			return RS_MEMORY;
 	}
-	pre->text[pre_length] = c;
-	pre->text[pre_length + 1] = '\0';
+	pre->text[pre->length] = c;
+	pre->length++;
+	pre->text[pre->length] = '\0';
 	return RS_OK;
 }
 
@@ -173,7 +170,9 @@ rcs_unwrap (rcstring * rcs)
 	if (rcs->text == NULL)
 		out = NULL;
 	else
+	{
 		out = realloc (rcs->text, sizeof (char) * (strlen (rcs->text) + 1));
+	}
 
 	free (rcs);
 	return out;
@@ -186,7 +185,7 @@ rcs_length (rcstring * rcs)
 {
 	/*TODO account for UTF8 */
 	assert (rcs != NULL);
-	return strlen (rcs->text);
+	return rcs->length;
 }
 
 
@@ -230,7 +229,7 @@ json_new_string (const char *text)
 
 	/* initialize members */
 	length = strlen (text) + 1;
-	new_object->text = calloc (sizeof (char), length);
+	new_object->text = malloc (length * sizeof (char));
 	if (new_object->text == NULL)
 	{
 		free (new_object);
@@ -262,7 +261,7 @@ json_new_number (const char *text)
 
 	/* initialize members */
 	length = strlen (text) + 1;
-	new_object->text = calloc (sizeof (char), length);
+	new_object->text = malloc (length * sizeof (char));
 	if (new_object->text == NULL)
 	{
 		free (new_object);
@@ -328,7 +327,7 @@ json_free_value (json_t ** value)
 		while (i != NULL)
 		{
 			j = i->previous;
-			json_free_value (&i);
+			json_free_value (&i);	/*TODO replace recursive solution with an iterative one */
 			i = j;
 		}
 	}
@@ -354,17 +353,29 @@ json_free_value (json_t ** value)
 	/*fixing parent node connections */
 	if ((*value)->parent)
 	{
+		/* fix the tree connection to the first node in the children's list */
 		if ((*value)->parent->child == (*value))
 		{
 			if ((*value)->next)
 			{
-				(*value)->parent->child = (*value)->next;	/* the parent node always points to the first node */
+				(*value)->parent->child = (*value)->next;	/* the parent node always points to the first node in the children linked list */
 			}
 			else
 			{
-				if ((*value)->previous)
-					(*value)->parent->child = (*value)->next;	/* the parent node always points to the first node */
 				(*value)->parent->child = NULL;
+			}
+		}
+
+		/* fix the tree connection to the last node in the children's list */
+		if ((*value)->parent->child_end == (*value))
+		{
+			if ((*value)->previous)
+			{
+				(*value)->parent->child_end = (*value)->previous;	/* the parent node always points to the last node in the children linked list */
+			}
+			else
+			{
+				(*value)->parent->child_end = NULL;
 			}
 		}
 	}
@@ -434,6 +445,7 @@ json_insert_child (json_t * parent, json_t * child)
 		case JSON_OBJECT:
 		case JSON_ARRAY:
 			break;
+
 		default:
 			return JSON_BAD_TREE_STRUCTURE;
 		}
@@ -465,6 +477,7 @@ json_insert_pair_into_object (json_t * parent, const char *text_label, json_t * 
 {
 	enum json_error error;
 	json_t *label;
+
 	/* verify if the parameters are valid */
 	assert (parent != NULL);
 	assert (text_label != NULL);
@@ -498,12 +511,13 @@ json_tree_to_string (json_t * root, char **text)
 {
 	json_t *cursor;
 	rcstring *output;
+
 	assert (root != NULL);
 	assert (text != NULL);
 
 	cursor = root;
 	/* set up the output and temporary rwstrings */
-	output = rcs_create (5);
+	output = rcs_create (RSTRING_DEFAULT);
 
 	/* start the convoluted fun */
       state1:			/* open value */
@@ -715,7 +729,7 @@ json_tree_to_string (json_t * root, char **text)
 
       end:
 	{
-		*text = rcs_unwrap(output);
+		*text = rcs_unwrap (output);
 		return JSON_OK;
 	}
 }
@@ -778,17 +792,18 @@ json_strip_white_spaces (char *text)
 
 
 char *
-json_format_string (char *text)
+json_format_string (const char *text)
 {
-	size_t pos = 0;
+	size_t pos = 0, text_length;
 	unsigned int indentation = 0;	/* the current indentation level */
 	unsigned int i;		/* loop iterator variable */
 	char loop;
 
 	rcstring *output;
+	text_length = strlen (text);
 
-	output = rcs_create (strlen (text));
-	while (pos < strlen (text))
+	output = rcs_create (text_length);
+	while (pos < text_length)
 	{
 		switch (text[pos])
 		{
@@ -801,7 +816,7 @@ json_format_string (char *text)
 
 		case '{':
 			indentation++;
-			rcs_catc (output, '{');
+			rcs_catcs (output, "{\n", 2);
 			for (i = 0; i < indentation; i++)
 			{
 				rcs_catc (output, '\t');
@@ -838,7 +853,7 @@ json_format_string (char *text)
 			rcs_catc (output, text[pos]);
 			pos++;
 			loop = 1;	/* inner string loop trigger is enabled */
-			while (loop)	/* parse the inner part of the string   ///TODO rethink this loop */
+			while (loop)
 			{
 				if (text[pos] == '\\')	/* escaped sequence */
 				{
@@ -858,7 +873,7 @@ json_format_string (char *text)
 				rcs_catc (output, text[pos]);
 
 				pos++;
-				if (pos >= strlen (text))
+				if (pos >= text_length)
 				{
 					loop = 0;
 				}
@@ -877,7 +892,7 @@ json_format_string (char *text)
 
 
 char *
-json_escape (char * text)
+json_escape (char *text)
 {
 	rcstring *output;
 	size_t i, length;
@@ -886,7 +901,7 @@ json_escape (char * text)
 	assert (text != NULL);
 
 	/* defining the temporary variables */
-	length = strlen(text);
+	length = strlen (text);
 	output = rcs_create (length);
 	if (output == NULL)
 		return NULL;
@@ -930,8 +945,8 @@ json_escape (char * text)
 		}
 		else if (text[i] < 0x20)
 		{
-			sprintf(buffer,"\\u%4.4x",text[i]);
-			rcs_catcs(output,buffer,6);
+			sprintf (buffer, "\\u%4.4x", text[i]);
+			rcs_catcs (output, buffer, 6);
 		}
 		else
 		{
@@ -994,7 +1009,7 @@ lexer (char *buffer, char **p, unsigned int *state, rcstring ** text)
 					return LEX_VALUE_SEPARATOR;
 
 				case '\"':
-					*text = rcs_create (5);
+					*text = rcs_create (RSTRING_DEFAULT);
 					if (*text == NULL)
 						return LEX_MEMORY;
 					*state = 1;	/* inside a JSON string */
@@ -1013,7 +1028,7 @@ lexer (char *buffer, char **p, unsigned int *state, rcstring ** text)
 					break;
 
 				case '-':
-					*text = rcs_create (5);
+					*text = rcs_create (RSTRING_DEFAULT);
 					if (*text == NULL)
 						return LEX_MEMORY;
 					if (rcs_catc (*text, '-') != RS_OK)
@@ -1022,7 +1037,7 @@ lexer (char *buffer, char **p, unsigned int *state, rcstring ** text)
 					break;
 
 				case '0':
-					*text = rcs_create (5);
+					*text = rcs_create (RSTRING_DEFAULT);
 					if (*text == NULL)
 						return LEX_MEMORY;
 					if (rcs_catc (*text, '0') != RS_OK)
@@ -1039,7 +1054,7 @@ lexer (char *buffer, char **p, unsigned int *state, rcstring ** text)
 				case '7':
 				case '8':
 				case '9':
-					*text = rcs_create (5);
+					*text = rcs_create (RSTRING_DEFAULT);
 					if (*text == NULL)
 						return LEX_MEMORY;
 					if (rcs_catc (*text, *(*p - 1)) != RS_OK)
@@ -1059,6 +1074,41 @@ lexer (char *buffer, char **p, unsigned int *state, rcstring ** text)
 				assert (*text != NULL);
 				switch (**p)
 				{
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+				case 7:
+				case 8:
+				case 9:
+				case 10:	/* line feed */
+				case 11:
+				case 12:
+				case 13:	/* carriage return */
+				case 14:
+				case 15:
+				case 16:
+				case 17:
+				case 18:
+				case 19:
+				case 20:
+				case 21:
+				case 22:
+				case 23:
+				case 24:
+				case 25:
+				case 26:
+				case 27:
+				case 28:
+				case 29:
+				case 30:
+				case 31:
+					/* ASCII control characters can only be present in a JSON string if they are escaped. If not then the document is invalid */
+					return LEX_INVALID_CHARACTER;
+					break;
+
 				case '\"':	/* close JSON string */
 					/* it is expected that, in the routine that calls this function, text is set to NULL */
 					*state = 0;
@@ -1114,13 +1164,13 @@ lexer (char *buffer, char **p, unsigned int *state, rcstring ** text)
 		case 3:	/*inside a JSON string: escape unicode */
 			{
 				assert (*text != NULL);
-				if ((**p >= 'a') && (**p <= 'e'))
+				if ((**p >= 'a') && (**p <= 'f'))
 				{
 					if (rcs_catc (*text, **p) != RS_OK)
 						return LEX_MEMORY;
 					*state = 4;	/* inside a JSON string: escape unicode */
 				}
-				else if ((**p >= 'A') && (**p <= 'E'))
+				else if ((**p >= 'A') && (**p <= 'F'))
 				{
 					if (rcs_catc (*text, **p) != RS_OK)
 						return LEX_MEMORY;
@@ -1141,13 +1191,13 @@ lexer (char *buffer, char **p, unsigned int *state, rcstring ** text)
 		case 4:	/* inside a JSON string: escape unicode */
 			{
 				assert (*text != NULL);
-				if ((**p >= 'a') && (**p <= 'e'))
+				if ((**p >= 'a') && (**p <= 'f'))
 				{
 					if (rcs_catc (*text, **p) != RS_OK)
 						return LEX_MEMORY;
 					*state = 5;	/* inside a JSON string: escape unicode */
 				}
-				else if ((**p >= 'A') && (**p <= 'E'))
+				else if ((**p >= 'A') && (**p <= 'F'))
 				{
 					if (rcs_catc (*text, **p) != RS_OK)
 						return LEX_MEMORY;
@@ -1167,13 +1217,13 @@ lexer (char *buffer, char **p, unsigned int *state, rcstring ** text)
 		case 5:	/* inside a JSON string: escape unicode */
 			{
 				assert (*text != NULL);
-				if ((**p >= 'a') && (**p <= 'e'))
+				if ((**p >= 'a') && (**p <= 'f'))
 				{
 					if (rcs_catc (*text, **p) != RS_OK)
 						return LEX_MEMORY;
 					*state = 6;	/* inside a JSON string: escape unicode */
 				}
-				else if ((**p >= 'A') && (**p <= 'E'))
+				else if ((**p >= 'A') && (**p <= 'F'))
 				{
 					if (rcs_catc (*text, **p) != RS_OK)
 						return LEX_MEMORY;
@@ -1194,13 +1244,13 @@ lexer (char *buffer, char **p, unsigned int *state, rcstring ** text)
 		case 6:	/* inside a JSON string: escape unicode */
 			{
 				assert (*text != NULL);
-				if ((**p >= 'a') && (**p <= 'e'))
+				if ((**p >= 'a') && (**p <= 'f'))
 				{
 					if (rcs_catc (*text, **p) != RS_OK)
 						return LEX_MEMORY;
 					*state = 1;	/* inside a JSON string: escape unicode */
 				}
-				else if ((**p >= 'A') && (**p <= 'E'))
+				else if ((**p >= 'A') && (**p <= 'F'))
 				{
 					if (rcs_catc (*text, **p) != RS_OK)
 						return LEX_MEMORY;
@@ -1415,7 +1465,6 @@ lexer (char *buffer, char **p, unsigned int *state, rcstring ** text)
 				case '.':
 					if (rcs_catc (*text, **p) != RS_OK)
 						return LEX_MEMORY;
-					/*TODO finish this state */
 					++*p;
 					*state = 20;	/* number: frac start */
 					break;
@@ -1425,8 +1474,8 @@ lexer (char *buffer, char **p, unsigned int *state, rcstring ** text)
 					if (rcs_catc (*text, **p) != RS_OK)
 						return LEX_MEMORY;
 					++*p;
-					*state = 22;    /* number: exp start */
-					break;	
+					*state = 22;	/* number: exp start */
+					break;
 
 				default:
 					return LEX_INVALID_CHARACTER;
@@ -1704,6 +1753,10 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 					info->state = 7;	/* begin array */
 					break;
 
+				case LEX_INVALID_CHARACTER:
+					return JSON_MALFORMED_DOCUMENT;
+					break;
+
 				default:
 					printf ("state %d: defaulted\n", info->state);
 					return JSON_MALFORMED_DOCUMENT;
@@ -1893,6 +1946,10 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 					return JSON_INCOMPLETE_DOCUMENT;
 					break;
 
+				case LEX_INVALID_CHARACTER:
+					return JSON_ILLEGAL_CHARACTER;
+					break;
+
 				default:
 					printf ("state %d: defaulted\n", info->state);
 					return JSON_MALFORMED_DOCUMENT;
@@ -2052,6 +2109,10 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 					return JSON_MEMORY;
 					break;
 
+				case LEX_INVALID_CHARACTER:
+					return JSON_ILLEGAL_CHARACTER;
+					break;
+
 				default:
 					printf ("state %d: defaulted\n", info->state);
 					return JSON_MALFORMED_DOCUMENT;
@@ -2199,6 +2260,10 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 					return JSON_INCOMPLETE_DOCUMENT;
 					break;
 
+				case LEX_INVALID_CHARACTER:
+					return JSON_ILLEGAL_CHARACTER;
+					break;
+
 				default:
 					printf ("state %d: defaulted\n", info->state);
 					return JSON_MALFORMED_DOCUMENT;
@@ -2303,39 +2368,40 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 
 
 
-enum json_error json_parse_document (json_t **root, char *text)
+enum json_error
+json_parse_document (json_t ** root, char *text)
 {
 	enum json_error error;
 	struct json_parsing_info *jpi;
 
-	assert(root != NULL);
-	assert(*root == NULL);
-	assert(text != NULL);
+	assert (root != NULL);
+	assert (*root == NULL);
+	assert (text != NULL);
 
 	/* initialize the parsing structure */
-	jpi = malloc(sizeof(struct json_parsing_info));
-	if(jpi == NULL)
+	jpi = malloc (sizeof (struct json_parsing_info));
+	if (jpi == NULL)
 	{
 		return JSON_MEMORY;
 	}
 	json_jpi_init (jpi);
 
 	error = json_parse_fragment (jpi, text);
-	if ( (error == JSON_WAITING_FOR_EOF) || (error == JSON_OK))
+	if ((error == JSON_WAITING_FOR_EOF) || (error == JSON_OK))
 	{
 		*root = jpi->cursor;
-		free(jpi);
+		free (jpi);
 		return JSON_OK;
 	}
 	else
 	{
-		free(jpi);
+		free (jpi);
 		return error;
 	}
 }
 
 
-	enum json_error
+enum json_error
 json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_functions *jsf, char c)
 {
 	/*TODO handle a string instead of a single char */
@@ -3712,7 +3778,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 
 		case '-':
 			jsps->state = 23;	/* number: */
-			if ((jsps->temp = rcs_create (5)) == NULL)
+			if ((jsps->temp = rcs_create (RSTRING_DEFAULT)) == NULL)
 			{
 				return JSON_MEMORY;
 			}
