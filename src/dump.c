@@ -279,14 +279,14 @@ static void amf_to_json(amf_data * data, json_t ** object) {
                 *object = (data->boolean_data) ? json_new_true() : json_new_false();
                 break;
             case AMF_TYPE_STRING:
-                *object = json_new_string(amf_string_get_bytes(data));
+                *object = json_new_string((const char *)amf_string_get_bytes(data));
                 break;
             case AMF_TYPE_OBJECT:
                 *object = json_new_object();
                 node = amf_object_first(data);
                 while (node != NULL) {
                     amf_to_json(amf_object_get_data(node), &value);
-                    json_insert_pair_into_object(*object, amf_string_get_bytes(amf_object_get_name(node)), value);
+                    json_insert_pair_into_object(*object, (const char *)amf_string_get_bytes(amf_object_get_name(node)), value);
                     node = amf_object_next(node);
                 }
                 break;
@@ -301,7 +301,7 @@ static void amf_to_json(amf_data * data, json_t ** object) {
                 node = amf_associative_array_first(data);
                 while (node != NULL) {
                     amf_to_json(amf_associative_array_get_data(node), &value);
-                    json_insert_pair_into_object(*object, amf_string_get_bytes(amf_associative_array_get_name(node)), value);
+                    json_insert_pair_into_object(*object, (const char *)amf_string_get_bytes(amf_associative_array_get_name(node)), value);
                     node = amf_associative_array_next(node);
                 }
                 break;
