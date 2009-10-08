@@ -24,6 +24,7 @@
 #include "flvmeta.h"
 #include "flv.h"
 #include "amf.h"
+#include "json.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -239,14 +240,9 @@ static int xml_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, 
 }
 
 /* XML FLV file metadata dump callbacks */
-
-static int xml_on_header_metadata_only(flv_header * header, flv_parser * parser) {
-    puts("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>");
-    return OK;
-}
-
 static int xml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
     if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
+        puts("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>");
         puts("<scriptDataObject name=\"onMetaData\" xmlns=\"http://schemas.flvmeta.org/FLV/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/\">");
         /* dump AMF data as XML, we start from level 3, meaning 6 indentations characters */
         xml_amf_data_dump(data, 1);
@@ -265,6 +261,90 @@ static int xml_on_stream_end(flv_parser * parser) {
     return OK;
 }
 
+/* JSON metadata dumping */
+static void amf_to_json(amf_data * data, json_t ** object) {
+    if (data != NULL) {
+        json_t * value;
+        amf_node * node;
+        time_t time;
+        struct tm * t;
+        char str[128];
+
+        switch (data->type) {
+            case AMF_TYPE_NUMBER:
+                sprintf(str, "%.12g", data->number_data);
+                *object = json_new_number(str);
+                break;
+            case AMF_TYPE_BOOLEAN:
+                *object = (data->boolean_data) ? json_new_true() : json_new_false();
+                break;
+            case AMF_TYPE_STRING:
+                *object = json_new_string(amf_string_get_bytes(data));
+                break;
+            case AMF_TYPE_OBJECT:
+                *object = json_new_object();
+                node = amf_object_first(data);
+                while (node != NULL) {
+                    amf_to_json(amf_object_get_data(node), &value);
+                    json_insert_pair_into_object(*object, amf_string_get_bytes(amf_object_get_name(node)), value);
+                    node = amf_object_next(node);
+                }
+                break;
+            case AMF_TYPE_NULL:
+                *object = json_new_null();
+                break;
+            case AMF_TYPE_UNDEFINED:
+                *object = json_new_null();
+                break;
+            case AMF_TYPE_ASSOCIATIVE_ARRAY:
+                *object = json_new_object();
+                node = amf_associative_array_first(data);
+                while (node != NULL) {
+                    amf_to_json(amf_associative_array_get_data(node), &value);
+                    json_insert_pair_into_object(*object, amf_string_get_bytes(amf_associative_array_get_name(node)), value);
+                    node = amf_associative_array_next(node);
+                }
+                break;
+            case AMF_TYPE_ARRAY:
+                *object = json_new_array();
+                node = amf_array_first(data);
+                while (node != NULL) {
+                    amf_to_json(amf_array_get(node), &value);
+                    json_insert_child(*object, value);
+                    node = amf_array_next(node);
+                }
+                break;
+            case AMF_TYPE_DATE:
+                time = amf_date_to_time_t(data);
+                tzset();
+                t = localtime(&time);
+                strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", t);
+                *object = json_new_string(str);
+                break;
+            case AMF_TYPE_XML: break;
+            case AMF_TYPE_CLASS: break;
+            default: break;
+        }
+    }
+}
+
+/* JSON FLV file metadata dump callbacks */
+static int json_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
+    json_t * root;
+    char * text;
+    if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
+        root = NULL;
+        /* dump AMF into JSON */
+        amf_to_json(data, &root);
+        /* print data */
+        json_tree_to_string(root, &text);
+    	printf("%s\n", text);
+        /* cleanup */
+        free(text);
+	    json_free_value(&root);
+    }
+    return OK;
+}
 
 /* dump metadata from a FLV file */
 int dump_metadata(const flvmeta_opts * options) {
@@ -273,8 +353,10 @@ int dump_metadata(const flvmeta_opts * options) {
 
     switch (options->dump_format) {
         case FLVMETA_FORMAT_XML:
-            parser.on_header = xml_on_header_metadata_only;
             parser.on_metadata_tag = xml_on_metadata_tag_only;
+            break;
+        case FLVMETA_FORMAT_JSON:
+            parser.on_metadata_tag = json_on_metadata_tag_only;
             break;
     }
 
@@ -295,6 +377,15 @@ int dump_flv_file(const flvmeta_opts * options) {
             parser.on_metadata_tag = xml_on_metadata_tag;
             parser.on_prev_tag_size = xml_on_prev_tag_size;
             parser.on_stream_end = xml_on_stream_end;
+            break;
+        case FLVMETA_FORMAT_JSON:
+            /*parser.on_header = json_on_header;
+            parser.on_tag = json_on_tag;
+            parser.on_audio_tag = json_on_audio_tag;
+            parser.on_video_tag = json_on_video_tag;
+            parser.on_metadata_tag = json_on_metadata_tag;
+            parser.on_prev_tag_size = json_on_prev_tag_size;
+            parser.on_stream_end = json_on_stream_end;*/
             break;
     }
 
