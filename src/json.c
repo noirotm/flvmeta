@@ -51,15 +51,6 @@ enum LEX_VALUE
 #define RSTRING_INCSTEP 5
 #define RSTRING_DEFAULT 8
 
-struct rui_cstring
-{
-	char *text;		/*<! char c-string */
-	size_t length;		/*<! put in place to avoid strlen() calls */
-	size_t max;		/*<! usable memory allocated to text minus the space for the nul character */
-};
-
-typedef struct rui_cstring rcstring;
-
 enum rui_string_error_codes
 { RS_MEMORY, RS_OK = 1, RS_UNKNOWN };
 
@@ -1743,7 +1734,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 		{
 		case 0:	/* starting point */
 			{
-				switch (lexer (buffer, &info->p, &info->lex_state, (rcstring **) & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
 				{
 				case LEX_BEGIN_OBJECT:
 					info->state = 1;	/* begin object */
@@ -1800,12 +1791,12 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 				assert (info->cursor != NULL);
 				assert (info->cursor->type == JSON_OBJECT);
 
-				switch (lexer (buffer, &info->p, &info->lex_state, (rcstring **) & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
 				{
 				case LEX_STRING:
 					if ((temp = json_new_value (JSON_STRING)) == NULL)
 						return JSON_MEMORY;
-					temp->text = rcs_unwrap ((rcstring *) info->lex_text), info->lex_text = NULL;
+					temp->text = rcs_unwrap (info->lex_text), info->lex_text = NULL;
 					if (json_insert_child (info->cursor, temp) != JSON_OK)
 					{
 						/*TODO return value according to the value returned from json_insert_child() */
@@ -1869,7 +1860,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 				assert (info->cursor != NULL);
 				assert (info->cursor->type == JSON_OBJECT);
 
-				switch (lexer (buffer, &info->p, &info->lex_state, (rcstring **) & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
 				{
 				case LEX_VALUE_SEPARATOR:
 					info->state = 4;	/* sibling, post-object */
@@ -1927,12 +1918,12 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 				assert (info->cursor != NULL);
 				assert (info->cursor->type == JSON_OBJECT);
 
-				switch (lexer (buffer, &info->p, &info->lex_state, (rcstring **) & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
 				{
 				case LEX_STRING:
 					if ((temp = json_new_value (JSON_STRING)) == NULL)
 						return JSON_MEMORY;
-					temp->text = rcs_unwrap ((rcstring *) info->lex_text), info->lex_text = NULL;
+					temp->text = rcs_unwrap (info->lex_text), info->lex_text = NULL;
 					if (json_insert_child (info->cursor, temp) != JSON_OK)
 					{
 						return JSON_UNKNOWN_PROBLEM;
@@ -1964,7 +1955,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 				assert (info->cursor != NULL);
 				assert (info->cursor->type == JSON_STRING);
 
-				switch (lexer (buffer, &info->p, &info->lex_state, (rcstring **) & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
 				{
 				case LEX_NAME_SEPARATOR:
 					info->state = 6;	/* label, pos label:value separator */
@@ -1989,12 +1980,12 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 				assert (info->cursor != NULL);
 				assert (info->cursor->type == JSON_STRING);
 
-				switch (value = lexer (buffer, &info->p, &info->lex_state, (rcstring **) & info->lex_text))
+				switch (value = lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
 				{
 				case LEX_STRING:
 					if ((temp = json_new_value (JSON_STRING)) == NULL)
 						return JSON_MEMORY;
-					temp->text = rcs_unwrap ((rcstring *) info->lex_text), info->lex_text = NULL;
+					temp->text = rcs_unwrap (info->lex_text), info->lex_text = NULL;
 					if (json_insert_child (info->cursor, temp) != JSON_OK)
 					{
 						/*TODO specify the exact error message */
@@ -2015,7 +2006,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 				case LEX_NUMBER:
 					if ((temp = json_new_value (JSON_NUMBER)) == NULL)
 						return JSON_MEMORY;
-					temp->text = rcs_unwrap ((rcstring *) info->lex_text), info->lex_text = NULL;
+					temp->text = rcs_unwrap (info->lex_text), info->lex_text = NULL;
 					if (json_insert_child (info->cursor, temp) != JSON_OK)
 					{
 						/*TODO specify the exact error message */
@@ -2156,12 +2147,12 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 				assert (info->cursor != NULL);
 				assert (info->cursor->type == JSON_ARRAY);
 
-				switch (lexer (buffer, &info->p, &info->lex_state, (rcstring **) & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
 				{
 				case LEX_STRING:
 					if ((temp = json_new_value (JSON_STRING)) == NULL)
 						return JSON_MEMORY;
-					temp->text = rcs_unwrap ((rcstring *) info->lex_text), info->lex_text = NULL;
+					temp->text = rcs_unwrap (info->lex_text), info->lex_text = NULL;
 					if (json_insert_child (info->cursor, temp) != JSON_OK)
 					{
 						return JSON_UNKNOWN_PROBLEM;
@@ -2173,7 +2164,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 				case LEX_NUMBER:
 					if ((temp = json_new_value (JSON_NUMBER)) == NULL)
 						return JSON_MEMORY;
-					temp->text = rcs_unwrap ((rcstring *) info->lex_text), info->lex_text = NULL;
+					temp->text = rcs_unwrap (info->lex_text), info->lex_text = NULL;
 					if (json_insert_child (info->cursor, temp) != JSON_OK)
 					{
 						return JSON_UNKNOWN_PROBLEM;
@@ -2276,7 +2267,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 			{
 				/*TODO perform tree sanity checks */
 				assert (info->cursor != NULL);
-				switch (lexer (buffer, &info->p, &info->lex_state, (rcstring **) & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
 				{
 				case LEX_VALUE_SEPARATOR:
 					info->state = 8;
@@ -2337,7 +2328,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 			{
 				/* perform tree sanity check */
 				assert (info->cursor->parent == NULL);
-				switch (lexer (buffer, &info->p, &info->lex_state, (rcstring **) & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
 				{
 				case LEX_MORE:
 					return JSON_WAITING_FOR_EOF;
@@ -2575,7 +2566,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				return JSON_MEMORY;
 			}
-			if (rcs_catc (((rcstring *) jsps->temp), '0') != RS_OK)
+			if (rcs_catc ((jsps->temp), '0') != RS_OK)
 			{
 				return JSON_MEMORY;
 			}
@@ -2596,7 +2587,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				return JSON_MEMORY;
 			}
-			if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+			if (rcs_catc ((jsps->temp), c) != RS_OK)
 			{
 				return JSON_MEMORY;
 			}
@@ -2610,7 +2601,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				return JSON_MEMORY;
 			}
-			if (rcs_catc (((rcstring *) jsps->temp), '-') != RS_OK)
+			if (rcs_catc ((jsps->temp), '-') != RS_OK)
 			{
 				return JSON_MEMORY;
 			}
@@ -2631,9 +2622,9 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case '\\':
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH - 1)	/* check if there is space for a two character escape sequence */
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH - 1)	/* check if there is space for a two character escape sequence */
 				{
-					if (rcs_catc (((rcstring *) jsps->temp), '\\') != RS_OK)
+					if (rcs_catc ((jsps->temp), '\\') != RS_OK)
 					{
 						return JSON_MEMORY;
 					}
@@ -2647,12 +2638,12 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			break;
 
 		case '\"':	/* end of string */
-			if (((rcstring *) jsps->temp) != NULL)
+			if ((jsps->temp) != NULL)
 			{
 				jsps->state = 0;	/* starting point */
 				if (jsf->new_string != NULL)
-					jsf->new_string (((rcstring *) ((rcstring *) jsps->temp))->text);	/*copied or integral? */
-				rcs_free ((rcstring **) & jsps->temp);
+					jsf->new_string (((jsps->temp))->text);	/*copied or integral? */
+				rcs_free (& jsps->temp);
 			}
 			else
 				return JSON_UNKNOWN_PROBLEM;
@@ -2661,9 +2652,9 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		default:
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH)	/* check if there is space for a two character escape sequence */
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH)	/* check if there is space for a two character escape sequence */
 				{
-					if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+					if (rcs_catc ((jsps->temp), c) != RS_OK)
 					{
 						return JSON_MEMORY;
 					}
@@ -2692,9 +2683,9 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case 't':
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH)
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH)
 				{
-					if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+					if (rcs_catc ((jsps->temp), c) != RS_OK)
 					{
 						return JSON_MEMORY;
 					}
@@ -2709,9 +2700,9 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case 'u':
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH - 4)
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH - 4)
 				{
-					if (rcs_catc (((rcstring *) jsps->temp), 'u') != RS_OK)
+					if (rcs_catc ((jsps->temp), 'u') != RS_OK)
 					{
 						return JSON_MEMORY;
 					}
@@ -2759,9 +2750,9 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case 'F':
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH - 3)
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH - 3)
 				{
-					if (rcs_catc (((rcstring *) jsps->temp), 'u') != RS_OK)
+					if (rcs_catc ((jsps->temp), 'u') != RS_OK)
 					{
 						return JSON_MEMORY;
 					}
@@ -2808,9 +2799,9 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case 'F':
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH - 2)
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH - 2)
 				{
-					if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+					if (rcs_catc ((jsps->temp), c) != RS_OK)
 					{
 						return JSON_MEMORY;
 					}
@@ -2857,9 +2848,9 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case 'F':
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH - 1)
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH - 1)
 				{
-					if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+					if (rcs_catc ((jsps->temp), c) != RS_OK)
 					{
 						return JSON_MEMORY;
 					}
@@ -2906,9 +2897,9 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case 'F':
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH)
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH)
 				{
-					if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+					if (rcs_catc ((jsps->temp), c) != RS_OK)
 					{
 						return JSON_MEMORY;
 					}
@@ -3052,7 +3043,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				return JSON_MEMORY;
 			}
-			if (rcs_catc (((rcstring *) jsps->temp), '.') != RS_OK)
+			if (rcs_catc ((jsps->temp), '.') != RS_OK)
 			{
 				return JSON_MEMORY;
 			}
@@ -3063,25 +3054,25 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case '\x09':
 		case '\x0A':
 		case '\x0D':	/* JSON insignificant white spaces */
-			if (((rcstring *) jsps->temp) == NULL)
+			if ((jsps->temp) == NULL)
 				return JSON_MEMORY;
 			if (jsf->new_number != NULL)
 			{
-				jsf->new_number (((rcstring *) jsps->temp)->text);
+				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free ((rcstring **) & jsps->temp);
+			rcs_free (& jsps->temp);
 
 			jsps->state = 0;
 			break;
 
 		case '}':
-			if (((rcstring *) jsps->temp) == NULL)
+			if ((jsps->temp) == NULL)
 				return JSON_MEMORY;
 			if (jsf->new_number != NULL)
 			{
-				jsf->new_number (((rcstring *) jsps->temp)->text);
+				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free ((rcstring **) & jsps->temp);
+			rcs_free (& jsps->temp);
 
 			if (jsf->open_object != NULL)
 				jsf->close_object ();
@@ -3090,13 +3081,13 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 
 		case ']':
 
-			if (((rcstring *) jsps->temp) == NULL)
+			if ((jsps->temp) == NULL)
 				return JSON_MEMORY;
 			if (jsf->new_number != NULL)
 			{
-				jsf->new_number (((rcstring *) jsps->temp)->text);
+				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free ((rcstring **) & jsps->temp);
+			rcs_free (& jsps->temp);
 
 			if (jsf->open_object != NULL)
 				jsf->close_array ();
@@ -3105,13 +3096,13 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 
 		case ',':
 
-			if (((rcstring *) jsps->temp) == NULL)
+			if ((jsps->temp) == NULL)
 				return JSON_MEMORY;
 			if (jsf->new_number != NULL)
 			{
-				jsf->new_number (((rcstring *) jsps->temp)->text);
+				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free ((rcstring **) & jsps->temp);
+			rcs_free (& jsps->temp);
 
 			if (jsf->open_object != NULL)
 				jsf->label_value_separator ();
@@ -3142,9 +3133,9 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case '9':
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH / 2)
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH / 2)
 				{
-					if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+					if (rcs_catc ((jsps->temp), c) != RS_OK)
 					{
 						return JSON_MEMORY;
 					}
@@ -3180,9 +3171,9 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case '9':
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH / 2)
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH / 2)
 				{
-					if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+					if (rcs_catc ((jsps->temp), c) != RS_OK)
 					{
 						return JSON_MEMORY;
 					}
@@ -3197,7 +3188,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 
 		case 'e':
 		case 'E':
-			if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+			if (rcs_catc ((jsps->temp), c) != RS_OK)
 			{
 				return JSON_MEMORY;
 			}
@@ -3211,26 +3202,26 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case '\x0A':
 		case '\x0D':	/* JSON insignificant white spaces */
 
-			if (((rcstring *) jsps->temp) == NULL)
+			if ((jsps->temp) == NULL)
 				return JSON_MEMORY;
 			if (jsf->new_number != NULL)
 			{
-				jsf->new_number (((rcstring *) jsps->temp)->text);
+				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free ((rcstring **) & jsps->temp);
+			rcs_free (& jsps->temp);
 
 			jsps->state = 0;
 			break;
 
 		case '}':
 
-			if (((rcstring *) jsps->temp) == NULL)
+			if ((jsps->temp) == NULL)
 				return JSON_MEMORY;
 			if (jsf->new_number != NULL)
 			{
-				jsf->new_number (((rcstring *) jsps->temp)->text);
+				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free ((rcstring **) & jsps->temp);
+			rcs_free (& jsps->temp);
 
 			if (jsf->open_object != NULL)
 				jsf->close_object ();
@@ -3240,14 +3231,14 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case ']':
 			if (jsf->new_number != NULL)
 			{
-				if (((rcstring *) jsps->temp) == NULL)
+				if ((jsps->temp) == NULL)
 					return JSON_MEMORY;
-				jsf->new_number (((rcstring *) jsps->temp)->text);
-				rcs_free ((rcstring **) & jsps->temp);
+				jsf->new_number ((jsps->temp)->text);
+				rcs_free (& jsps->temp);
 			}
 			else
 			{
-				rcs_free ((rcstring **) & jsps->temp);
+				rcs_free (& jsps->temp);
 				jsps->temp = NULL;
 			}
 			if (jsf->open_object != NULL)
@@ -3257,13 +3248,13 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 
 		case ',':
 
-			if (((rcstring *) jsps->temp) == NULL)
+			if ((jsps->temp) == NULL)
 				return JSON_MEMORY;
 			if (jsf->new_number != NULL)
 			{
-				jsf->new_number (((rcstring *) jsps->temp)->text);
+				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free ((rcstring **) & jsps->temp);
+			rcs_free (& jsps->temp);
 
 			if (jsf->label_value_separator != NULL)
 				jsf->label_value_separator ();
@@ -3285,7 +3276,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case '+':
 		case '-':
 			jsps->string_length_limit_reached = 0;
-			if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+			if (rcs_catc ((jsps->temp), c) != RS_OK)
 			{
 				return JSON_MEMORY;
 			}
@@ -3305,9 +3296,9 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case '9':
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH)
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH)
 				{
-					if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+					if (rcs_catc ((jsps->temp), c) != RS_OK)
 					{
 						return JSON_MEMORY;
 					}
@@ -3344,9 +3335,9 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case '9':
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH)
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH)
 				{
-					if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+					if (rcs_catc ((jsps->temp), c) != RS_OK)
 					{
 						return JSON_MEMORY;
 					}
@@ -3364,25 +3355,25 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case '\x0A':
 		case '\x0D':	/* JSON insignificant white spaces */
 
-			if (((rcstring *) jsps->temp) == NULL)
+			if ((jsps->temp) == NULL)
 				return JSON_MEMORY;
 			if (jsf->new_number != NULL)
 			{
-				jsf->new_number (((rcstring *) jsps->temp)->text);
+				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free ((rcstring **) & jsps->temp);
+			rcs_free (& jsps->temp);
 
 			jsps->state = 0;
 			break;
 
 		case '}':
-			if (((rcstring *) jsps->temp) == NULL)
+			if ((jsps->temp) == NULL)
 				return JSON_MEMORY;
 			if (jsf->new_number != NULL)
 			{
-				jsf->new_number (((rcstring *) jsps->temp)->text);
+				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free ((rcstring **) & jsps->temp);
+			rcs_free (& jsps->temp);
 
 			if (jsf->open_object != NULL)
 				jsf->close_object ();
@@ -3392,15 +3383,15 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case ']':
 			if (jsf->new_number != NULL)
 			{
-				if (((rcstring *) jsps->temp) == NULL)
+				if ((jsps->temp) == NULL)
 					return JSON_MEMORY;
-				jsf->new_number (((rcstring *) jsps->temp)->text);
-				free ((rcstring *) jsps->temp);
+				jsf->new_number ((jsps->temp)->text);
+				free (jsps->temp);
 				jsps->temp = NULL;
 			}
 			else
 			{
-				free (((rcstring *) jsps->temp));
+				free ((jsps->temp));
 				jsps->temp = NULL;
 			}
 			if (jsf->open_object != NULL)
@@ -3411,15 +3402,15 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case ',':
 			if (jsf->new_number != NULL)
 			{
-				if (((rcstring *) jsps->temp) == NULL)
+				if ((jsps->temp) == NULL)
 					return JSON_MEMORY;
-				jsf->new_number (((rcstring *) jsps->temp)->text);
-				free (((rcstring *) jsps->temp));
+				jsf->new_number ((jsps->temp)->text);
+				free ((jsps->temp));
 				jsps->temp = NULL;
 			}
 			else
 			{
-				free ((rcstring *) jsps->temp);
+				free (jsps->temp);
 				jsps->temp = NULL;
 			}
 			if (jsf->label_value_separator != NULL)
@@ -3450,9 +3441,9 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case '9':
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH)
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH)
 				{
-					rcs_catc (((rcstring *) jsps->temp), c);
+					rcs_catc ((jsps->temp), c);
 				}
 				else
 				{
@@ -3474,7 +3465,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		switch (c)
 		{
 		case '0':
-			rcs_catc (((rcstring *) jsps->temp), c);
+			rcs_catc ((jsps->temp), c);
 			jsps->state = 17;	/* parse number: 0 */
 			break;
 
@@ -3489,13 +3480,13 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case '9':
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH / 2)
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH / 2)
 				{
 					if ((jsps->temp = rcs_create (5)) == NULL)
 					{
 						return JSON_MEMORY;
 					}
-					if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+					if (rcs_catc ((jsps->temp), c) != RS_OK)
 					{
 						return JSON_MEMORY;
 					}
@@ -3531,13 +3522,13 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case '9':
 			if (!jsps->string_length_limit_reached)
 			{
-				if (rcs_length (((rcstring *) jsps->temp)) < JSON_MAX_STRING_LENGTH / 2)
+				if (rcs_length ((jsps->temp)) < JSON_MAX_STRING_LENGTH / 2)
 				{
 					if ((jsps->temp = rcs_create (5)) == NULL)
 					{
 						return JSON_MEMORY;
 					}
-					if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+					if (rcs_catc ((jsps->temp), c) != RS_OK)
 					{
 						return JSON_MEMORY;
 					}
@@ -3555,7 +3546,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				return JSON_MEMORY;
 			}
-			if (rcs_catc (((rcstring *) jsps->temp), '.') != RS_OK)
+			if (rcs_catc ((jsps->temp), '.') != RS_OK)
 			{
 				return JSON_MEMORY;
 			}
@@ -3569,7 +3560,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				return JSON_MEMORY;
 			}
-			if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+			if (rcs_catc ((jsps->temp), c) != RS_OK)
 			{
 				return JSON_MEMORY;
 			}
@@ -3582,25 +3573,25 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 		case '\x09':
 		case '\x0A':
 		case '\x0D':	/* JSON insignificant white spaces */
-			if (((rcstring *) jsps->temp) == NULL)
+			if ((jsps->temp) == NULL)
 				return JSON_MEMORY;
 			if (jsf->new_number != NULL)
 			{
-				jsf->new_number (((rcstring *) jsps->temp)->text);
+				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free ((rcstring **) & jsps->temp);
+			rcs_free (& jsps->temp);
 
 			jsps->state = 0;
 			break;
 
 		case '}':
-			if (((rcstring *) jsps->temp) == NULL)
+			if ((jsps->temp) == NULL)
 				return JSON_MEMORY;
 			if (jsf->new_number != NULL)
 			{
-				jsf->new_number (((rcstring *) jsps->temp)->text);
+				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free ((rcstring **) & jsps->temp);
+			rcs_free (& jsps->temp);
 
 			if (jsf->open_object != NULL)
 				jsf->close_object ();
@@ -3608,13 +3599,13 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			break;
 
 		case ']':
-			if (((rcstring *) jsps->temp) == NULL)
+			if ((jsps->temp) == NULL)
 				return JSON_MEMORY;
 			if (jsf->new_number != NULL)
 			{
-				jsf->new_number (((rcstring *) jsps->temp)->text);
+				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free ((rcstring **) & jsps->temp);
+			rcs_free (& jsps->temp);
 
 			if (jsf->open_object != NULL)
 				jsf->close_array ();
@@ -3622,13 +3613,13 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			break;
 
 		case ',':
-			if (((rcstring *) jsps->temp) == NULL)
+			if ((jsps->temp) == NULL)
 				return JSON_MEMORY;
 			if (jsf->new_number != NULL)
 			{
-				jsf->new_number (((rcstring *) jsps->temp)->text);
+				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free ((rcstring **) & jsps->temp);
+			rcs_free (& jsps->temp);
 
 			if (jsf->label_value_separator != NULL)
 				jsf->label_value_separator ();
@@ -3750,7 +3741,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				return JSON_MEMORY;
 			}
-			if (rcs_catc (((rcstring *) jsps->temp), '0') != RS_OK)
+			if (rcs_catc ((jsps->temp), '0') != RS_OK)
 			{
 				return JSON_MEMORY;
 			}
@@ -3770,7 +3761,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				return JSON_MEMORY;
 			}
-			if (rcs_catc (((rcstring *) jsps->temp), c) != RS_OK)
+			if (rcs_catc ((jsps->temp), c) != RS_OK)
 			{
 				return JSON_MEMORY;
 			}
@@ -3782,7 +3773,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				return JSON_MEMORY;
 			}
-			if (rcs_catc (((rcstring *) jsps->temp), '-') != RS_OK)
+			if (rcs_catc ((jsps->temp), '-') != RS_OK)
 			{
 				return JSON_MEMORY;
 			}

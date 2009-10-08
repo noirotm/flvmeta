@@ -26,6 +26,9 @@
 \version v1.1
 */
 
+#ifndef JSON_H
+#define JSON_H
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -34,8 +37,7 @@
 # include <stdint.h>
 #endif
 
-#ifndef JSON_H
-#define JSON_H
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -50,6 +52,17 @@ The descriptions of the json_value node type
 	enum json_value_type
 	{ JSON_STRING = 0, JSON_NUMBER, JSON_OBJECT, JSON_ARRAY, JSON_TRUE, JSON_FALSE, JSON_NULL };
 
+/**
+String implementation
+**/
+    struct rui_cstring
+    {
+	    char *text;		/*<! char c-string */
+	    size_t length;		/*<! put in place to avoid strlen() calls */
+	    size_t max;		/*<! usable memory allocated to text minus the space for the nul character */
+    };
+
+    typedef struct rui_cstring rcstring;
 
 /**
 The error messages produced by the JSON parsers
@@ -89,11 +102,13 @@ The JSON document tree node, which is a basic JSON type
 /**
 The structure holding all information needed to resume parsing
 **/
+    
+
 	struct json_parsing_info
 	{
 		unsigned int state;	/*!< the state where the parsing was left on the last parser run */
 		unsigned int lex_state;
-		void *lex_text;
+		rcstring *lex_text;
 		char *p;
 		int string_length_limit_reached;	/*!< flag informing if the string limit length defined by JSON_MAX_STRING_LENGTH was reached */
 		json_t *cursor;	/*!< pointers to nodes belonging to the document tree which aid the document parsing */
@@ -126,7 +141,7 @@ The structure holding the information needed for json_saxy_parse to resume parsi
 	{
 		unsigned int state;	/*!< current parser state */
 		int string_length_limit_reached;	/*!< flag informing if the string limit length defined by JSON_MAX_STRING_LENGTH was reached */
-		void *temp;	/*!< temporary string which will be used to build up parsed strings between parser runs. */
+		rcstring *temp;	/*!< temporary string which will be used to build up parsed strings between parser runs. */
 	};
 
 /**
