@@ -333,15 +333,11 @@ static void amf_to_json(amf_data * data, json_t ** object) {
     }
 }
 
-/* JSON parsing structure */
-typedef struct __json_parser_info {
-    int tag_number;
-} json_parser_info;
-
 /* JSON FLV file full dump callbacks */
 
 static int json_on_header(flv_header * header, flv_parser * parser) {
-    printf("{\"hasVideo\":%s,\"hasAudio\":%s,\"version\":%i,\"tags\":[",
+    printf("{\"magic\":\"%c%c%c\",\"hasVideo\":%s,\"hasAudio\":%s,\"version\":%i,\"tags\":[",
+        header->signature[0], header->signature[1], header->signature[2],
         flv_header_has_video(*header) ? "true" : "false",
         flv_header_has_audio(*header) ? "true" : "false",
         header->version);
@@ -350,13 +346,13 @@ static int json_on_header(flv_header * header, flv_parser * parser) {
 
 static int json_on_tag(flv_tag * tag, flv_parser * parser) {
     char * str;
-    json_parser_info * jpi;
-
-    jpi = (json_parser_info *)parser->user_data;
-    if (jpi->tag_number >= 1) {
+    
+    if (parser->user_data != NULL) {
         printf(",");
     }
-    jpi->tag_number++;
+    else {
+        parser->user_data = tag;
+    }
 
     switch (tag->type) {
         case FLV_TAG_TYPE_AUDIO: str = "audio"; break;
@@ -530,9 +526,7 @@ int dump_flv_file(const flvmeta_opts * options) {
             parser.on_stream_end = xml_on_stream_end;
             break;
         case FLVMETA_FORMAT_JSON: {
-            json_parser_info jpi;
-            jpi.tag_number = 0;
-            parser.user_data = &jpi;
+            parser.user_data = NULL;
             parser.on_header = json_on_header;
             parser.on_tag = json_on_tag;
             parser.on_audio_tag = json_on_audio_tag;
