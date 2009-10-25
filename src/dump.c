@@ -525,7 +525,7 @@ int dump_flv_file(const flvmeta_opts * options) {
             parser.on_prev_tag_size = xml_on_prev_tag_size;
             parser.on_stream_end = xml_on_stream_end;
             break;
-        case FLVMETA_FORMAT_JSON: {
+        case FLVMETA_FORMAT_JSON:
             parser.user_data = NULL;
             parser.on_header = json_on_header;
             parser.on_tag = json_on_tag;
@@ -535,7 +535,6 @@ int dump_flv_file(const flvmeta_opts * options) {
             parser.on_prev_tag_size = json_on_prev_tag_size;
             parser.on_stream_end = json_on_stream_end;
             break;
-        }
     }
 
     return flv_parse(options->input_file, &parser);
