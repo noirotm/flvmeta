@@ -340,7 +340,7 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
         /* extended timestamp fixing */
         if (ft.type == FLV_TAG_TYPE_META) {
             if (timestamp < prev_timestamp_meta
-            && prev_timestamp_meta - timestamp > 0xF000) {
+            && prev_timestamp_meta - timestamp > 0xF00000) {
                 ++timestamp_extended_meta;
             }
             prev_timestamp_meta = timestamp;
@@ -350,7 +350,7 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
         }
         else if (ft.type == FLV_TAG_TYPE_AUDIO) {
             if (timestamp < prev_timestamp_audio
-            && prev_timestamp_audio - timestamp > 0xF000) {
+            && prev_timestamp_audio - timestamp > 0xF00000) {
                 ++timestamp_extended_audio;
             }
             prev_timestamp_audio = timestamp;
@@ -360,7 +360,7 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
         }
         else if (ft.type == FLV_TAG_TYPE_VIDEO) {
             if (timestamp < prev_timestamp_video
-            && prev_timestamp_video - timestamp > 0xF000) {
+            && prev_timestamp_video - timestamp > 0xF00000) {
                 ++timestamp_extended_video;
             }
             prev_timestamp_video = timestamp;
@@ -800,7 +800,7 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
         /* extended timestamp fixing */
         if (ft.type == FLV_TAG_TYPE_META) {
             if (timestamp < prev_timestamp_meta
-            && prev_timestamp_meta - timestamp > 0xF000) {
+            && prev_timestamp_meta - timestamp > 0xF00000) {
                 ++timestamp_extended_meta;
             }
             prev_timestamp_meta = timestamp;
@@ -810,7 +810,7 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
         }
         else if (ft.type == FLV_TAG_TYPE_AUDIO) {
             if (timestamp < prev_timestamp_audio
-            && prev_timestamp_audio - timestamp > 0xF000) {
+            && prev_timestamp_audio - timestamp > 0xF00000) {
                 ++timestamp_extended_audio;
             }
             prev_timestamp_audio = timestamp;
@@ -820,7 +820,7 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
         }
         else if (ft.type == FLV_TAG_TYPE_VIDEO) {
             if (timestamp < prev_timestamp_video
-            && prev_timestamp_video - timestamp > 0xF000) {
+            && prev_timestamp_video - timestamp > 0xF00000) {
                 ++timestamp_extended_video;
             }
             prev_timestamp_video = timestamp;
