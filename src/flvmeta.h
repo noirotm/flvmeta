@@ -49,7 +49,7 @@
 #define FLVMETA_DUMP_COMMAND        1
 #define FLVMETA_FULL_DUMP_COMMAND   2
 #define FLVMETA_CHECK_COMMAND       3
-#define FLVMETA_INJECT_COMMAND      4
+#define FLVMETA_UPDATE_COMMAND      4
 
 /* tags handling */
 #define FLVMETA_EXIT_ON_ERROR       0

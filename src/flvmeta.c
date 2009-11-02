@@ -28,7 +28,7 @@
 
 #include "flvmeta.h"
 #include "dump.h"
-#include "inject.h"
+#include "update.h"
 
 /*
     Command-line options
@@ -37,7 +37,7 @@ static struct option long_options[] = {
     { "dump",          no_argument,         NULL, 'D'},
     { "full-dump",     no_argument,         NULL, 'F'},
     { "check",         no_argument,         NULL, 'C'},
-    { "inject",        no_argument,         NULL, 'I'},
+    { "update",        no_argument,         NULL, 'U'},
     { "add",           required_argument,   NULL, 'a'},
     { "no-lastsecond", no_argument,         NULL, 'l'},
     { "preserve",      no_argument,         NULL, 'p'},
@@ -74,7 +74,7 @@ static void help(const char * name) {
     fprintf(stderr, "  -D, --dump                dump onMetaData tag (default without output file)\n");
     fprintf(stderr, "  -F, --full-dump           dump all tags\n");
     fprintf(stderr, "  -C, --check               check the validity of FILE\n");
-    fprintf(stderr, "  -I, --inject              inject computed onMetaData tag from FILE\n");
+    fprintf(stderr, "  -U, --update              update computed onMetaData tag from FILE\n");
     fprintf(stderr, "                            into OUTPUT_FILE (default with output file)\n");
     fprintf(stderr, "  -A, --extract-audio       extract raw audio data into OUTPUT_FILE\n");
     fprintf(stderr, "  -E, --extract-video       extract raw video data into OUTPUT_FILE\n");
@@ -119,7 +119,7 @@ int main(int argc, char ** argv) {
     */
     option_index = 0;
     do {
-        option = getopt_long(argc, argv, "DFCIa:lpfid:jyxvVh", long_options, &option_index);
+        option = getopt_long(argc, argv, "DFCUa:lpfid:jyxvVh", long_options, &option_index);
         switch (option) {
             /*
                 commands
@@ -145,12 +145,12 @@ int main(int argc, char ** argv) {
                 }
                 options.command = FLVMETA_CHECK_COMMAND;
                 break;
-            case 'I':
+            case 'U':
                 if (options.command != FLVMETA_DEFAULT_COMMAND) {
                     fprintf(stderr, "%s: only one command can be specified -- %s\n", argv[0], argv[optind]);
                     exit(EXIT_FAILURE);
                 }
-                options.command = FLVMETA_INJECT_COMMAND;
+                options.command = FLVMETA_UPDATE_COMMAND;
                 break;
             /*
                 options
@@ -249,7 +249,7 @@ int main(int argc, char ** argv) {
 
     /* determine command if default */
     if (options.command == FLVMETA_DEFAULT_COMMAND && options.output_file != NULL) {
-        options.command = FLVMETA_INJECT_COMMAND;
+        options.command = FLVMETA_UPDATE_COMMAND;
     }
     else if (options.command == FLVMETA_DEFAULT_COMMAND && options.output_file == NULL) {
         options.command = FLVMETA_DUMP_COMMAND;
@@ -261,7 +261,7 @@ int main(int argc, char ** argv) {
         case FLVMETA_DUMP_COMMAND: errcode = dump_metadata(&options); break;
         case FLVMETA_FULL_DUMP_COMMAND: errcode = dump_flv_file(&options); break;
         case FLVMETA_CHECK_COMMAND: break;
-        case FLVMETA_INJECT_COMMAND: errcode = inject_metadata(&options); break;
+        case FLVMETA_UPDATE_COMMAND: errcode = update_metadata(&options); break;
     }
 
     /* error report */
