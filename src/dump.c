@@ -449,17 +449,14 @@ static int json_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parse
 
 static int json_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
     json_t * root;
-    char * text;
-    
+
     printf("\"scriptDataObject\":{\"name\":\"%s\",\"metadata\":", amf_string_get_bytes(name));
     root = NULL;
     /* dump AMF into JSON */
     amf_to_json(data, &root);
     /* print data */
-    json_tree_to_string(root, &text);
-	printf("%s", text);
+    json_stream_output(stdout, root);
     /* cleanup */
-    free(text);
     json_free_value(&root);
     printf("}");
     return OK;
@@ -478,16 +475,14 @@ static int json_on_stream_end(flv_parser * parser) {
 /* JSON FLV file metadata dump callbacks */
 static int json_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
     json_t * root;
-    char * text;
+
     if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
         root = NULL;
         /* dump AMF into JSON */
         amf_to_json(data, &root);
         /* print data */
-        json_tree_to_string(root, &text);
-    	printf("%s\n", text);
+        json_stream_output(stdout, root);
         /* cleanup */
-        free(text);
 	    json_free_value(&root);
     }
     return OK;

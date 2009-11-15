@@ -21,7 +21,6 @@
 #include "json.h"
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <memory.h>
@@ -50,6 +49,7 @@ enum LEX_VALUE
 
 #define RSTRING_INCSTEP 5
 #define RSTRING_DEFAULT 8
+
 
 enum rui_string_error_codes
 { RS_MEMORY, RS_OK = 1, RS_UNKNOWN };
@@ -183,6 +183,57 @@ rcs_length (rcstring * rcs)
 /* end of rc_string part */
 
 
+enum json_error
+json_stream_parse (FILE * file, json_t ** document)
+{
+	char buffer[1024];	/* hard-coded value */
+	unsigned int error = JSON_INCOMPLETE_DOCUMENT;
+
+	struct json_parsing_info state;
+
+	assert (file != NULL);	/* must be an open stream */
+	assert (document != NULL);	/* must be a valid pointer reference */
+	assert (*document == NULL);	/* only accepts a null json_t pointer, to avoid memory leaks */
+
+	json_jpi_init (&state);	/* initializes the json_parsing_info object */
+
+	while ((error == JSON_WAITING_FOR_EOF) || (error == JSON_INCOMPLETE_DOCUMENT))
+	{
+		if (fgets (buffer, 1024, file) != NULL)
+		{
+			switch (error = json_parse_fragment (&state, buffer))
+			{
+			case JSON_OK:
+			case JSON_WAITING_FOR_EOF:
+			case JSON_INCOMPLETE_DOCUMENT:
+				break;
+
+			default:
+				json_free_value (&state.cursor);
+				return error;
+				break;
+			}
+		}
+		else
+		{
+			if (error == JSON_WAITING_FOR_EOF)
+				error = JSON_OK;
+			else
+			{
+				/*TODO refine this error code */
+				error = JSON_UNKNOWN_PROBLEM;
+			}
+		}
+	}
+
+	if (error == JSON_OK)
+	{
+		*document = state.cursor;
+	}
+
+	return error;
+}
+
 
 json_t *
 json_new_value (const enum json_value_type type)
@@ -304,24 +355,12 @@ json_new_false (void)
 }
 
 
-void
-json_free_value (json_t ** value)
+static void
+intern_json_free_value (json_t ** value)
 {
 	assert (value != NULL);
 	assert ((*value) != NULL);
-
-	/* free each and every child node */
-	if ((*value)->child != NULL)
-	{
-		json_t *i, *j;
-		i = (*value)->child_end;
-		while (i != NULL)
-		{
-			j = i->previous;
-			json_free_value (&i);	/*TODO replace recursive solution with an iterative one */
-			i = j;
-		}
-	}
+	assert ((*value)->child == NULL);
 
 	/* fixing sibling linked list connections */
 	if ((*value)->previous && (*value)->next)
@@ -378,6 +417,36 @@ json_free_value (json_t ** value)
 	}
 	free (*value);		/* the json value */
 	(*value) = NULL;
+}
+
+
+void
+json_free_value (json_t ** value)
+{
+	json_t *cursor = *value;
+
+	assert (value);
+	assert (*value);
+
+	while (*value)
+	{
+		json_t *parent;
+
+		if (cursor->child)
+		{
+			cursor = cursor->child;
+			continue;
+		}
+
+		if (cursor == *value)
+		{
+			*value = NULL;
+		}
+
+		parent = cursor->parent;
+		intern_json_free_value (&cursor);
+		cursor = parent;
+	}
 }
 
 
@@ -726,6 +795,187 @@ json_tree_to_string (json_t * root, char **text)
 }
 
 
+enum json_error
+json_stream_output (FILE * file, json_t * root)
+{
+	json_t *cursor;
+
+	assert (root != NULL);
+	assert (file != NULL);	/* the file stream must be opened */
+
+	cursor = root;
+	/* set up the output and temporary rwstrings */
+
+	/* start the convoluted fun */
+      state1:			/* open value */
+	{
+		if ((cursor->previous) && (cursor != root))	/*if cursor is children and not root than it is a followup sibling */
+		{
+			/* append comma */
+			fprintf (file, ",");
+		}
+		switch (cursor->type)
+		{
+		case JSON_STRING:
+			/* append the "text"\0, which means 1 + wcslen(cursor->text) + 1 + 1 */
+			/* set the new output size */
+			fprintf (file, "\"%s\"", cursor->text);
+
+			if (cursor->parent != NULL)
+			{
+				if (cursor->parent->type == JSON_OBJECT)	/* cursor is label in label:value pair */
+				{
+					/* error checking: if parent is object and cursor is string then cursor must have a single child */
+					if (cursor->child != NULL)
+					{
+						if (fprintf (file, ":") != RS_OK)
+						{
+							return JSON_MEMORY;
+						}
+					}
+					else
+					{
+						/* malformed document tree: label without value in label:value pair */
+						return JSON_BAD_TREE_STRUCTURE;
+					}
+				}
+			}
+			else	/* does not have a parent */
+			{
+				if (cursor->child != NULL)	/* is root label in label:value pair */
+				{
+					fprintf (file, ":");
+				}
+				else
+				{
+					/* malformed document tree: label without value in label:value pair */
+					return JSON_BAD_TREE_STRUCTURE;
+				}
+			}
+			break;
+
+		case JSON_NUMBER:
+			/* must not have any children */
+			/* set the new size */
+			fprintf (file, "%s", cursor->text);
+			goto state2;	/* close value */
+			break;
+
+		case JSON_OBJECT:
+			fprintf (file, "{");
+
+			if (cursor->child)
+			{
+				cursor = cursor->child;
+				goto state1;	/* open value */
+			}
+			else
+			{
+				goto state2;	/* close value */
+			}
+			break;
+
+		case JSON_ARRAY:
+			fprintf (file, "[");
+
+			if (cursor->child != NULL)
+			{
+				cursor = cursor->child;
+				goto state1;
+			}
+			else
+			{
+				goto state2;	/* close value */
+			}
+			break;
+
+		case JSON_TRUE:
+			/* must not have any children */
+			fprintf (file, "true");
+			goto state2;	/* close value */
+			break;
+
+		case JSON_FALSE:
+			/* must not have any children */
+			fprintf (file, "false");
+			goto state2;	/* close value */
+			break;
+
+		case JSON_NULL:
+			/* must not have any children */
+			fprintf (file, "null");
+			goto state2;	/* close value */
+			break;
+
+		default:
+			goto error;
+		}
+		if (cursor->child)
+		{
+			cursor = cursor->child;
+			goto state1;	/* open value */
+		}
+		else
+		{
+			/* does not have any children */
+			goto state2;	/* close value */
+		}
+	}
+
+      state2:			/* close value */
+	{
+		switch (cursor->type)
+		{
+		case JSON_OBJECT:
+			fprintf (file, "}");
+			break;
+
+		case JSON_ARRAY:
+			fprintf (file, "]");
+			break;
+
+		case JSON_STRING:
+			break;
+		case JSON_NUMBER:
+			break;
+		case JSON_TRUE:
+			break;
+		case JSON_FALSE:
+			break;
+		case JSON_NULL:
+			break;
+		default:
+			goto error;
+		}
+		if ((cursor->parent == NULL) || (cursor == root))
+		{
+			goto end;
+		}
+		else if (cursor->next)
+		{
+			cursor = cursor->next;
+			goto state1;	/* open value */
+		}
+		else
+		{
+			cursor = cursor->parent;
+			goto state2;	/* close value */
+		}
+	}
+
+      error:
+	{
+		return JSON_UNKNOWN_PROBLEM;
+	}
+
+      end:
+	{
+		fprintf (file, "\n");
+		return JSON_OK;
+	}
+}
+
+
 void
 json_strip_white_spaces (char *text)
 {
@@ -945,6 +1195,162 @@ json_escape (char *text)
 		}
 	}
 	return rcs_unwrap (output);
+}
+
+
+char *
+json_unescape (char *text)
+{
+	char *result = malloc (strlen (text) + 1);
+	size_t r;		/* read cursor */
+	size_t w;		/* write cursor */
+
+	assert (text);
+
+	for (r = w = 0; text[r]; r++)
+	{
+		switch (text[r])
+		{
+		case '\\':
+			switch (text[++r])
+			{
+			case '\"':
+			case '\\':
+			case '/':
+				/* literal translation */
+				result[w++] = text[r];
+				break;
+			case 'b':
+				result[w++] = '\b';
+				break;
+			case 'f':
+				result[w++] = '\f';
+				break;
+			case 'n':
+				result[w++] = '\n';
+				break;
+			case 'r':
+				result[w++] = '\r';
+				break;
+			case 't':
+				result[w++] = '\t';
+				break;
+			case 'u':
+				{
+					char buf[5];
+					int64_t unicode;
+
+					buf[0] = text[++r];
+					buf[1] = text[++r];
+					buf[2] = text[++r];
+					buf[3] = text[++r];
+					buf[4] = '\0';
+
+					unicode = strtol (buf, NULL, 16);
+
+					if (unicode < 0x80)
+					{
+						/* ASCII: map to UTF-8 literally */
+						result[w++] = (char) unicode;
+					}
+					else if (unicode < 0x800)
+					{
+						/* two-byte-encoding */
+						char one = 0xC0;	/* 110 00000 */
+						char two = 0x80;	/* 10 000000 */
+
+						two += (unicode & 0x3F);
+						unicode >>= 6;
+						one += (unicode & 0x1F);
+
+						result[w++] = one;
+						result[w++] = two;
+					}
+					else if (unicode < 0x10000)
+					{
+						if (unicode < 0xD800 || 0xDBFF < unicode)
+						{
+							/* three-byte-encoding */
+							char one = 0xE0;	/* 1110 0000 */
+							char two = 0x80;	/* 10 000000 */
+							char three = 0x80;	/* 10 000000 */
+
+							three += (unicode & 0x3F);
+							unicode >>= 6;
+							two += (unicode & 0x3F);
+							unicode >>= 6;
+							one += (unicode & 0xF);
+
+							result[w++] = one;
+							result[w++] = two;
+							result[w++] = three;
+						}
+						else
+						{
+							/* unicode is a UTF-16 high surrogate, continue with the low surrogate */
+							uint64_t high_surrogate = unicode;	/* 110110 00;00000000 */
+							uint64_t low_surrogate;
+							char one = 0xF0;	/* 11110 000 */
+							char two = 0x80;	/* 10 000000 */
+							char three = 0x80;	/* 10 000000 */
+							char four = 0x80;	/* 10 000000 */
+
+							if (!text[++r] == '\\')
+							{
+								break;
+							}
+							if (!text[++r] == 'u')
+							{
+								break;
+							}
+
+							buf[0] = text[++r];
+							buf[1] = text[++r];
+							buf[2] = text[++r];
+							buf[3] = text[++r];
+
+							low_surrogate = strtol (buf, NULL, 16);	/* 110111 00;00000000 */
+
+							/* strip surrogate markers */
+							high_surrogate -= 0xD800;	/* 11011000;00000000 */
+							low_surrogate -= 0xDC00;	/* 11011100;00000000 */
+
+							unicode = (high_surrogate << 10) + (low_surrogate) + 0x10000;
+
+							/* now encode into four-byte UTF-8 (as we are larger than 0x10000) */
+							four += (unicode & 0x3F);
+							unicode >>= 6;
+							three += (unicode & 0x3F);
+							unicode >>= 6;
+							two += (unicode & 0x3F);
+							unicode >>= 6;
+							one += (unicode & 0x7);
+
+							result[w++] = one;
+							result[w++] = two;
+							result[w++] = three;
+							result[w++] = four;
+						}
+					}
+					else
+					{
+						fprintf (stderr, "JSON: unsupported unicode value: 0x%lX\n", unicode);
+					}
+				}
+				break;
+			default:
+				assert (0);
+				break;
+			}
+			break;
+		default:
+			result[w++] = text[r];
+			break;
+		}
+	}
+	result[w] = '\0';
+
+	return result;
 }
 
 
@@ -1708,7 +2114,7 @@ lexer (char *buffer, char **p, unsigned int *state, rcstring ** text)
 			break;
 
 		default:
-			printf ("*state missing: %d\n", *state);
+			fprintf (stderr, "JSON: *state missing: %d\n", *state);
 			return LEX_INVALID_CHARACTER;
 		}
 
@@ -1734,7 +2140,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 		{
 		case 0:	/* starting point */
 			{
-				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, &info->lex_text))
 				{
 				case LEX_BEGIN_OBJECT:
 					info->state = 1;	/* begin object */
@@ -1749,7 +2155,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 					break;
 
 				default:
-					printf ("state %d: defaulted\n", info->state);
+					fprintf (stderr, "JSON: state %d: defaulted\n", info->state);
 					return JSON_MALFORMED_DOCUMENT;
 					break;
 				}
@@ -1791,7 +2197,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 				assert (info->cursor != NULL);
 				assert (info->cursor->type == JSON_OBJECT);
 
-				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, &info->lex_text))
 				{
 				case LEX_STRING:
 					if ((temp = json_new_value (JSON_STRING)) == NULL)
@@ -1847,7 +2253,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 					break;
 
 				default:
-					printf ("state %d: defaulted\n", info->state);
+					fprintf (stderr, "JSON: state %d: defaulted\n", info->state);
 					return JSON_MALFORMED_DOCUMENT;
 					break;
 				}
@@ -1860,7 +2266,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 				assert (info->cursor != NULL);
 				assert (info->cursor->type == JSON_OBJECT);
 
-				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, &info->lex_text))
 				{
 				case LEX_VALUE_SEPARATOR:
 					info->state = 4;	/* sibling, post-object */
@@ -1906,7 +2312,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 					break;
 
 				default:
-					printf ("state %d: defaulted\n", info->state);
+					fprintf (stderr, "JSON: state %d: defaulted\n", info->state);
 					return JSON_MALFORMED_DOCUMENT;
 					break;
 				}
@@ -1918,7 +2324,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 				assert (info->cursor != NULL);
 				assert (info->cursor->type == JSON_OBJECT);
 
-				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, &info->lex_text))
 				{
 				case LEX_STRING:
 					if ((temp = json_new_value (JSON_STRING)) == NULL)
@@ -1942,7 +2348,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 					break;
 
 				default:
-					printf ("state %d: defaulted\n", info->state);
+					fprintf (stderr, "JSON: state %d: defaulted\n", info->state);
 					return JSON_MALFORMED_DOCUMENT;
 					break;
 				}
@@ -1955,7 +2361,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 				assert (info->cursor != NULL);
 				assert (info->cursor->type == JSON_STRING);
 
-				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, &info->lex_text))
 				{
 				case LEX_NAME_SEPARATOR:
 					info->state = 6;	/* label, pos label:value separator */
@@ -1966,7 +2372,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 					break;
 
 				default:
-					printf ("state %d: defaulted\n", info->state);
+					fprintf (stderr, "JSON: state %d: defaulted\n", info->state);
 					return JSON_MALFORMED_DOCUMENT;
 					break;
 				}
@@ -1980,7 +2386,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 				assert (info->cursor != NULL);
 				assert (info->cursor->type == JSON_STRING);
 
-				switch (value = lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
+				switch (value = lexer (buffer, &info->p, &info->lex_state, &info->lex_text))
 				{
 				case LEX_STRING:
 					if ((temp = json_new_value (JSON_STRING)) == NULL)
@@ -2105,7 +2511,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 					break;
 
 				default:
-					printf ("state %d: defaulted\n", info->state);
+					fprintf (stderr, "JSON: state %d: defaulted\n", info->state);
 					return JSON_MALFORMED_DOCUMENT;
 					break;
 				}
@@ -2147,7 +2553,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 				assert (info->cursor != NULL);
 				assert (info->cursor->type == JSON_ARRAY);
 
-				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, &info->lex_text))
 				{
 				case LEX_STRING:
 					if ((temp = json_new_value (JSON_STRING)) == NULL)
@@ -2256,7 +2662,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 					break;
 
 				default:
-					printf ("state %d: defaulted\n", info->state);
+					fprintf (stderr, "JSON: state %d: defaulted\n", info->state);
 					return JSON_MALFORMED_DOCUMENT;
 					break;
 				}
@@ -2267,7 +2673,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 			{
 				/*TODO perform tree sanity checks */
 				assert (info->cursor != NULL);
-				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, &info->lex_text))
 				{
 				case LEX_VALUE_SEPARATOR:
 					info->state = 8;
@@ -2317,7 +2723,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 					break;
 
 				default:
-					printf ("state %d: defaulted\n", info->state);
+					fprintf (stderr, "JSON: state %d: defaulted\n", info->state);
 					return JSON_MALFORMED_DOCUMENT;
 					break;
 				}
@@ -2328,7 +2734,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 			{
 				/* perform tree sanity check */
 				assert (info->cursor->parent == NULL);
-				switch (lexer (buffer, &info->p, &info->lex_state, & info->lex_text))
+				switch (lexer (buffer, &info->p, &info->lex_state, &info->lex_text))
 				{
 				case LEX_MORE:
 					return JSON_WAITING_FOR_EOF;
@@ -2346,7 +2752,7 @@ json_parse_fragment (struct json_parsing_info *info, char *buffer)
 			break;
 
 		default:
-			printf ("invalid parser state %d: defaulted\n", info->state);
+			fprintf (stderr, "JSON: invalid parser state %d: defaulted\n", info->state);
 			return JSON_UNKNOWN_PROBLEM;
 		}
 	}
@@ -2643,7 +3049,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 				jsps->state = 0;	/* starting point */
 				if (jsf->new_string != NULL)
 					jsf->new_string (((jsps->temp))->text);	/*copied or integral? */
-				rcs_free (& jsps->temp);
+				rcs_free (&jsps->temp);
 			}
 			else
 				return JSON_UNKNOWN_PROBLEM;
@@ -3060,7 +3466,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free (& jsps->temp);
+			rcs_free (&jsps->temp);
 
 			jsps->state = 0;
 			break;
@@ -3072,7 +3478,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free (& jsps->temp);
+			rcs_free (&jsps->temp);
 
 			if (jsf->open_object != NULL)
 				jsf->close_object ();
@@ -3087,7 +3493,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free (& jsps->temp);
+			rcs_free (&jsps->temp);
 
 			if (jsf->open_object != NULL)
 				jsf->close_array ();
@@ -3102,7 +3508,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free (& jsps->temp);
+			rcs_free (&jsps->temp);
 
 			if (jsf->open_object != NULL)
 				jsf->label_value_separator ();
@@ -3208,7 +3614,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free (& jsps->temp);
+			rcs_free (&jsps->temp);
 
 			jsps->state = 0;
 			break;
@@ -3221,7 +3627,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free (& jsps->temp);
+			rcs_free (&jsps->temp);
 
 			if (jsf->open_object != NULL)
 				jsf->close_object ();
@@ -3234,11 +3640,11 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 				if ((jsps->temp) == NULL)
 					return JSON_MEMORY;
 				jsf->new_number ((jsps->temp)->text);
-				rcs_free (& jsps->temp);
+				rcs_free (&jsps->temp);
 			}
 			else
 			{
-				rcs_free (& jsps->temp);
+				rcs_free (&jsps->temp);
 				jsps->temp = NULL;
 			}
 			if (jsf->open_object != NULL)
@@ -3254,7 +3660,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free (& jsps->temp);
+			rcs_free (&jsps->temp);
 
 			if (jsf->label_value_separator != NULL)
 				jsf->label_value_separator ();
@@ -3361,7 +3767,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free (& jsps->temp);
+			rcs_free (&jsps->temp);
 
 			jsps->state = 0;
 			break;
@@ -3373,7 +3779,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free (& jsps->temp);
+			rcs_free (&jsps->temp);
 
 			if (jsf->open_object != NULL)
 				jsf->close_object ();
@@ -3579,7 +3985,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free (& jsps->temp);
+			rcs_free (&jsps->temp);
 
 			jsps->state = 0;
 			break;
@@ -3591,7 +3997,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free (& jsps->temp);
+			rcs_free (&jsps->temp);
 
 			if (jsf->open_object != NULL)
 				jsf->close_object ();
@@ -3605,7 +4011,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free (& jsps->temp);
+			rcs_free (&jsps->temp);
 
 			if (jsf->open_object != NULL)
 				jsf->close_array ();
@@ -3619,7 +4025,7 @@ json_saxy_parse (struct json_saxy_parser_status *jsps, struct json_saxy_function
 			{
 				jsf->new_number ((jsps->temp)->text);
 			}
-			rcs_free (& jsps->temp);
+			rcs_free (&jsps->temp);
 
 			if (jsf->label_value_separator != NULL)
 				jsf->label_value_separator ();
@@ -3799,14 +4205,10 @@ json_find_first_label (const json_t * object, const char *text_label)
 	assert (text_label != NULL);
 	assert (object->type == JSON_OBJECT);
 
-	if (object->child == NULL)
-		return NULL;
-	cursor = object->child;
-	while (cursor != NULL)
+	for (cursor = object->child; cursor != NULL; cursor = cursor->next)
 	{
-		if (strncmp (cursor->text, text_label, strlen (text_label)) == 0)
-			return cursor;
-		cursor = cursor->next;
+		if (strcmp (cursor->text, text_label) == 0)
+			break;
 	}
-	return NULL;
+	return cursor;
 }

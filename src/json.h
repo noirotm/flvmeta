@@ -23,7 +23,8 @@
 
 \note error handling is only in a very rudimentary form.
 \author Rui Maciel	rui_maciel@users.sourceforge.net
-\version v1.1
+\author Sven Herzberg
+\version v1.2
 */
 
 #ifndef JSON_H
@@ -38,6 +39,7 @@
 #endif
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -55,14 +57,14 @@ The descriptions of the json_value node type
 /**
 String implementation
 **/
-    struct rui_cstring
-    {
-	    char *text;		/*<! char c-string */
-	    size_t length;		/*<! put in place to avoid strlen() calls */
-	    size_t max;		/*<! usable memory allocated to text minus the space for the nul character */
-    };
+	struct rui_cstring
+	{
+		char *text;	/*<! char c-string */
+		size_t length;	/*<! put in place to avoid strlen() calls */
+		size_t max;	/*<! usable memory allocated to text minus the space for the nul character */
+	};
 
-    typedef struct rui_cstring rcstring;
+	typedef struct rui_cstring rcstring;
 
 /**
 The error messages produced by the JSON parsers
@@ -102,8 +104,6 @@ The JSON document tree node, which is a basic JSON type
 /**
 The structure holding all information needed to resume parsing
 **/
-    
-
 	struct json_parsing_info
 	{
 		unsigned int state;	/*!< the state where the parsing was left on the last parser run */
@@ -143,6 +143,16 @@ The structure holding the information needed for json_saxy_parse to resume parsi
 		int string_length_limit_reached;	/*!< flag informing if the string limit length defined by JSON_MAX_STRING_LENGTH was reached */
 		rcstring *temp;	/*!< temporary string which will be used to build up parsed strings between parser runs. */
 	};
+
+
+/** 
+Buils a json_t document by parsing an open file
+@param file a pointer to an object controlling a stream, returned by fopen()
+@param document a reference to a json_t pointer, set to NULL, which will store the parsed document
+@return a json_error error code according to how the parsing operation went.
+**/
+	enum json_error json_stream_parse (FILE * file, json_t ** document);
+
 
 /**
 Creates a new JSON value and defines it's type
@@ -240,11 +250,11 @@ Produces a JSON markup text document from a document tree
 
 /**
 Produces a JSON markup text document from a json_t document tree to a text stream 
+@param file a opened file stream
 @param root The document's root node
-@param text a pointer to a char string that will hold the JSON document text.
 @return  a json_error code describing how the operation went
 **/
-/*	enum json_error json_tree_to_file (json_t * root, FILE *file); */
+	enum json_error json_stream_output (FILE * file, json_t * root);
 
 
 /**
@@ -268,6 +278,15 @@ Outputs a new UTF8 c-string which replaces all characters that must be escaped w
 @return an UTF-8 c-string holding the same text string but with escaped characters
 **/
 	char *json_escape (char *text);
+
+/**
+ * Outputs a new UTF-8 c-string which has all escaped characters replaced by
+ * their unescaped, UTF-8 encoded variants.
+ *
+ * @param test a UTF-8 c-string
+ * @return a newly allocated UTF-8 c-string; free with free()
+ */
+	char *json_unescape (char *text);
 
 
 /**
