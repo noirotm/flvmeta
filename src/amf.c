@@ -306,6 +306,9 @@ static amf_data * amf_object_read(amf_read_proc read_proc, void * user_data) {
                         amf_data_free(data);
                         return NULL;
                     }
+                    else {
+                        amf_data_free(name);
+                    }
                 }
                 else {
                     amf_data_free(name);
@@ -341,6 +344,9 @@ static amf_data * amf_associative_array_read(amf_read_proc read_proc, void * use
                             amf_data_free(element);
                             amf_data_free(data);
                             return NULL;
+                        }
+                        else {
+                            amf_data_free(name);
                         }
                     }
                     else {

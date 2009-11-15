@@ -435,14 +435,15 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
                 info->video_first_timestamp = timestamp;
             }
 
-            if (have_video_size != 1) {
+            if (have_video_size != 1
+            && flv_video_tag_frame_type(vt) == FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
                 /* read first video frame to get critical info */
                 bytes_read = compute_video_size(flv_in, info, body_length - sizeof(flv_video_tag));
                 if (bytes_read > 0 && info->video_width > 0 && info->video_width > 0) {
                     have_video_size = 1;
                 }
                 /* if we cannot fetch that information from the first tag, we'll try
-                   for each following video tag */
+                   for each following video key frame */
             }
 
             /* add keyframe to list */
