@@ -66,15 +66,16 @@ endif(MSVC)
 
 # installation
 if(WIN32)
-  set(CPACK_PACKAGE_VENDOR "Marc Noirot <marc.noirot@gmail.com>")
   set(CPACK_PACKAGE_FILE_NAME "flvmeta-${PACKAGE_VERSION}-win32")
   set(CPACK_GENERATOR ZIP)
-  include(CPack)
-  
-  install(FILES ${CMAKE_SOURCE_DIR}/README  DESTINATION . RENAME readme.txt)
-  install(FILES ${CMAKE_SOURCE_DIR}/COPYING DESTINATION . RENAME license.txt)
-  install(FILES ${CMAKE_SOURCE_DIR}/NEWS    DESTINATION . RENAME changelog.txt)
+  install(FILES ${CMAKE_SOURCE_DIR}/README  DESTINATION . RENAME Readme.txt)
+  install(FILES ${CMAKE_SOURCE_DIR}/COPYING DESTINATION . RENAME License.txt)
+  install(FILES ${CMAKE_SOURCE_DIR}/NEWS    DESTINATION . RENAME Changelog.txt)
+else(WIN32)
+  set(CPACK_PACKAGE_FILE_NAME "flvmeta-${PACKAGE_VERSION}")
 endif(WIN32)
+
+include(CPack)
 
 add_subdirectory(src)
 
