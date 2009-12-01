@@ -130,6 +130,8 @@ size_t     amf_data_buffer_write(amf_data * data, byte * buffer, size_t maxbytes
 size_t     amf_data_file_write(amf_data * data, FILE * stream);
 /* get the type of AMF data */
 byte       amf_data_get_type(amf_data * data);
+/* return a new copy of AMF data */
+amf_data * amf_data_clone(amf_data * data);
 /* release the memory of AMF data */
 void       amf_data_free(amf_data * data);
 /* dump AMF data into a stream as text */
@@ -147,15 +149,16 @@ void       amf_boolean_set_value(amf_data * data, uint8 value);
 
 /* string functions */
 amf_data * amf_string_new(byte * str, uint16 size);
-amf_data * amf_str(char * str);
+amf_data * amf_str(const char * str);
 uint16     amf_string_get_size(amf_data * data);
 byte *     amf_string_get_bytes(amf_data * data);
 
 /* object functions */
 amf_data * amf_object_new(void);
 uint32     amf_object_size(amf_data * data);
-amf_data * amf_object_add(amf_data * data, amf_data * name, amf_data * element);
+amf_data * amf_object_add(amf_data * data, const char * name, amf_data * element);
 amf_data * amf_object_get(amf_data * data, const char * name);
+amf_data * amf_object_set(amf_data * data, const char * name, amf_data * element);
 amf_data * amf_object_delete(amf_data * data, const char * name);
 amf_node * amf_object_first(amf_data * data);
 amf_node * amf_object_last(amf_data * data);
@@ -175,6 +178,7 @@ amf_data * amf_associative_array_new(void);
 #define amf_associative_array_size(d)       amf_object_size(d)
 #define amf_associative_array_add(d, n, e)  amf_object_add(d, n, e)
 #define amf_associative_array_get(d, n)     amf_object_get(d, n)
+#define amf_associative_array_set(d, n, e)  amf_object_set(d, n, e)
 #define amf_associative_array_delete(d, n)  amf_object_delete(d, n)
 #define amf_associative_array_first(d)      amf_object_first(d)
 #define amf_associative_array_last(d)       amf_object_last(d)

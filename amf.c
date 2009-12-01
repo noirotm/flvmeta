@@ -158,6 +158,16 @@ static void amf_list_clear(amf_list * list) {
     list->size = 0;
 }
 
+static amf_list * amf_list_clone(amf_list * list, amf_list * out_list) {
+    amf_node * node;
+    node = list->first_element;
+    while (node != NULL) {
+        amf_list_push(out_list, amf_data_clone(node->data));
+        node = node->next;
+    }
+    return out_list;
+}
+
 /* structure used to mimic a stream with a memory buffer */
 typedef struct __buffer_context {
     byte * start_address;
@@ -290,11 +300,14 @@ static amf_data * amf_object_read(amf_read_proc read_proc, void * user_data) {
             if (name != NULL) {
                 element = amf_data_read(read_proc, user_data);
                 if (element != NULL) {
-                    if (amf_object_add(data, name, element) == NULL) {
+                    if (amf_object_add(data, (char *)amf_string_get_bytes(name), element) == NULL) {
                         amf_data_free(name);
                         amf_data_free(element);
                         amf_data_free(data);
                         return NULL;
+                    }
+                    else {
+                        amf_data_free(name);
                     }
                 }
                 else {
@@ -326,11 +339,14 @@ static amf_data * amf_associative_array_read(amf_read_proc read_proc, void * use
                 if (name != NULL) {
                     element = amf_data_read(read_proc, user_data);
                     if (element != NULL) {
-                        if (amf_associative_array_add(data, name, element) == NULL) {
+                        if (amf_associative_array_add(data, (char *)amf_string_get_bytes(name), element) == NULL) {
                             amf_data_free(name);
                             amf_data_free(element);
                             amf_data_free(data);
                             return NULL;
+                        }
+                        else {
+                            amf_data_free(name);
                         }
                     }
                     else {
@@ -649,6 +665,43 @@ byte amf_data_get_type(amf_data * data) {
     return (data != NULL) ? data->type : AMF_TYPE_NULL;
 }
 
+/* clone AMF data */
+amf_data * amf_data_clone(amf_data * data) {
+    /* we copy data recursively */
+    if (data != NULL) {
+        switch (data->type) {
+            case AMF_TYPE_NUMBER: return amf_number_new(amf_number_get_value(data));
+            case AMF_TYPE_BOOLEAN: return amf_boolean_new(amf_boolean_get_value(data));
+            case AMF_TYPE_STRING:
+                if (data->string_data.mbstr != NULL) {
+                    return amf_string_new((byte *)strdup((char *)amf_string_get_bytes(data)), amf_string_get_size(data));
+                }
+                else {
+                    return amf_str(NULL);
+                }
+            case AMF_TYPE_NULL: return NULL;
+            case AMF_TYPE_UNDEFINED: return NULL;
+            /*case AMF_TYPE_REFERENCE:*/
+            case AMF_TYPE_OBJECT:
+            case AMF_TYPE_ASSOCIATIVE_ARRAY:
+            case AMF_TYPE_ARRAY:
+                {
+                    amf_data * d = amf_data_new(data->type);
+                    if (d != NULL) {
+                        amf_list_init(&d->list_data);
+                        amf_list_clone(&data->list_data, &d->list_data);
+                    }
+                    return d;
+                }
+            case AMF_TYPE_DATE: return amf_date_new(amf_date_get_milliseconds(data), amf_date_get_timezone(data));
+            /*case AMF_TYPE_SIMPLEOBJECT:*/
+            case AMF_TYPE_XML: return NULL;
+            case AMF_TYPE_CLASS: return NULL;
+        }
+    }
+    return NULL;
+}
+
 /* free AMF data */
 void amf_data_free(amf_data * data) {
     if (data != NULL) {
@@ -794,26 +847,21 @@ amf_data * amf_string_new(byte * str, uint16 size) {
     amf_data * data = amf_data_new(AMF_TYPE_STRING);
     if (data != NULL) {
         data->string_data.size = size;
-
-        if (str != NULL && size > 0) {
-            data->string_data.mbstr = (byte*)calloc(size+1, sizeof(byte));
-            if (data->string_data.mbstr != NULL) {
+        data->string_data.mbstr = (byte*)calloc(size+1, sizeof(byte));
+        if (data->string_data.mbstr != NULL) {
+            if (size > 0) {
                 memcpy(data->string_data.mbstr, str, size);
-            }
-            else {
-                amf_data_free(data);
-                return NULL;
             }
         }
         else {
-            data->string_data.size = 0;
-            data->string_data.mbstr = NULL;
+            amf_data_free(data);
+            return NULL;
         }
     }
     return data;
 }
 
-amf_data * amf_str(char * str) {
+amf_data * amf_str(const char * str) {
     return amf_string_new((byte *)str, (uint16)(str != NULL ? strlen(str) : 0));
 }
 
@@ -838,9 +886,9 @@ uint32 amf_object_size(amf_data * data) {
     return (data != NULL) ? data->list_data.size / 2 : 0;
 }
 
-amf_data * amf_object_add(amf_data * data, amf_data * name, amf_data * element) {
+amf_data * amf_object_add(amf_data * data, const char * name, amf_data * element) {
     if (data != NULL) {
-        if (amf_list_push(&data->list_data, name) != NULL) {
+        if (amf_list_push(&data->list_data, amf_str(name)) != NULL) {
             if (amf_list_push(&data->list_data, element) != NULL) {
                 return element;
             }
@@ -856,12 +904,31 @@ amf_data * amf_object_get(amf_data * data, const char * name) {
     if (data != NULL) {
         amf_node * node = amf_list_first(&(data->list_data));
         while (node != NULL) {
-            node = node->next;
             if (strncmp((char*)(node->data->string_data.mbstr), name, (size_t)(node->data->string_data.size)) == 0) {
                 node = node->next;
                 return (node != NULL) ? node->data : NULL;
             }
-            node = node->next;
+            /* we have to skip the element data to reach the next name */
+            node = node->next->next;
+        }
+    }
+    return NULL;
+}
+
+amf_data * amf_object_set(amf_data * data, const char * name, amf_data * element) {
+    if (data != NULL) {
+        amf_node * node = amf_list_first(&(data->list_data));
+        while (node != NULL) {
+            if (strncmp((char*)(node->data->string_data.mbstr), name, (size_t)(node->data->string_data.size)) == 0) {
+                node = node->next;
+                if (node != NULL && node->data != NULL) {
+                    amf_data_free(node->data);
+                    node->data = element;
+                    return element;
+                }
+            }
+            /* we have to skip the element data to reach the next name */
+            node = node->next->next;
         }
     }
     return NULL;
