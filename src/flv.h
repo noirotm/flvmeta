@@ -55,6 +55,8 @@ typedef struct __flv_header {
     uint32_be       offset; /* always 9 */
 } flv_header;
 
+#define FLV_HEADER_SIZE 9
+
 #define flv_header_has_video(header)    ((header).flags & FLV_FLAG_VIDEO)
 #define flv_header_has_audio(header)    ((header).flags & FLV_FLAG_AUDIO)
 
@@ -71,6 +73,8 @@ typedef struct __flv_tag {
     uint24_be   stream_id; /* reserved, must be "\0\0\0" */
     /* body comes next */
 } flv_tag;
+
+#define FLV_TAG_SIZE 11
 
 #define flv_tag_get_timestamp(tag) \
     (uint24_be_to_uint32((tag).timestamp) + ((tag).timestamp_extended << 24))

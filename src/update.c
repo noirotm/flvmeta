@@ -310,7 +310,7 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
     amf_object_add(info->keyframes, "filepositions", info->filepositions);
 
     /* skip first empty previous tag size */
-    flvmeta_fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
+    lfs_fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
     info->total_prev_tags_size += sizeof(uint32_be);
 
     /* extended timestamp initialization */
@@ -329,7 +329,7 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
         uint32 body_length;
         uint32 timestamp;
 
-        offset = flvmeta_ftell(flv_in);
+        offset = lfs_ftell(flv_in);
         if (fread(&ft, sizeof(flv_tag), 1, flv_in) == 0) {
             break;
         }
@@ -521,7 +521,7 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
         }
 
         body_length += sizeof(uint32_be); /* skip tag size */
-        flvmeta_fseek(flv_in, body_length, SEEK_CUR);
+        lfs_fseek(flv_in, body_length, SEEK_CUR);
 
         ++tag_number;
     }
@@ -778,7 +778,7 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
     timestamp_extended_meta = 0;
 
     /* copy the tags verbatim */
-    flvmeta_fseek(flv_in, sizeof(flv_header)+sizeof(uint32_be), SEEK_SET);
+    lfs_fseek(flv_in, sizeof(flv_header)+sizeof(uint32_be), SEEK_SET);
 
     copy_buffer = (byte *)malloc(info->biggest_tag_body_size + sizeof(flv_tag));
     have_on_last_second = 0;
@@ -849,7 +849,7 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
                 return ERROR_WRITE;
             }
 
-            flvmeta_fseek(flv_in, body_length + sizeof(uint32_be), SEEK_CUR);
+            lfs_fseek(flv_in, body_length + sizeof(uint32_be), SEEK_CUR);
         }
         else {
             /* insert an onLastSecond metadata tag */
@@ -896,7 +896,7 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
                 }
                 else if (opts->error_handling == FLVMETA_IGNORE_ERRORS) {
                     /* just copy the whole tag and exit */
-                    flvmeta_fseek(flv_in, offset, SEEK_SET);
+                    lfs_fseek(flv_in, offset, SEEK_SET);
                     read_body = fread(copy_buffer, 1, sizeof(flv_tag) + read_body, flv_in);
                     fwrite(copy_buffer, 1, read_body, flv_out);
                     free(copy_buffer);
@@ -916,7 +916,7 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
                 return ERROR_WRITE;
             }
 
-            flvmeta_fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
+            lfs_fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
         }        
     }
 

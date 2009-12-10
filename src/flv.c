@@ -52,8 +52,14 @@ int flv_read_header(flv_stream * stream, flv_header * header) {
     if (stream == NULL
     || stream->flvin == NULL
     || feof(stream->flvin)
-    || stream->state != FLV_STREAM_STATE_START
-    || fread(header, sizeof(flv_header), 1, stream->flvin) == 0) {
+    || stream->state != FLV_STREAM_STATE_START) {
+        return FLV_ERROR_EOF;
+    }
+
+    if (fread(&header->signature, sizeof(header->signature), 1, stream->flvin) == 0
+    || fread(&header->version, sizeof(header->version), 1, stream->flvin) == 0
+    || fread(&header->flags, sizeof(header->flags), 1, stream->flvin) == 0
+    || fread(&header->offset, sizeof(header->offset), 1, stream->flvin) == 0) {
         return FLV_ERROR_EOF;
     }
 
@@ -77,7 +83,7 @@ int flv_read_prev_tag_size(flv_stream * stream, uint32 * prev_tag_size) {
 
     /* skip remaining tag body bytes */
     if (stream->state == FLV_STREAM_STATE_TAG_BODY) {
-        flvmeta_fseek(stream->flvin, stream->current_tag_offset + sizeof(flv_tag) + uint24_be_to_uint32(stream->current_tag.body_length), SEEK_SET);
+        lfs_fseek(stream->flvin, stream->current_tag_offset + FLV_TAG_SIZE + uint24_be_to_uint32(stream->current_tag.body_length), SEEK_SET);
         stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
     }
 
@@ -105,25 +111,30 @@ int flv_read_tag(flv_stream * stream, flv_tag * tag) {
 
     /* skip header */
     if (stream->state == FLV_STREAM_STATE_START) {
-        flvmeta_fseek(stream->flvin, sizeof(flv_header), SEEK_CUR);
+        lfs_fseek(stream->flvin, FLV_HEADER_SIZE, SEEK_CUR);
         stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
     }
 
     /* skip current tag body */
     if (stream->state == FLV_STREAM_STATE_TAG_BODY) {
-        flvmeta_fseek(stream->flvin, stream->current_tag_offset + sizeof(flv_tag) + uint24_be_to_uint32(stream->current_tag.body_length), SEEK_SET);
+        lfs_fseek(stream->flvin, stream->current_tag_offset + FLV_TAG_SIZE + uint24_be_to_uint32(stream->current_tag.body_length), SEEK_SET);
         stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
     }
 
     /* skip previous tag size */
     if (stream->state == FLV_STREAM_STATE_PREV_TAG_SIZE) {
-        flvmeta_fseek(stream->flvin, sizeof(uint32_be), SEEK_CUR);
+        lfs_fseek(stream->flvin, sizeof(uint32_be), SEEK_CUR);
         stream->state = FLV_STREAM_STATE_TAG;
     }
     
     if (stream->state == FLV_STREAM_STATE_TAG) {
-        stream->current_tag_offset = flvmeta_ftell(stream->flvin);
-        if (fread(tag, sizeof(flv_tag), 1, stream->flvin) == 0) {
+        stream->current_tag_offset = lfs_ftell(stream->flvin);
+
+        if (fread(&tag->type, sizeof(tag->type), 1, stream->flvin) == 0
+        || fread(&tag->body_length, sizeof(tag->body_length), 1, stream->flvin) == 0
+        || fread(&tag->timestamp, sizeof(tag->timestamp), 1, stream->flvin) == 0
+        || fread(&tag->timestamp_extended, sizeof(tag->timestamp_extended), 1, stream->flvin) == 0
+        || fread(&tag->stream_id, sizeof(tag->stream_id), 1, stream->flvin) == 0) {
             return FLV_ERROR_EOF;
         }
         else {
@@ -209,6 +220,7 @@ int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
 
 size_t flv_read_tag_body(flv_stream * stream, byte * buffer, size_t buffer_size) {
     size_t bytes_number;
+
     if (stream == NULL
     || stream->flvin == NULL
     || feof(stream->flvin)
@@ -226,6 +238,17 @@ size_t flv_read_tag_body(flv_stream * stream, byte * buffer, size_t buffer_size)
     }
 
     return bytes_number;
+}
+
+void flv_reset(flv_stream * stream) {
+    /* go back to beginning of file */
+    if (stream != NULL && stream->flvin != NULL) {
+        stream->current_tag_body_length = 0;
+        stream->current_tag_offset = 0;
+        stream->state = FLV_STREAM_STATE_START;
+
+        lfs_fseek(stream->flvin, 0, SEEK_SET);
+    }
 }
 
 void flv_close(flv_stream * stream) {

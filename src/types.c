@@ -50,9 +50,9 @@ number64 swap_number64(number64 n) {
 /* convert native integers into 24 bits big endian integers */
 uint24_be uint32_to_uint24_be(uint32 l) {
     uint24_be r;
-    r.b0 = (uint8)((l & 0x00FF0000U) >> 16);
-    r.b1 = (uint8)((l & 0x0000FF00U) >> 8);
-    r.b2 = (uint8) (l & 0x000000FFU);
+    r.b[0] = (uint8)((l & 0x00FF0000U) >> 16);
+    r.b[1] = (uint8)((l & 0x0000FF00U) >> 8);
+    r.b[2] = (uint8) (l & 0x000000FFU);
     return r;
 }
 
@@ -62,7 +62,7 @@ uint24_be uint32_to_uint24_be(uint32 l) {
     These functions assume fpos_t is a 64-bit signed integer
 */
 
-file_offset_t flvmeta_ftell(FILE * stream) {
+file_offset_t lfs_ftell(FILE * stream) {
     fpos_t p;
     if (fgetpos(stream, &p) == 0) {
         return (file_offset_t)p;
@@ -72,7 +72,7 @@ file_offset_t flvmeta_ftell(FILE * stream) {
     }
 }
 
-int flvmeta_fseek(FILE * stream, file_offset_t offset, int whence) {
+int lfs_fseek(FILE * stream, file_offset_t offset, int whence) {
     fpos_t p;
     if (fgetpos(stream, &p) == 0) {
         switch (whence) {

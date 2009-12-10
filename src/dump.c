@@ -29,6 +29,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define FLVMETA_DUMP_STOP_OK 5
+
 /* does the given string have XML tag markers ? */
 static int has_xml_markers(const char * str, int len) {
     int i;
@@ -258,7 +260,7 @@ static int xml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * d
         xml_amf_data_dump(data, 1);
         printf("</scriptDataObject>");
     }
-    return OK;
+    return FLVMETA_DUMP_STOP_OK;
 }
 
 /* JSON metadata dumping */
@@ -485,11 +487,12 @@ static int json_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * 
         /* cleanup */
 	    json_free_value(&root);
     }
-    return OK;
+    return FLVMETA_DUMP_STOP_OK;
 }
 
 /* dump metadata from a FLV file */
 int dump_metadata(const flvmeta_opts * options) {
+    int retval;
     flv_parser parser;
     memset(&parser, 0, sizeof(flv_parser));
 
@@ -502,7 +505,12 @@ int dump_metadata(const flvmeta_opts * options) {
             break;
     }
 
-    return flv_parse(options->input_file, &parser);
+    retval = flv_parse(options->input_file, &parser);
+    if (retval == FLVMETA_DUMP_STOP_OK) {
+        retval = FLV_OK;
+    }
+
+    return retval;
 }
 
 /* dump the full contents of an FLV file */

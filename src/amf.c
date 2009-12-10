@@ -23,7 +23,6 @@
 */
 #include <string.h>
 
-#include "flvmeta.h"
 #include "amf.h"
 
 /* function common to all array types */

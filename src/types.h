@@ -53,11 +53,9 @@ typedef uint32_t uint32, uint32_be, uint32_le;
 
 typedef int32_t sint32, sint32_be, sint32_le;
 
-#pragma pack(push, 1)
 typedef struct __uint24 {
-    uint8 b0, b1, b2;
+    uint8 b[3];
 } uint24, uint24_be, uint24_le;
-#pragma pack(pop)
 
 typedef uint64_t uint64, uint64_le, uint64_be;
 
@@ -87,8 +85,8 @@ extern "C" {
 # define swap_number64(x) (x)
 
 /* convert big endian 24 bits integers to native integers */
-# define uint24_be_to_uint32(x) ((uint32)(((x).b2 << 16) | \
-    ((x).b1 << 8) | (x).b0))
+# define uint24_be_to_uint32(x) ((uint32)(((x).b[2] << 16) | \
+    ((x).b[1] << 8) | (x).b[0]))
 
 #else /* !defined WORDS_BIGENDIAN */
 
@@ -108,8 +106,8 @@ extern "C" {
 number64 swap_number64(number64);
 
 /* convert big endian 24 bits integers to native integers */
-# define uint24_be_to_uint32(x) ((uint32)(((x).b0 << 16) | \
-    ((x).b1 << 8) | (x).b2))
+# define uint24_be_to_uint32(x) ((uint32)(((x).b[0] << 16) | \
+    ((x).b[1] << 8) | (x).b[2]))
 
 #endif /* WORDS_BIGENDIAN */
 
@@ -118,8 +116,8 @@ uint24_be uint32_to_uint24_be(uint32);
 
 /* large file support */
 #ifdef HAVE_FSEEKO
-# define flvmeta_ftell ftello
-# define flvmeta_fseek fseeko
+# define lfs_ftell ftello
+# define lfs_fseek fseeko
 
 typedef off_t file_offset_t;
 
@@ -130,13 +128,13 @@ typedef off_t file_offset_t;
 typedef long long int file_offset_t;
 
 /* Win32 large file support */
-file_offset_t flvmeta_ftell(FILE * stream);
-int flvmeta_fseek(FILE * stream, file_offset_t offset, int whence);
+file_offset_t lfs_ftell(FILE * stream);
+int lfs_fseek(FILE * stream, file_offset_t offset, int whence);
 
 # else /* !defined WIN32 */
 
-# define flvmeta_ftell ftell
-# define flvmeta_fseek fseek
+# define lfs_ftell ftell
+# define lfs_fseek fseek
 
 typedef long file_offset_t;
 
