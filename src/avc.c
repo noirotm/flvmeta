@@ -123,8 +123,9 @@ static void parse_scaling_list(uint32 size, bit_buffer * bb) {
 */
 static void parse_sps(byte * sps, size_t sps_size, uint32 * width, uint32 * height) {
     bit_buffer bb;
-    uint32 profile, pic_order_cnt_type, height_map;
-    uint32 i, size;
+    uint32 profile, pic_order_cnt_type, width_in_mbs, height_in_map_units;
+    uint32 i, size, left, right, top, bottom;
+    uint8 frame_mbs_only_flag;
 
     bb.start = sps;
     bb.size = sps_size;
@@ -187,11 +188,37 @@ static void parse_sps(byte * sps, size_t sps_size, uint32 * width, uint32 * heig
     exp_golomb_ue(&bb);
     /* gaps_in_frame_num_value_allowed_flag */
     skip_bits(&bb, 1);
+    /* pic_width_in_mbs */
+    width_in_mbs = exp_golomb_ue(&bb) + 1;
+    /* pic_height_in_map_units */
+    height_in_map_units = exp_golomb_ue(&bb) + 1;
+    /* frame_mbs_only_flag */
+    frame_mbs_only_flag = get_bit(&bb);
+    if (!frame_mbs_only_flag) {
+        /* mb_adaptive_frame_field */
+        skip_bits(&bb, 1);
+    }
+    /* direct_8x8_inference_flag */
+    skip_bits(&bb, 1);
+    /* frame_cropping */
+    left = right = top = bottom = 0;
+    if (get_bit(&bb)) {
+        left = exp_golomb_ue(&bb) * 2;
+        right = exp_golomb_ue(&bb) * 2;
+        top = exp_golomb_ue(&bb) * 2;
+        bottom = exp_golomb_ue(&bb) * 2;
+        if (!frame_mbs_only_flag) {
+            top *= 2;
+            bottom *= 2;
+        }
+    }
     /* width */
-    *width = (exp_golomb_ue(&bb) + 1) * 16;
+    *width = width_in_mbs * 16 - (left + right);
     /* height */
-    height_map = exp_golomb_ue(&bb) + 1;
-    *height = (2 - get_bit(&bb)) * height_map * 16;
+    *height = height_in_map_units * 16 - (top + bottom);
+    if (!frame_mbs_only_flag) {
+        *height *= 2;
+    }
 }
 
 /**

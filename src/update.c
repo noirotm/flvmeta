@@ -936,7 +936,7 @@ int update_metadata(const flvmeta_opts * opts) {
     flv_info info;
     flv_metadata meta;
 
-    if (!strcmp(opts->input_file, opts->output_file)) {
+    if (opts->output_file == NULL || !strcmp(opts->input_file, opts->output_file)) {
         return ERROR_SAME_FILE;
     }
     
