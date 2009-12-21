@@ -78,18 +78,17 @@ typedef struct __flv_metadata {
 /*
     compute Sorensen H.263 video size
 */
-static size_t compute_h263_size(FILE * flv_in, flv_info * info, uint32 body_length) {
+static int compute_h263_size(flv_stream * flv_in, flv_info * info, uint32 body_length) {
     byte header[9];
-    size_t bytes_read;
+    uint32 psc;
 
     /* make sure we have enough bytes to read in the current tag */
-    if (body_length < 9) {
-        return 0;
-    }
+    if (body_length >= 9) {
+        if (flv_read_tag_body(flv_in, header, 9) < 9) {
+            return FLV_ERROR_EOF;
+        }
 
-    bytes_read = fread(header, 1, 9, flv_in);
-    if (bytes_read == 9) {
-        uint32 psc = uint24_be_to_uint32(*(uint24_be *)(header)) >> 7;
+        psc = uint24_be_to_uint32(*(uint24_be *)(header)) >> 7;
         if (psc == 1) {
             uint32 psize = ((header[3] & 0x03) << 1) + ((header[4] >> 7) & 0x01);
             switch (psize) {
@@ -126,103 +125,94 @@ static size_t compute_h263_size(FILE * flv_in, flv_info * info, uint32 body_leng
             }
         }
     }
-    return bytes_read;
+    return FLV_OK;
 }
 
 /*
     compute Screen video size
 */
-static size_t compute_screen_size(FILE * flv_in, flv_info * info, uint32 body_length) {
+static int compute_screen_size(flv_stream * flv_in, flv_info * info, uint32 body_length) {
     byte header[4];
-    size_t bytes_read;
 
     /* make sure we have enough bytes to read in the current tag */
-    if (body_length < 4) {
-        return 0;
-    }
-
-    bytes_read = fread(header, 1, 4, flv_in);
-    if (bytes_read == 4) {
+    if (body_length >= 4) {
+        if (flv_read_tag_body(flv_in, header, 4) < 4) {
+            return FLV_ERROR_EOF;
+        }
+        
         info->video_width  = ((header[0] & 0x0f) << 8) + header[1];
         info->video_height = ((header[2] & 0x0f) << 8) + header[3];
     }
-    return bytes_read;
+    return FLV_OK;
 }
 
 /*
     compute On2 VP6 video size
 */
-static size_t compute_vp6_size(FILE * flv_in, flv_info * info, uint32 body_length) {
+static int compute_vp6_size(flv_stream * flv_in, flv_info * info, uint32 body_length) {
     byte header[7], offset;
-    size_t bytes_read;
 
     /* make sure we have enough bytes to read in the current tag */
-    if (body_length < 7) {
-        return 0;
-    }
-
-    bytes_read = fread(header, 1, 7, flv_in);
-    if (bytes_read == 7) {
+    if (body_length >= 7) {
+        if (flv_read_tag_body(flv_in, header, 7) < 7) {
+            return FLV_ERROR_EOF;
+        }
+        
         /* two bytes offset if VP6 0 */
         offset = (header[1] & 0x01 || !(header[2] & 0x06)) << 1;
         info->video_width  = (header[4 + offset] << 4) - (header[0] >> 4);
         info->video_height = (header[3 + offset] << 4) - (header[0] & 0x0f);
+        
     }
-    return bytes_read;
+    return FLV_OK;
 }
 
 /*
     compute On2 VP6 with Alpha video size
 */
-static size_t compute_vp6_alpha_size(FILE * flv_in, flv_info * info, uint32 body_length) {
+static int compute_vp6_alpha_size(flv_stream * flv_in, flv_info * info, uint32 body_length) {
     byte header[10], offset;
-    size_t bytes_read;
 
     /* make sure we have enough bytes to read in the current tag */
-    if (body_length < 10) {
-        return 0;
-    }
-
-    bytes_read = fread(header, 1, 10, flv_in);
-    if (bytes_read == 10) {
+    if (body_length >= 10) {
+        if (flv_read_tag_body(flv_in, header, 10) < 10) {
+            return FLV_ERROR_EOF;
+        }
+        
         /* two bytes offset if VP6 0 */
         offset = (header[4] & 0x01 || !(header[5] & 0x06)) << 1;
         info->video_width  = (header[7 + offset] << 4) - (header[0] >> 4);
         info->video_height = (header[6 + offset] << 4) - (header[0] & 0x0f);
     }
-    return bytes_read;
+    return FLV_OK;
 }
 
 /*
     compute AVC (H.264) video size (experimental)
 */
-static size_t compute_avc_size(FILE * flv_in, flv_info * info, uint32 body_length) {
+static int compute_avc_size(flv_stream * flv_in, flv_info * info, uint32 body_length) {
     return read_avc_resolution(flv_in, body_length, &(info->video_width), &(info->video_height));
 }
 
 /*
     compute video width and height from the first video frame
 */
-static size_t compute_video_size(FILE * flv_in, flv_info * info, uint32 body_length) {
-    size_t bytes_read = 0;
+static int compute_video_size(flv_stream * flv_in, flv_info * info, uint32 body_length) {
     switch (info->video_codec) {
         case FLV_VIDEO_TAG_CODEC_SORENSEN_H263:
-            bytes_read = compute_h263_size(flv_in, info, body_length);
-            break;
+            return compute_h263_size(flv_in, info, body_length);
         case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO:
         case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2:
-            bytes_read = compute_screen_size(flv_in, info, body_length);
-            break;
+            return compute_screen_size(flv_in, info, body_length);
         case FLV_VIDEO_TAG_CODEC_ON2_VP6:
-            bytes_read = compute_vp6_size(flv_in, info, body_length);
-            break;
+            return compute_vp6_size(flv_in, info, body_length);
         case FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA:
-            bytes_read = compute_vp6_alpha_size(flv_in, info, body_length);
-            break;
+            return compute_vp6_alpha_size(flv_in, info, body_length);
         case FLV_VIDEO_TAG_CODEC_AVC:
-            bytes_read = compute_avc_size(flv_in, info, body_length);
+            return compute_avc_size(flv_in, info, body_length);
+        default:
+            return FLV_OK;
     }
-    return bytes_read;
 }
 
 /*
@@ -244,7 +234,7 @@ static size_t compute_video_size(FILE * flv_in, flv_info * info, uint32 body_len
     - real audio data size, duration to compute audio data rate
     - video headers to find width and height. (depends on the encoding)
 */
-static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opts) {
+static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts) {
     uint32 prev_timestamp_video;
     uint32 prev_timestamp_audio;
     uint32 prev_timestamp_meta;
@@ -253,6 +243,8 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
     uint8 timestamp_extended_meta;
     uint8 have_video_size;
     uint32 tag_number;
+    int result;
+    flv_tag ft;
 
     info->have_video = 0;
     info->have_audio = 0;
@@ -295,7 +287,7 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
         read FLV header
     */
 
-    if (fread(&(info->header), sizeof(flv_header), 1, flv_in) < 1) {
+    if (flv_read_header(flv_in, &(info->header)) != FLV_OK) {
         return ERROR_NO_FLV;
     }
 
@@ -309,9 +301,8 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
     amf_object_add(info->keyframes, "times", info->times);
     amf_object_add(info->keyframes, "filepositions", info->filepositions);
 
-    /* skip first empty previous tag size */
-    lfs_fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
-    info->total_prev_tags_size += sizeof(uint32_be);
+    /* first empty previous tag size */
+    info->total_prev_tags_size = sizeof(uint32_be);
 
     /* extended timestamp initialization */
     prev_timestamp_video = 0;
@@ -323,17 +314,12 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
     tag_number = 0;
     have_video_size = 0;
 
-    while (!feof(flv_in)) {
-        flv_tag ft;
+    while (flv_read_tag(flv_in, &ft) == FLV_OK) {
         file_offset_t offset;
         uint32 body_length;
         uint32 timestamp;
 
-        offset = lfs_ftell(flv_in);
-        if (fread(&ft, sizeof(flv_tag), 1, flv_in) == 0) {
-            break;
-        }
-
+        offset = flv_get_current_tag_offset(flv_in);
         body_length = uint24_be_to_uint32(ft.body_length);
         timestamp = flv_tag_get_timestamp(ft);
 
@@ -380,8 +366,8 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
         }
 
         if (ft.type == FLV_TAG_TYPE_META) {
-            amf_data * tag_name = amf_data_file_read(flv_in);
-            if (tag_name == NULL) {
+            amf_data *tag_name, *data;
+            if (flv_read_metadata(flv_in, &tag_name, &data) != FLV_OK) {
                 return ERROR_EOF;
             }
 
@@ -392,40 +378,38 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
 
                 /* get info only on the first onMetaData we read */
                 if (info->on_metadata_size == 0 && !strncmp(name, "onMetaData", len)) {
-                    info->on_metadata_size = body_length + sizeof(flv_tag) + sizeof(uint32_be);
+                    info->on_metadata_size = body_length + FLV_TAG_SIZE + sizeof(uint32_be);
                     info->on_metadata_offset = offset;
 
                     /* if we want to preserve existing metadata, then extract them */
                     if (opts->preserve_metadata == 1) {
-                        info->original_on_metadata = amf_data_file_read(flv_in);
-                        if (info->original_on_metadata == NULL) {
-                            amf_data_free(tag_name);
-                            return ERROR_EOF;
-                        }
-                        body_length -= (uint32)amf_data_size(info->original_on_metadata);
+                        info->original_on_metadata = data;
+                    }
+                    else {
+                        amf_data_free(data);
                     }
                 }
                 else {
                     if (!strncmp(name, "onLastSecond", len)) {
                         info->have_on_last_second = 1;
                     }
-                    info->meta_data_size += (body_length + sizeof(flv_tag));
+                    info->meta_data_size += (body_length + FLV_TAG_SIZE);
                     info->total_prev_tags_size += sizeof(uint32_be);
+                    amf_data_free(data);
                 }
             }
             else {
-                info->meta_data_size += (body_length + sizeof(flv_tag));
+                info->meta_data_size += (body_length + FLV_TAG_SIZE);
                 info->total_prev_tags_size += sizeof(uint32_be);
+                amf_data_free(data);
             }
-
-            body_length -= (uint32)amf_data_size(tag_name);
             amf_data_free(tag_name);
         }
         else if (ft.type == FLV_TAG_TYPE_VIDEO) {
             flv_video_tag vt;
             size_t bytes_read = 0;
 
-            if (fread(&vt, sizeof(flv_video_tag), 1, flv_in) == 0) {
+            if (flv_read_video_tag(flv_in, &vt) != FLV_OK) {
                 return ERROR_EOF;
             }
 
@@ -438,8 +422,12 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
             if (have_video_size != 1
             && flv_video_tag_frame_type(vt) == FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
                 /* read first video frame to get critical info */
-                bytes_read = compute_video_size(flv_in, info, body_length - sizeof(flv_video_tag));
-                if (bytes_read > 0 && info->video_width > 0 && info->video_width > 0) {
+                result = compute_video_size(flv_in, info, body_length - sizeof(flv_video_tag));
+                if (result != FLV_OK) {
+                    return result;
+                }
+
+                if (info->video_width > 0 && info->video_width > 0) {
                     have_video_size = 1;
                 }
                 /* if we cannot fetch that information from the first tag, we'll try
@@ -472,16 +460,14 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
                 info->video_frame_duration = timestamp;
             }
 
-            info->video_data_size += (body_length + sizeof(flv_tag));
+            info->video_data_size += (body_length + FLV_TAG_SIZE);
             info->real_video_data_size += (body_length - 1);
-
-            body_length -= (uint32)(sizeof(flv_video_tag) + bytes_read);
             info->total_prev_tags_size += sizeof(uint32_be);
         }
         else if (ft.type == FLV_TAG_TYPE_AUDIO) {
             flv_audio_tag at;
             
-            if (fread(&at, sizeof(flv_audio_tag), 1, flv_in) == 0) {
+            if (flv_read_audio_tag(flv_in, &at) != FLV_OK) {
                 return ERROR_EOF;
             }
             
@@ -498,10 +484,8 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
                 info->audio_frame_duration = timestamp;
             }
 
-            info->audio_data_size += (body_length + sizeof(flv_tag));
+            info->audio_data_size += (body_length + FLV_TAG_SIZE);
             info->real_audio_data_size += (body_length - 1);
-
-            body_length -= sizeof(flv_audio_tag);
             info->total_prev_tags_size += sizeof(uint32_be);
         }
         else {
@@ -519,10 +503,6 @@ static int get_flv_info(FILE * flv_in, flv_info * info, const flvmeta_opts * opt
                 return ERROR_INVALID_TAG;
             }
         }
-
-        body_length += sizeof(uint32_be); /* skip tag size */
-        lfs_fseek(flv_in, body_length, SEEK_CUR);
-
         ++tag_number;
     }
 
@@ -668,7 +648,7 @@ static void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta
     /*
         When we know the final size, we can recompute te offsets for the filepositions, and the final datasize.
     */
-    new_on_metadata_size = sizeof(flv_tag) + sizeof(uint32_be) +
+    new_on_metadata_size = FLV_TAG_SIZE + sizeof(uint32_be) +
         (uint32)(amf_data_size(meta->on_metadata_name) + amf_data_size(meta->on_metadata));
     on_last_second_size = (uint32)(amf_data_size(meta->on_last_second_name) + amf_data_size(meta->on_last_second));
 
@@ -681,7 +661,7 @@ static void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta
 
         /* after the onLastSecond event we need to take in account the tag size */
         if (!info->have_on_last_second && (duration - timestamp) <= 1.0) {
-            offset += (sizeof(flv_tag) + on_last_second_size + sizeof(uint32_be));
+            offset += (FLV_TAG_SIZE + on_last_second_size + sizeof(uint32_be));
         }
 
         amf_number_set_value(amf_filepos, offset);
@@ -695,10 +675,10 @@ static void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta
     }
     amf_number_set_value(amf_total_data_size, (number64)total_data_size);
 
-    total_filesize = sizeof(flv_header) + total_data_size + info->total_prev_tags_size;
+    total_filesize = FLV_HEADER_SIZE + total_data_size + info->total_prev_tags_size;
     if (!info->have_on_last_second) {
         /* if we have to add onLastSecond, we must count the header and new prevTagSize we add */
-        total_filesize += (sizeof(flv_tag) + sizeof(uint32_be));
+        total_filesize += (FLV_TAG_SIZE + sizeof(uint32_be));
     }
     amf_number_set_value(amf_total_filesize, (number64)total_filesize);
 }
@@ -706,7 +686,7 @@ static void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta
 /*
     Write the flv output file
 */
-static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const flv_metadata * meta, const flvmeta_opts * opts) {
+static int write_flv(flv_stream * flv_in, FILE * flv_out, const flv_info * info, const flv_metadata * meta, const flvmeta_opts * opts) {
     uint32_be size;
     uint32 on_metadata_name_size;
     uint32 on_metadata_size;
@@ -718,7 +698,7 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
     uint8 timestamp_extended_meta;
     byte * copy_buffer;
     uint32 duration;
-    flv_tag omft;
+    flv_tag ft, omft;
     int have_on_last_second;
 
     if (opts->verbose) {
@@ -726,7 +706,7 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
     }
 
     /* write the flv header */
-    if (fwrite(&info->header, sizeof(flv_header), 1, flv_out) != 1) {
+    if (flv_write_header(flv_out, &info->header) != 1) {
         return ERROR_WRITE;
     }
 
@@ -747,15 +727,14 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
     
     /* write the computed onMetaData tag first if it doesn't exist in the input file */
     if (info->on_metadata_size == 0) {
-        if (fwrite(&omft, sizeof(flv_tag), 1, flv_out) != 1 ||
-            amf_data_file_write(meta->on_metadata_name, flv_out) < on_metadata_name_size ||
-            amf_data_file_write(meta->on_metadata, flv_out) < on_metadata_size
-        ) {
+        if (flv_write_tag(flv_out, &omft) != 1
+        || amf_data_file_write(meta->on_metadata_name, flv_out) < on_metadata_name_size
+        || amf_data_file_write(meta->on_metadata, flv_out) < on_metadata_size) {
             return ERROR_WRITE;
         }
 
         /* previous tag size */
-        size = swap_uint32(sizeof(flv_tag) + on_metadata_name_size + on_metadata_size);
+        size = swap_uint32(FLV_TAG_SIZE + on_metadata_name_size + on_metadata_size);
         if (fwrite(&size, sizeof(uint32_be), 1, flv_out) != 1) {
             return ERROR_WRITE;
         }
@@ -778,23 +757,17 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
     timestamp_extended_meta = 0;
 
     /* copy the tags verbatim */
-    lfs_fseek(flv_in, sizeof(flv_header)+sizeof(uint32_be), SEEK_SET);
+    flv_reset(flv_in);
 
-    copy_buffer = (byte *)malloc(info->biggest_tag_body_size + sizeof(flv_tag));
+    copy_buffer = (byte *)malloc(info->biggest_tag_body_size + FLV_TAG_SIZE);
     have_on_last_second = 0;
-    while (!feof(flv_in)) {
+    while (flv_read_tag(flv_in, &ft) == FLV_OK) {
         file_offset_t offset;
         size_t read_body;
         uint32 body_length;
         uint32 timestamp;
-        flv_tag ft;
 
-        offset = ftell(flv_in);
-
-        if (fread(&ft, sizeof(ft), 1, flv_in) == 0) {
-            break;
-        }
-
+        offset = flv_get_current_tag_offset(flv_in);
         body_length = uint24_be_to_uint32(ft.body_length);
         timestamp = flv_tag_get_timestamp(ft);
 
@@ -834,22 +807,19 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
         /* if we're at the offset of the first onMetaData tag in the input file,
            we write the one we computed instead, discarding the old one */
         if (info->on_metadata_offset == offset) {
-            if (fwrite(&omft, sizeof(flv_tag), 1, flv_out) != 1 ||
-                amf_data_file_write(meta->on_metadata_name, flv_out) < on_metadata_name_size ||
-                amf_data_file_write(meta->on_metadata, flv_out) < on_metadata_size
-            ) {
+            if (flv_write_tag(flv_out, &omft) != 1
+            || amf_data_file_write(meta->on_metadata_name, flv_out) < on_metadata_name_size
+            || amf_data_file_write(meta->on_metadata, flv_out) < on_metadata_size) {
                 free(copy_buffer);
                 return ERROR_WRITE;
             }
 
             /* previous tag size */
-            size = swap_uint32(sizeof(flv_tag) + on_metadata_name_size + on_metadata_size);
+            size = swap_uint32(FLV_TAG_SIZE + on_metadata_name_size + on_metadata_size);
             if (fwrite(&size, sizeof(uint32_be), 1, flv_out) != 1) {
                 free(copy_buffer);
                 return ERROR_WRITE;
             }
-
-            lfs_fseek(flv_in, body_length + sizeof(uint32_be), SEEK_CUR);
         }
         else {
             /* insert an onLastSecond metadata tag */
@@ -862,16 +832,15 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
                 tag.timestamp = ft.timestamp;
                 tag.timestamp_extended = ft.timestamp_extended;
                 tag.stream_id = uint32_to_uint24_be(0);
-                if (fwrite(&tag, sizeof(flv_tag), 1, flv_out) != 1 ||
-                    amf_data_file_write(meta->on_last_second_name, flv_out) < on_last_second_name_size ||
-                    amf_data_file_write(meta->on_last_second, flv_out) < on_last_second_size
-                ) {
+                if (flv_write_tag(flv_out, &tag) != 1
+                || amf_data_file_write(meta->on_last_second_name, flv_out) < on_last_second_name_size
+                || amf_data_file_write(meta->on_last_second, flv_out) < on_last_second_size) {
                     free(copy_buffer);
                     return ERROR_WRITE;
                 }
 
                 /* previous tag size */
-                size = swap_uint32(sizeof(flv_tag) + on_last_second_name_size + on_last_second_size);
+                size = swap_uint32(FLV_TAG_SIZE + on_last_second_name_size + on_last_second_size);
                 if (fwrite(&size, sizeof(uint32_be), 1, flv_out) != 1) {
                     free(copy_buffer);
                     return ERROR_WRITE;
@@ -881,7 +850,7 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
             }
 
             /* copy the tag verbatim */
-            read_body = fread(copy_buffer, 1, body_length, flv_in);
+            read_body = flv_read_tag_body(flv_in, copy_buffer, body_length);
             if (read_body < body_length) {
                 /* we have reached end of file on an incomplete tag */
                 if (opts->error_handling == FLVMETA_EXIT_ON_ERROR) {
@@ -896,27 +865,26 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
                 }
                 else if (opts->error_handling == FLVMETA_IGNORE_ERRORS) {
                     /* just copy the whole tag and exit */
-                    lfs_fseek(flv_in, offset, SEEK_SET);
-                    read_body = fread(copy_buffer, 1, sizeof(flv_tag) + read_body, flv_in);
+                    flv_write_tag(flv_out, &ft);
                     fwrite(copy_buffer, 1, read_body, flv_out);
                     free(copy_buffer);
+                    size = swap_uint32(FLV_TAG_SIZE + read_body);
+                    fwrite(&size, sizeof(uint32_be), 1, flv_out);
                     return OK;
                 }
             }
-            if (fwrite(&ft, sizeof(flv_tag), 1, flv_out) != 1
+            if (flv_write_tag(flv_out, &ft) != 1
             || fwrite(copy_buffer, 1, body_length, flv_out) < body_length) {
                 free(copy_buffer);
                 return ERROR_WRITE;
             }
 
             /* previous tag length */
-            size = swap_uint32(sizeof(flv_tag) + body_length);
+            size = swap_uint32(FLV_TAG_SIZE + body_length);
             if (fwrite(&size, sizeof(uint32_be), 1, flv_out) != 1) {
                 free(copy_buffer);
                 return ERROR_WRITE;
             }
-
-            lfs_fseek(flv_in, sizeof(uint32_be), SEEK_CUR);
         }        
     }
 
@@ -931,7 +899,7 @@ static int write_flv(FILE * flv_in, FILE * flv_out, const flv_info * info, const
 /* copy a FLV file while adding onMetaData and optionnally onLastSecond events */
 int update_metadata(const flvmeta_opts * opts) {
     int res;
-    FILE * flv_in;
+    flv_stream * flv_in;
     FILE * flv_out;
     flv_info info;
     flv_metadata meta;
@@ -940,7 +908,7 @@ int update_metadata(const flvmeta_opts * opts) {
         return ERROR_SAME_FILE;
     }
     
-    flv_in = fopen(opts->input_file, "rb");
+    flv_in = flv_open(opts->input_file);
     if (flv_in == NULL) {
         return ERROR_OPEN_READ;
     }
@@ -950,22 +918,19 @@ int update_metadata(const flvmeta_opts * opts) {
     */
     res = get_flv_info(flv_in, &info, opts);
     if (res != OK) {
-        fclose(flv_in);
+        flv_close(flv_in);
         amf_data_free(info.keyframes);
         return res;
     }
 
     compute_metadata(&info, &meta, opts);
 
-    /* debug */
-    /* amf_data_dump(stderr, meta.on_metadata, 0); */
-    
     /*
         open output file
     */
     flv_out = fopen(opts->output_file, "wb");
     if (flv_out == NULL) {
-        fclose(flv_in);
+        flv_close(flv_in);
         amf_data_free(meta.on_last_second_name);
         amf_data_free(meta.on_last_second);
         amf_data_free(meta.on_metadata_name);
@@ -979,7 +944,7 @@ int update_metadata(const flvmeta_opts * opts) {
     */
     res = write_flv(flv_in, flv_out, &info, &meta, opts);
 
-    fclose(flv_in);
+    flv_close(flv_in);
     fclose(flv_out);
     amf_data_free(meta.on_last_second_name);
     amf_data_free(meta.on_last_second);

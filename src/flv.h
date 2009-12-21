@@ -37,9 +37,9 @@
 #define FLV_ERROR_OPEN_READ     1
 #define FLV_ERROR_NO_FLV        2
 #define FLV_ERROR_EOF           3
+#define FLV_ERROR_MEMORY        4
 
 /* flv file format structure and definitions */
-#pragma pack(push, 1)
 
 /* FLV file header */
 #define FLV_SIGNATURE       "FLV"
@@ -133,8 +133,6 @@ typedef byte flv_video_tag;
 #define flv_video_tag_codec_id(tag)     (((tag) & 0x0F) >> 0)
 #define flv_video_tag_frame_type(tag)   (((tag) & 0xF0) >> 4)
 
-#pragma pack(pop)
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -164,9 +162,14 @@ int flv_read_tag(flv_stream * stream, flv_tag * tag);
 int flv_read_audio_tag(flv_stream * stream, flv_audio_tag * tag);
 int flv_read_video_tag(flv_stream * stream, flv_video_tag * tag);
 int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data);
-size_t flv_read_tag_body(flv_stream * stream, byte * buffer, size_t buffer_size);
+size_t flv_read_tag_body(flv_stream * stream, void * buffer, size_t buffer_size);
+file_offset_t flv_get_current_tag_offset(flv_stream * stream);
 void flv_reset(flv_stream * stream);
 void flv_close(flv_stream * stream);
+
+/* FLV stdio writing helper functions */
+size_t flv_write_header(FILE * out, const flv_header * header);
+size_t flv_write_tag(FILE * out, const flv_tag * tag);
 
 /* FLV event based parser */
 typedef struct __flv_parser {

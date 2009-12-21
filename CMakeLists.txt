@@ -65,6 +65,8 @@ if(MSVC)
 endif(MSVC)
 
 # installation
+set(CPACK_PACKAGE_VENDOR "Marc Noirot <marc.noirot@gmail.com>")
+
 if(WIN32)
   set(CPACK_PACKAGE_FILE_NAME "flvmeta-${PACKAGE_VERSION}-win32")
   set(CPACK_GENERATOR ZIP)

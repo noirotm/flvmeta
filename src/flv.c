@@ -218,7 +218,7 @@ int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
     return FLV_OK;
 }
 
-size_t flv_read_tag_body(flv_stream * stream, byte * buffer, size_t buffer_size) {
+size_t flv_read_tag_body(flv_stream * stream, void * buffer, size_t buffer_size) {
     size_t bytes_number;
 
     if (stream == NULL
@@ -240,6 +240,10 @@ size_t flv_read_tag_body(flv_stream * stream, byte * buffer, size_t buffer_size)
     return bytes_number;
 }
 
+file_offset_t flv_get_current_tag_offset(flv_stream * stream) {
+    return (stream != NULL) ? stream->current_tag_offset : 0;
+}
+
 void flv_reset(flv_stream * stream) {
     /* go back to beginning of file */
     if (stream != NULL && stream->flvin != NULL) {
@@ -257,6 +261,32 @@ void flv_close(flv_stream * stream) {
             fclose(stream->flvin);
         }
         free(stream);
+    }
+}
+
+/* FLV stdio writing helper functions */
+size_t flv_write_header(FILE * out, const flv_header * header) {
+    if (fwrite(&header->signature, sizeof(header->signature), 1, out) != 0
+    && fwrite(&header->version, sizeof(header->version), 1, out) != 0
+    && fwrite(&header->flags, sizeof(header->flags), 1, out) != 0
+    && fwrite(&header->offset, sizeof(header->offset), 1, out) != 0) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
+size_t flv_write_tag(FILE * out, const flv_tag * tag) {
+    if (fwrite(&tag->type, sizeof(tag->type), 1, out) != 0
+    && fwrite(&tag->body_length, sizeof(tag->body_length), 1, out) != 0
+    && fwrite(&tag->timestamp, sizeof(tag->timestamp), 1, out) != 0
+    && fwrite(&tag->timestamp_extended, sizeof(tag->timestamp_extended), 1, out) != 0
+    && fwrite(&tag->stream_id, sizeof(tag->stream_id), 1, out) != 0) {
+        return 1;
+    }
+    else {
+        return 0;
     }
 }
 

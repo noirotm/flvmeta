@@ -39,10 +39,11 @@
 #define ERROR_OPEN_READ     FLV_ERROR_OPEN_READ
 #define ERROR_NO_FLV        FLV_ERROR_NO_FLV
 #define ERROR_EOF           FLV_ERROR_EOF
-#define ERROR_OPEN_WRITE    4
-#define ERROR_INVALID_TAG   5
-#define ERROR_WRITE         6
-#define ERROR_SAME_FILE     7
+#define ERROR_MEMORY        FLV_ERROR_MEMORY
+#define ERROR_OPEN_WRITE    5
+#define ERROR_INVALID_TAG   6
+#define ERROR_WRITE         7
+#define ERROR_SAME_FILE     8
 
 /* commands */
 #define FLVMETA_DEFAULT_COMMAND     0

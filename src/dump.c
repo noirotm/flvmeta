@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define FLVMETA_DUMP_STOP_OK 5
+#define FLVMETA_DUMP_STOP_OK 10
 
 /* does the given string have XML tag markers ? */
 static int has_xml_markers(const char * str, int len) {

@@ -35,12 +35,12 @@ typedef struct __bit_buffer {
     uint8 read_bits;
 } bit_buffer;
 
-void skip_bits(bit_buffer * bb, size_t nbits) {
+static void skip_bits(bit_buffer * bb, size_t nbits) {
     bb->current = bb->current + ((nbits + bb->read_bits) / 8);
     bb->read_bits = (uint8)((bb->read_bits + nbits) % 8);
 }
 
-uint8 get_bit(bit_buffer * bb) {
+static uint8 get_bit(bit_buffer * bb) {
     uint8 ret;
     ret = (*(bb->current) >> (7 - bb->read_bits)) & 0x1;
     if (bb->read_bits == 7) {
@@ -53,7 +53,7 @@ uint8 get_bit(bit_buffer * bb) {
     return ret;
 }
 
-uint32 get_bits(bit_buffer * bb, size_t nbits) {
+static uint32 get_bits(bit_buffer * bb, size_t nbits) {
     uint32 i, ret;
     ret = 0;
     for (i = 0; i < nbits; i++) {
@@ -62,7 +62,7 @@ uint32 get_bits(bit_buffer * bb, size_t nbits) {
     return ret;
 }
 
-uint32 exp_golomb_ue(bit_buffer * bb) {
+static uint32 exp_golomb_ue(bit_buffer * bb) {
     uint8 bit, significant_bits;
     significant_bits = 0;
     bit = get_bit(bb);
@@ -73,7 +73,7 @@ uint32 exp_golomb_ue(bit_buffer * bb) {
     return (1 << significant_bits) + get_bits(bb, significant_bits) - 1;
 }
 
-sint32 exp_golomb_se(bit_buffer * bb) {
+static sint32 exp_golomb_se(bit_buffer * bb) {
     sint32 ret;
     ret = exp_golomb_ue(bb);
     if ((ret & 0x1) == 0) {
@@ -85,7 +85,6 @@ sint32 exp_golomb_se(bit_buffer * bb) {
 }
 
 /* AVC type definitions */
-#pragma pack(push, 1)
 
 #define AVC_SEQUENCE_HEADER 0
 #define AVC_NALU            1
@@ -100,7 +99,20 @@ typedef struct __AVCDecoderConfigurationRecord {
     uint8 numOfSequenceParameterSets;
 } AVCDecoderConfigurationRecord;
 
-#pragma pack(pop)
+int read_avc_decoder_configuration_record(flv_stream * f, AVCDecoderConfigurationRecord * adcr) {
+    if (flv_read_tag_body(f, &adcr->configurationVersion, 1) == 1
+    && flv_read_tag_body(f, &adcr->configurationVersion, 1) == 1
+    && flv_read_tag_body(f, &adcr->configurationVersion, 1) == 1
+    && flv_read_tag_body(f, &adcr->configurationVersion, 1) == 1
+    && flv_read_tag_body(f, &adcr->configurationVersion, 1) == 1
+    && flv_read_tag_body(f, &adcr->configurationVersion, 1) == 1) {
+        return FLV_OK;
+    }
+    else {
+        return FLV_ERROR_EOF;
+    }
+}
+
 
 static void parse_scaling_list(uint32 size, bit_buffer * bb) {
     uint32 last_scale, next_scale, i;
@@ -225,8 +237,7 @@ static void parse_sps(byte * sps, size_t sps_size, uint32 * width, uint32 * heig
     Tries to read the resolution of the current video packet.
     We assume to be at the first byte of the video data.
 */
-size_t read_avc_resolution(FILE * f, uint32 body_length, uint32 * width, uint32 * height) {
-    size_t bytes_read;
+int read_avc_resolution(flv_stream * f, uint32 body_length, uint32 * width, uint32 * height) {
     byte avc_packet_type;
     uint24 composition_time;
     AVCDecoderConfigurationRecord adcr;
@@ -235,55 +246,53 @@ size_t read_avc_resolution(FILE * f, uint32 body_length, uint32 * width, uint32 
 
     /* make sure we have enough bytes to read in the current tag */
     if (body_length < sizeof(byte) + sizeof(uint24) + sizeof(AVCDecoderConfigurationRecord)) {
-        return 0;
+        return FLV_OK;
     }
 
     /* determine whether we're reading an AVCDecoderConfigurationRecord */
-    bytes_read = fread(&avc_packet_type, 1, 1, f);
-    if (bytes_read == 0 || avc_packet_type != AVC_SEQUENCE_HEADER) {
-        return bytes_read;
+    if (flv_read_tag_body(f, &avc_packet_type, 1) < 1) {
+        return FLV_ERROR_EOF;
+    }
+    if (avc_packet_type != AVC_SEQUENCE_HEADER) {
+        return FLV_OK;
     }
 
     /* read the composition time */
-    if (fread(&composition_time, sizeof(uint24), 1, f) == 0) {
-        return bytes_read;
+    if (flv_read_tag_body(f, &composition_time, sizeof(uint24)) < sizeof(uint24)) {
+        return FLV_ERROR_EOF;
     }
-    bytes_read += sizeof(uint24);
 
     /* we need to read an AVCDecoderConfigurationRecord */
-    if (fread(&adcr, sizeof(AVCDecoderConfigurationRecord), 1, f) == 0) {
-        return bytes_read;
+    if (read_avc_decoder_configuration_record(f, &adcr) == FLV_ERROR_EOF) {
+        return FLV_ERROR_EOF;
     }
-    bytes_read += sizeof(AVCDecoderConfigurationRecord);
 
     /* number of SequenceParameterSets */
     if ((adcr.numOfSequenceParameterSets & 0x1F) == 0) {
         /* no SPS, return */
-        return bytes_read;
+        return FLV_OK;
     }
 
     /** read the first SequenceParameterSet found */
     /* SPS size */
-    if (fread(&sps_size, sizeof(uint16), 1, f) == 0) {
-        return bytes_read;
+    if (flv_read_tag_body(f, &sps_size, sizeof(uint16)) < sizeof(uint16)) {
+        return FLV_ERROR_EOF;
     }
-    bytes_read += sizeof(uint16);
     sps_size = swap_uint16(sps_size);
     
     /* read the SPS entirely */
     sps_buffer = (byte *) malloc((size_t)sps_size);
     if (sps_buffer == NULL) {
-        return bytes_read;
+        return FLV_ERROR_MEMORY;
     }
-    if (fread(sps_buffer, (size_t)sps_size, 1, f) == 0) {
+    if (flv_read_tag_body(f, sps_buffer, (size_t)sps_size) < (size_t)sps_size) {
         free(sps_buffer);
-        return bytes_read;
+        return FLV_ERROR_EOF;
     }
-    bytes_read += (size_t)sps_size;
 
     /* parse SPS to determine video resolution */
     parse_sps(sps_buffer, (size_t)sps_size, width, height);
     
     free(sps_buffer);
-    return bytes_read;
+    return FLV_OK;
 }
