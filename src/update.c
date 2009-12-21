@@ -26,6 +26,7 @@
 #include "amf.h"
 #include "avc.h"
 #include "update.h"
+#include "util.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -407,7 +408,6 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
         }
         else if (ft.type == FLV_TAG_TYPE_VIDEO) {
             flv_video_tag vt;
-            size_t bytes_read = 0;
 
             if (flv_read_video_tag(flv_in, &vt) != FLV_OK) {
                 return ERROR_EOF;
@@ -904,7 +904,7 @@ int update_metadata(const flvmeta_opts * opts) {
     flv_info info;
     flv_metadata meta;
 
-    if (opts->output_file == NULL || !strcmp(opts->input_file, opts->output_file)) {
+    if (opts->output_file == NULL || same_file(opts->input_file, opts->output_file)) {
         return ERROR_SAME_FILE;
     }
     

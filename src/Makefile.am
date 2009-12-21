@@ -17,7 +17,9 @@ flvmeta_SOURCES = amf.c \
                   types.c \
                   types.h \
                   update.c \
-                  update.h
+                  update.h \
+                  util.c \
+                  util.h
 
 EXTRA_DIST =      CMakeLists.txt \
                   compat/gettext.h \

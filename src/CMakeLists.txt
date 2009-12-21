@@ -15,6 +15,8 @@ set(flvmeta_src
   types.h
   update.c
   update.h
+  util.c
+  util.h
   ${CMAKE_BINARY_DIR}/config.h
 )
 
