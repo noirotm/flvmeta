@@ -81,6 +81,7 @@ typedef struct __flv_metadata {
 */
 static int compute_h263_size(flv_stream * flv_in, flv_info * info, uint32 body_length) {
     byte header[9];
+    uint24_be psc_be;
     uint32 psc;
 
     /* make sure we have enough bytes to read in the current tag */
@@ -88,8 +89,10 @@ static int compute_h263_size(flv_stream * flv_in, flv_info * info, uint32 body_l
         if (flv_read_tag_body(flv_in, header, 9) < 9) {
             return FLV_ERROR_EOF;
         }
-
-        psc = uint24_be_to_uint32(*(uint24_be *)(header)) >> 7;
+        psc_be.b[0] = header[0];
+        psc_be.b[1] = header[1];
+        psc_be.b[2] = header[2];
+        psc = uint24_be_to_uint32(psc_be) >> 7;
         if (psc == 1) {
             uint32 psize = ((header[3] & 0x03) << 1) + ((header[4] >> 7) & 0x01);
             switch (psize) {
