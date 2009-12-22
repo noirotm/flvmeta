@@ -58,10 +58,10 @@ int same_file(const char * file1, const char * file2) {
 #else /* WIN32 */
     /* if not in Windows, we must stat each file and compare inode numbers */
     struct stat s1, s2;
-    if (stat(file1, &s1) == 0) {
+    if (stat(file1, &s1) != 0) {
         return 0;
     }
-    if (stat(file2, &s2) == 0) {
+    if (stat(file2, &s2) != 0) {
         return 0;
     }
     return (s1.st_dev == s2.st_dev && s1.st_ino == s2.st_ino);
