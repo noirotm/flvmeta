@@ -1,5 +1,5 @@
 /*
-    $Id: util.h 144 2009-12-10 10:55:31Z marc.noirot $
+    $Id: util.c 144 2009-12-10 10:55:31Z marc.noirot $
 
     FLV Metadata updater
 
@@ -23,6 +23,7 @@
 */
 
 #ifdef WIN32
+# define WIN32_LEAN_AND_MEAN
 # include <windows.h>
 #else /* WIN32 */
 # include <sys/types.h>
@@ -56,7 +57,7 @@ int same_file(const char * file1, const char * file2) {
         && info1.nFileIndexHigh == info2.nFileIndexHigh
         && info1.nFileIndexLow == info2.nFileIndexLow);
 #else /* WIN32 */
-    /* if not in Windows, we must stat each file and compare inode numbers */
+    /* if not in Windows, we must stat each file and compare device and inode numbers */
     struct stat s1, s2;
     if (stat(file1, &s1) != 0) {
         return 0;

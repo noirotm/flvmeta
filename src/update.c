@@ -21,6 +21,10 @@
     along with FLVMeta; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+
 #include "flvmeta.h"
 #include "flv.h"
 #include "amf.h"
@@ -28,9 +32,14 @@
 #include "update.h"
 #include "util.h"
 
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
+#define COPY_BUFFER_SIZE 4096
+
+#ifdef WIN32
+# include "win32_tmpfile.h"
+# define flvmeta_tmpfile win32_tmpfile
+#else /* WIN32 */
+# define flvmeta_tmpfile tmpfile
+#endif /* WIN32 */
 
 typedef struct __flv_info {
     flv_header header;
@@ -901,14 +910,19 @@ static int write_flv(flv_stream * flv_in, FILE * flv_out, const flv_info * info,
 
 /* copy a FLV file while adding onMetaData and optionnally onLastSecond events */
 int update_metadata(const flvmeta_opts * opts) {
-    int res;
+    int res, in_place_update;
     flv_stream * flv_in;
     FILE * flv_out;
     flv_info info;
     flv_metadata meta;
 
-    if (opts->output_file == NULL || same_file(opts->input_file, opts->output_file)) {
-        return ERROR_SAME_FILE;
+    /* detect whether we have to overwrite the input file */
+    if (same_file(opts->input_file, opts->output_file)) {
+        in_place_update = 1;
+        flv_out = flvmeta_tmpfile();
+    }
+    else {
+        in_place_update = 0;
     }
     
     flv_in = flv_open(opts->input_file);
@@ -931,7 +945,10 @@ int update_metadata(const flvmeta_opts * opts) {
     /*
         open output file
     */
-    flv_out = fopen(opts->output_file, "wb");
+    if (in_place_update == 0) {
+        flv_out = fopen(opts->output_file, "wb");
+    }
+
     if (flv_out == NULL) {
         flv_close(flv_in);
         amf_data_free(meta.on_last_second_name);
@@ -948,11 +965,45 @@ int update_metadata(const flvmeta_opts * opts) {
     res = write_flv(flv_in, flv_out, &info, &meta, opts);
 
     flv_close(flv_in);
-    fclose(flv_out);
     amf_data_free(meta.on_last_second_name);
     amf_data_free(meta.on_last_second);
     amf_data_free(meta.on_metadata_name);
     amf_data_free(meta.on_metadata);
     amf_data_free(info.original_on_metadata);
+
+    /* copy data into the original file if needed */
+    if (in_place_update == 1) {
+        FILE * flv_out_real;
+        size_t bytes_read;
+        byte copy_buffer[COPY_BUFFER_SIZE];
+
+        flv_out_real = fopen(opts->output_file, "wb");
+        if (flv_in == NULL) {
+            return ERROR_OPEN_WRITE;
+        }
+
+        /* copy temporary file contents into the final file */
+        lfs_fseek(flv_out, 0, SEEK_SET);
+        while (!feof(flv_out)) {
+            bytes_read = fread(copy_buffer, sizeof(byte), COPY_BUFFER_SIZE, flv_out);
+            if (bytes_read > 0) {
+                if (fwrite(copy_buffer, sizeof(byte), bytes_read, flv_out_real) < bytes_read) {
+                    fclose(flv_out_real);
+                    fclose(flv_out);
+                    return ERROR_WRITE;
+                }
+            }
+            else {
+                fclose(flv_out_real);
+                fclose(flv_out);
+                return ERROR_WRITE;
+            }
+        }
+        
+        fclose(flv_out_real);
+    }
+
+    fclose(flv_out);
+    
     return res;
 }

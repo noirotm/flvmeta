@@ -62,19 +62,19 @@ void version(void) {
 }
 
 void usage(const char * name) {
-    fprintf(stderr, "Usage: %s [COMMAND] [OPTIONS] FILE [OUTPUT_FILE]\n", name);
+    fprintf(stderr, "Usage: %s [COMMAND] [OPTIONS] INPUT_FILE [OUTPUT_FILE]\n", name);
     fprintf(stderr, "Try `%s --help' for more information.\n", name);
 }
 
 static void help(const char * name) {
     version();
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Usage: %s [COMMAND] [OPTIONS] FILE [OUTPUT_FILE]\n", name);
+    fprintf(stderr, "\nUsage: %s [COMMAND] [OPTIONS] INPUT_FILE [OUTPUT_FILE]\n", name);
+    fprintf(stderr, "\nIf OUTPUT_FILE is ommitted for commands using it, INPUT_FILE will be overwritten instead.\n");
     fprintf(stderr, "\nCommands:\n");
     fprintf(stderr, "  -D, --dump                dump onMetaData tag (default without output file)\n");
     fprintf(stderr, "  -F, --full-dump           dump all tags\n");
     fprintf(stderr, "  -C, --check               check the validity of FILE\n");
-    fprintf(stderr, "  -U, --update              update computed onMetaData tag from FILE\n");
+    fprintf(stderr, "  -U, --update              update computed onMetaData tag from INPUT_FILE\n");
     fprintf(stderr, "                            into OUTPUT_FILE (default with output file)\n");
     fprintf(stderr, "  -A, --extract-audio       extract raw audio data into OUTPUT_FILE\n");
     fprintf(stderr, "  -E, --extract-video       extract raw video data into OUTPUT_FILE\n");
@@ -245,6 +245,9 @@ int main(int argc, char ** argv) {
     /* output filename */
     if (++optind < argc) {
         options.output_file = argv[optind];
+    }
+    else {
+        options.output_file = options.input_file;
     }
 
     /* determine command if default */

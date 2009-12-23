@@ -25,4 +25,6 @@ EXTRA_DIST =      CMakeLists.txt \
                   compat/gettext.h \
                   compat/getopt.h \
                   compat/getopt.c \
-                  compat/getopt1.c
+                  compat/getopt1.c \
+                  compat/win32_tmpfile.c \
+                  compat/win32_tmpfile.h
