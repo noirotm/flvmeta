@@ -916,15 +916,6 @@ int update_metadata(const flvmeta_opts * opts) {
     flv_info info;
     flv_metadata meta;
 
-    /* detect whether we have to overwrite the input file */
-    if (same_file(opts->input_file, opts->output_file)) {
-        in_place_update = 1;
-        flv_out = flvmeta_tmpfile();
-    }
-    else {
-        in_place_update = 0;
-    }
-    
     flv_in = flv_open(opts->input_file);
     if (flv_in == NULL) {
         return ERROR_OPEN_READ;
@@ -945,7 +936,13 @@ int update_metadata(const flvmeta_opts * opts) {
     /*
         open output file
     */
-    if (in_place_update == 0) {
+    /* detect whether we have to overwrite the input file */
+    if (same_file(opts->input_file, opts->output_file)) {
+        in_place_update = 1;
+        flv_out = flvmeta_tmpfile();
+    }
+    else {
+        in_place_update = 0;
         flv_out = fopen(opts->output_file, "wb");
     }
 
