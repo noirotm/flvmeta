@@ -21,16 +21,16 @@
     along with FLVMeta; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-
 #include "flvmeta.h"
 #include "flv.h"
 #include "amf.h"
 #include "avc.h"
 #include "update.h"
 #include "util.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
 
 #define COPY_BUFFER_SIZE 4096
 
