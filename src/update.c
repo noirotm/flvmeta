@@ -861,11 +861,19 @@ static int write_flv(flv_stream * flv_in, FILE * flv_out, const flv_info * info,
                 have_on_last_second = 1;
             }
 
+            /* if the tag is bigger than expected, it means that
+               it's an unknown tag type. In this case, we only
+               copy as much data as the copy buffer can contain */
+            if (body_length > info->biggest_tag_body_size) {
+                body_length = info->biggest_tag_body_size;
+            }
+
             /* copy the tag verbatim */
             read_body = flv_read_tag_body(flv_in, copy_buffer, body_length);
             if (read_body < body_length) {
                 /* we have reached end of file on an incomplete tag */
                 if (opts->error_handling == FLVMETA_EXIT_ON_ERROR) {
+                    free(copy_buffer);
                     return ERROR_EOF;
                 }
                 else if (opts->error_handling == FLVMETA_FIX_ERRORS) {
@@ -873,6 +881,7 @@ static int write_flv(flv_stream * flv_in, FILE * flv_out, const flv_info * info,
                        even though it will make the whole file length
                        calculation wrong, and the metadata inaccurate */
                     /* TODO : fix it by handling that problem in the first pass */
+                    free(copy_buffer);
                     return OK;
                 }
                 else if (opts->error_handling == FLVMETA_IGNORE_ERRORS) {
