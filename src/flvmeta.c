@@ -3,7 +3,7 @@
 
     FLV Metadata updater
 
-    Copyright (C) 2007, 2008, 2009 Marc Noirot <marc.noirot AT gmail.com>
+    Copyright (C) 2007-2010 Marc Noirot <marc.noirot AT gmail.com>
 
     This file is part of FLVMeta.
 
@@ -73,7 +73,7 @@ static void help(const char * name) {
     fprintf(stderr, "\nCommands:\n");
     fprintf(stderr, "  -D, --dump                dump onMetaData tag (default without output file)\n");
     fprintf(stderr, "  -F, --full-dump           dump all tags\n");
-    fprintf(stderr, "  -C, --check               check the validity of FILE\n");
+    fprintf(stderr, "  -C, --check               check the validity of INPUT_FILE\n");
     fprintf(stderr, "  -U, --update              update computed onMetaData tag from INPUT_FILE\n");
     fprintf(stderr, "                            into OUTPUT_FILE (default with output file)\n");
     fprintf(stderr, "  -A, --extract-audio       extract raw audio data into OUTPUT_FILE\n");
