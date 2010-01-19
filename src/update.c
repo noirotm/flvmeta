@@ -56,10 +56,12 @@ typedef struct __flv_info {
     file_offset_t video_data_size;
     file_offset_t audio_data_size;
     file_offset_t meta_data_size;
+    file_offset_t meta_data_only_size;
     file_offset_t real_video_data_size;
     file_offset_t real_audio_data_size;
     uint32 video_first_timestamp;
     uint32 audio_first_timestamp;
+    uint32 first_timestamp;
     uint8 can_seek_to_end;
     uint8 have_keyframes;
     uint32 last_keyframe_timestamp;
@@ -255,6 +257,7 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
     uint8 timestamp_extended_audio;
     uint8 timestamp_extended_meta;
     uint8 have_video_size;
+    uint8 have_first_timestamp;
     uint32 tag_number;
     int result;
     flv_tag ft;
@@ -272,10 +275,12 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
     info->video_data_size = 0;
     info->audio_data_size = 0;
     info->meta_data_size = 0;
+    info->meta_data_only_size = 0;
     info->real_video_data_size = 0;
     info->real_audio_data_size = 0;
     info->video_first_timestamp = 0;
     info->audio_first_timestamp = 0;
+    info->first_timestamp = 0;
     info->can_seek_to_end = 0;
     info->have_keyframes = 0;
     info->last_keyframe_timestamp = 0;
@@ -316,6 +321,9 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
 
     /* first empty previous tag size */
     info->total_prev_tags_size = sizeof(uint32_be);
+
+    /* first timestamp */
+    have_first_timestamp = 0;
 
     /* extended timestamp initialization */
     prev_timestamp_video = 0;
@@ -368,6 +376,15 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
             }
         }
 
+        /* non-zero starting timestamp handling */
+        if (!have_first_timestamp && ft.type != FLV_TAG_TYPE_META) {
+            info->first_timestamp = timestamp;
+            have_first_timestamp = 1;
+        }
+        if (opts->reset_timestamps && timestamp > 0) {
+            timestamp -= info->first_timestamp;
+        }
+
         /* update the info struct only if the tag is valid */
         if (ft.type == FLV_TAG_TYPE_META
         || ft.type == FLV_TAG_TYPE_AUDIO
@@ -406,12 +423,14 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
                     if (!strncmp(name, "onLastSecond", len)) {
                         info->have_on_last_second = 1;
                     }
+                    info->meta_data_only_size += body_length;
                     info->meta_data_size += (body_length + FLV_TAG_SIZE);
                     info->total_prev_tags_size += sizeof(uint32_be);
                     amf_data_free(data);
                 }
             }
             else {
+                info->meta_data_only_size += body_length;
                 info->meta_data_size += (body_length + FLV_TAG_SIZE);
                 info->total_prev_tags_size += sizeof(uint32_be);
                 amf_data_free(data);
@@ -468,8 +487,8 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
                 we assume all video frames have the same size as the first one:
                 probably bogus but only used in case there's no audio in the file
             */
-            if (info->video_frame_duration == 0 && timestamp != 0) {
-                info->video_frame_duration = timestamp;
+            if (info->video_frame_duration == 0) {
+                info->video_frame_duration = timestamp - info->video_first_timestamp;
             }
 
             info->video_data_size += (body_length + FLV_TAG_SIZE);
@@ -492,8 +511,8 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
                 info->audio_first_timestamp = timestamp;
             }
             /* we assume all audio frames have the same size as the first one */
-            if (info->audio_frame_duration == 0 && timestamp != 0) {
-                info->audio_frame_duration = timestamp;
+            if (info->audio_frame_duration == 0) {
+                info->audio_frame_duration = timestamp - info->audio_first_timestamp;
             }
 
             info->audio_data_size += (body_length + FLV_TAG_SIZE);
@@ -530,7 +549,7 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
 */
 static void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts * opts) {
     uint32 new_on_metadata_size, on_last_second_size;
-    file_offset_t total_data_size, total_filesize;
+    file_offset_t data_size, total_filesize;
     number64 duration, video_data_rate, framerate;
     amf_data * amf_total_filesize;
     amf_data * amf_total_data_size;
@@ -557,10 +576,10 @@ static void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta
     amf_associative_array_add(meta->on_metadata, "hasAudio", amf_boolean_new(info->have_audio));
     
     if (info->have_audio) {
-        duration = (info->last_timestamp + info->audio_frame_duration) / 1000.0;
+        duration = (info->last_timestamp - (opts->reset_timestamps ? 0 : info->first_timestamp) + info->audio_frame_duration) / 1000.0;
     }
     else {
-        duration = (info->last_timestamp + info->video_frame_duration) / 1000.0;
+        duration = (info->last_timestamp - (opts->reset_timestamps ? 0 : info->first_timestamp) + info->video_frame_duration) / 1000.0;
     }
     amf_associative_array_add(meta->on_metadata, "duration", amf_number_new(duration));
 
@@ -672,7 +691,7 @@ static void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta
         number64 timestamp = amf_number_get_value(amf_array_get(node_t));
 
         /* after the onLastSecond event we need to take in account the tag size */
-        if (!info->have_on_last_second && (duration - timestamp) <= 1.0) {
+        if (!info->have_on_last_second && (info->last_timestamp - timestamp * 1000) <= 1000) {
             offset += (FLV_TAG_SIZE + on_last_second_size + sizeof(uint32_be));
         }
 
@@ -681,17 +700,22 @@ static void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta
         node_f = amf_array_next(node_f);
     }
 
-    total_data_size = info->video_data_size + info->audio_data_size + info->meta_data_size + new_on_metadata_size;
+    /* compute data size, ie. size of metadata excluding tags and prev_tag_size */
+    data_size = info->meta_data_only_size + new_on_metadata_size;
     if (!info->have_on_last_second && opts->insert_onlastsecond) {
-        total_data_size += (uint32)on_last_second_size;
+        data_size += (uint32)on_last_second_size;
     }
-    amf_number_set_value(amf_total_data_size, (number64)total_data_size);
+    amf_number_set_value(amf_total_data_size, (number64)data_size);
+  
+    /* compute total file size */
+    total_filesize = FLV_HEADER_SIZE + info->total_prev_tags_size + info->video_data_size
+        + info->audio_data_size + info->meta_data_size + new_on_metadata_size;
 
-    total_filesize = FLV_HEADER_SIZE + total_data_size + info->total_prev_tags_size;
-    if (!info->have_on_last_second) {
+    if (!info->have_on_last_second && opts->insert_onlastsecond) {
         /* if we have to add onLastSecond, we must count the header and new prevTagSize we add */
-        total_filesize += (FLV_TAG_SIZE + sizeof(uint32_be));
+        total_filesize += (uint32)(FLV_TAG_SIZE + on_last_second_size + sizeof(uint32_be));
     }
+
     amf_number_set_value(amf_total_filesize, (number64)total_filesize);
 }
 
@@ -709,7 +733,6 @@ static int write_flv(flv_stream * flv_in, FILE * flv_out, const flv_info * info,
     uint8 timestamp_extended_audio;
     uint8 timestamp_extended_meta;
     byte * copy_buffer;
-    uint32 duration;
     flv_tag ft, omft;
     int have_on_last_second;
 
@@ -750,14 +773,6 @@ static int write_flv(flv_stream * flv_in, FILE * flv_out, const flv_info * info,
         if (fwrite(&size, sizeof(uint32_be), 1, flv_out) != 1) {
             return ERROR_WRITE;
         }
-    }
-
-    /* compute file duration */
-    if (info->have_audio) {
-        duration = info->last_timestamp + info->audio_frame_duration;
-    }
-    else {
-        duration = info->last_timestamp + info->video_frame_duration;
     }
 
     /* extended timestamp initialization */
@@ -814,6 +829,12 @@ static int write_flv(flv_stream * flv_in, FILE * flv_out, const flv_info * info,
                 timestamp += timestamp_extended_video << 24;
             }
         }
+
+        /* non-zero starting timestamp handling */
+        if (opts->reset_timestamps && timestamp > 0) {
+            timestamp -= info->first_timestamp;
+        }
+
         flv_tag_set_timestamp(&ft, timestamp);
 
         /* if we're at the offset of the first onMetaData tag in the input file,
@@ -835,7 +856,7 @@ static int write_flv(flv_stream * flv_in, FILE * flv_out, const flv_info * info,
         }
         else {
             /* insert an onLastSecond metadata tag */
-            if (opts->insert_onlastsecond && !have_on_last_second && !info->have_on_last_second && (duration - timestamp) <= 1000) {
+            if (opts->insert_onlastsecond && !have_on_last_second && !info->have_on_last_second && (info->last_timestamp - timestamp) <= 1000) {
                 flv_tag tag;
                 uint32 on_last_second_name_size = (uint32)amf_data_size(meta->on_last_second_name);
                 uint32 on_last_second_size = (uint32)amf_data_size(meta->on_last_second);

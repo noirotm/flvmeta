@@ -70,6 +70,7 @@ typedef struct __flvmeta_opts {
     char * output_file;
     amf_data * metadata;
     int insert_onlastsecond;
+    int reset_timestamps;
     int preserve_metadata;
     int error_handling;
     int dump_format;

@@ -38,16 +38,17 @@ static struct option long_options[] = {
     { "full-dump",     no_argument,         NULL, 'F'},
     { "check",         no_argument,         NULL, 'C'},
     { "update",        no_argument,         NULL, 'U'},
-    { "add",           required_argument,   NULL, 'a'},
-    { "no-lastsecond", no_argument,         NULL, 'l'},
-    { "preserve",      no_argument,         NULL, 'p'},
-    { "fix",           no_argument,         NULL, 'f'},
-    { "ignore",        no_argument,         NULL, 'i'},
     { "dump-format",   required_argument,   NULL, 'd'},
     { "json",          no_argument,         NULL, 'j'},
     { "raw",           no_argument,         NULL, 'r'},
     { "yaml",          no_argument,         NULL, 'y'},
     { "xml",           no_argument,         NULL, 'x'},
+    { "add",           required_argument,   NULL, 'a'},
+    { "no-lastsecond", no_argument,         NULL, 'l'},
+    { "preserve",      no_argument,         NULL, 'p'},
+    { "fix",           no_argument,         NULL, 'f'},
+    { "ignore",        no_argument,         NULL, 'i'},
+    { "reset-timestamps", no_argument,      NULL, 't'},
     { "verbose",       no_argument,         NULL, 'v'},
     { "version",       no_argument,         NULL, 'V'},
     { "help",          no_argument,         NULL, 'h'},
@@ -78,20 +79,22 @@ static void help(const char * name) {
     fprintf(stderr, "                            into OUTPUT_FILE (default with output file)\n");
     fprintf(stderr, "  -A, --extract-audio       extract raw audio data into OUTPUT_FILE\n");
     fprintf(stderr, "  -E, --extract-video       extract raw video data into OUTPUT_FILE\n");
-    fprintf(stderr, "\nOutput control options:\n");
-    fprintf(stderr, "  -a, --add=NAME=VALUE      add a metadata string value to the output file\n");
-    fprintf(stderr, "  -l, --no-lastsecond       do not create the onLastSecond tag\n");
-    fprintf(stderr, "  -p, --preserve            preserve input file existing onMetadata tags\n");
-    fprintf(stderr, "  -f, --fix                 fix invalid tags from the input file\n");
-    fprintf(stderr, "  -i, --ignore              ignore invalid tags from the input file\n");
-    fprintf(stderr, "                            (the default is to stop with an error)\n");
+    fprintf(stderr, "\nDump options:\n");
     fprintf(stderr, "  -d, --dump-format=TYPE    dump format is of type TYPE\n");
     fprintf(stderr, "                            TYPE is 'xml' (default), 'raw', 'json', or 'yaml'\n");
     fprintf(stderr, "  -j, --json                equivalent to --dump-format=json\n");
     fprintf(stderr, "  -r, --raw                 equivalent to --dump-format=raw\n");
     fprintf(stderr, "  -y, --yaml                equivalent to --dump-format=yaml\n");
     fprintf(stderr, "  -x, --xml                 equivalent to --dump-format=xml\n");
-    fprintf(stderr, "\nAdvanced options:\n");
+    fprintf(stderr, "\nUpdate options:\n");
+    fprintf(stderr, "  -a, --add=NAME=VALUE      add a metadata string value to the output file\n");
+    fprintf(stderr, "  -l, --no-lastsecond       do not create the onLastSecond tag\n");
+    fprintf(stderr, "  -p, --preserve            preserve input file existing onMetadata tags\n");
+    fprintf(stderr, "  -f, --fix                 fix invalid tags from the input file\n");
+    fprintf(stderr, "  -i, --ignore              ignore invalid tags from the input file\n");
+    fprintf(stderr, "                            (the default is to stop with an error)\n");
+    fprintf(stderr, "  -t, --reset-timestamps    reset timestamps so OUTPUT_FILE starts at zero\n");
+    fprintf(stderr, "\nCommon options:\n");
     fprintf(stderr, "  -v, --verbose             display informative messages\n");
     fprintf(stderr, "\nMiscellaneous:\n");
     fprintf(stderr, "  -V, --version             print version information and exit\n");
@@ -109,6 +112,7 @@ int main(int argc, char ** argv) {
     options.output_file = NULL;
     options.metadata = NULL;
     options.insert_onlastsecond = 1;
+    options.reset_timestamps = 0;
     options.preserve_metadata = 0;
     options.error_handling = FLVMETA_EXIT_ON_ERROR;
     options.dump_format = FLVMETA_FORMAT_XML;
@@ -119,7 +123,7 @@ int main(int argc, char ** argv) {
     */
     option_index = 0;
     do {
-        option = getopt_long(argc, argv, "DFCUa:lpfid:jyxvVh", long_options, &option_index);
+        option = getopt_long(argc, argv, "DFCUd:jryxa:lpfitvVh", long_options, &option_index);
         switch (option) {
             /*
                 commands
@@ -155,29 +159,7 @@ int main(int argc, char ** argv) {
             /*
                 options
             */
-            /* add metadata */
-            case 'a':
-                {
-                    char * eq_pos;
-                    eq_pos = strchr(optarg, '=');
-                    if (eq_pos != NULL) {
-                        *eq_pos = 0;
-                        if (options.metadata == NULL) {
-                            options.metadata = amf_associative_array_new();
-                        }
-                        amf_associative_array_add(options.metadata, optarg, amf_str(eq_pos + 1));
-                    }
-                    else {
-                        fprintf(stderr, "%s: invalid metadata format -- %s\n", argv[0], optarg);
-                        usage(argv[0]);
-                        exit(EXIT_FAILURE);
-                    }
-                } break;
-            case 'l': options.insert_onlastsecond = 0;                  break;
-            case 'p': options.preserve_metadata = 1;                    break;
-            case 'f': options.error_handling = FLVMETA_FIX_ERRORS;      break;
-            case 'i': options.error_handling = FLVMETA_IGNORE_ERRORS;   break;
-            /* choose dump format */
+            /* dump options */
             case 'd':
                 if (!strcmp(optarg, "xml")) {
                     options.dump_format = FLVMETA_FORMAT_XML;
@@ -201,8 +183,32 @@ int main(int argc, char ** argv) {
             case 'r': options.dump_format = FLVMETA_FORMAT_RAW;     break;
             case 'y': options.dump_format = FLVMETA_FORMAT_XML;     break;
             case 'x': options.dump_format = FLVMETA_FORMAT_YAML;    break;
+            /* update options */
+            case 'a':
+                {
+                    char * eq_pos;
+                    eq_pos = strchr(optarg, '=');
+                    if (eq_pos != NULL) {
+                        *eq_pos = 0;
+                        if (options.metadata == NULL) {
+                            options.metadata = amf_associative_array_new();
+                        }
+                        amf_associative_array_add(options.metadata, optarg, amf_str(eq_pos + 1));
+                    }
+                    else {
+                        fprintf(stderr, "%s: invalid metadata format -- %s\n", argv[0], optarg);
+                        usage(argv[0]);
+                        exit(EXIT_FAILURE);
+                    }
+                } break;
+            case 'l': options.insert_onlastsecond = 0;                  break;
+            case 'p': options.preserve_metadata = 1;                    break;
+            case 'f': options.error_handling = FLVMETA_FIX_ERRORS;      break;
+            case 'i': options.error_handling = FLVMETA_IGNORE_ERRORS;   break;
+            case 't': options.reset_timestamps = 1;                     break;
+            
             /*
-                advanced options
+                common options
             */
             case 'v': options.verbose = 1;  break;
             /*
@@ -246,9 +252,6 @@ int main(int argc, char ** argv) {
     if (++optind < argc) {
         options.output_file = argv[optind];
     }
-    else {
-        options.output_file = options.input_file;
-    }
 
     /* determine command if default */
     if (options.command == FLVMETA_DEFAULT_COMMAND && options.output_file != NULL) {
@@ -256,6 +259,11 @@ int main(int argc, char ** argv) {
     }
     else if (options.command == FLVMETA_DEFAULT_COMMAND && options.output_file == NULL) {
         options.command = FLVMETA_DUMP_COMMAND;
+    }
+
+    /* output file is input file if not specified */
+    if (options.output_file == NULL) {
+        options.output_file = options.input_file;
     }
 
     /* execute command */
