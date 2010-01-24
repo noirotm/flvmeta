@@ -691,7 +691,7 @@ static void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta
         number64 timestamp = amf_number_get_value(amf_array_get(node_t));
 
         /* after the onLastSecond event we need to take in account the tag size */
-        if (!info->have_on_last_second && (info->last_timestamp - timestamp * 1000) <= 1000) {
+        if (opts->insert_onlastsecond && !info->have_on_last_second && (info->last_timestamp - timestamp * 1000) <= 1000) {
             offset += (FLV_TAG_SIZE + on_last_second_size + sizeof(uint32_be));
         }
 
