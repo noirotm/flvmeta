@@ -1,3 +1,14 @@
+Version 1.0.11 (2010-01-25)
+  - Bug fix release.
+  - Fixed video resolution detection when the first video frame
+    is not a keyframe.
+  - Fixed invalid timestamp handling in the case of decreasing timestamps.
+  - Fixed AVC resolution computation when frame cropping rectangle
+    is used.
+  - Fixed handling of files with a non-zero starting timestamp.
+  - Fixed datasize tag computation so only metadata are taken
+    into account.
+
 Version 1.0.10 (2009-09-02)
   - Bug fix release.
   - Fixed amf_data_dump numeric format.

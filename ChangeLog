@@ -1,3 +1,29 @@
+2010-01-25 Marc Noirot <marc.noirot@gmail.com>
+	* configure.ac: 1.0.11 release.
+	
+	* all source files: Fixed copyright strings.
+	
+	* flvmeta.c: Fixed datasize tag computation so only metadata
+	  are taken into account.
+	
+	* flvmeta.c: Fixed handling of files with a non-zero starting
+	  timestamp.
+
+2009-12-14 Marc Noirot <marc.noirot@gmail.com>
+	* amf.c: Fixed AVC resolution computation when frame cropping
+	  rectangle is used.
+
+2009-12-01 Marc Noirot <marc.noirot@gmail.com>
+	* amf.c, amf.h: Added an AMF data cloning API
+	
+	* amf.c (amf_string_new): Use c strings for amf objects keys.
+	
+	* flvmeta.c: Fixed invalid timestamp handling in the case of
+	  decreasing timestamps.
+	
+	* flvmeta.c: Fixed video resolution detection when the first
+	  video frame is not a keyframe.
+
 2009-09-02 Marc Noirot <marc.noirot@gmail.com>
 	* configure.ac: 1.0.10 Release.
 
