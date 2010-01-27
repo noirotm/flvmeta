@@ -1005,7 +1005,7 @@ int update_metadata(const flvmeta_opts * opts) {
         byte copy_buffer[COPY_BUFFER_SIZE];
 
         flv_out_real = fopen(opts->output_file, "wb");
-        if (flv_in == NULL) {
+        if (flv_out_real == NULL) {
             return ERROR_OPEN_WRITE;
         }
 
