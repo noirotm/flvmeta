@@ -606,8 +606,8 @@ static void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta
         switch (info->audio_rate) {
             case FLV_AUDIO_TAG_SOUND_RATE_5_5: audio_khz = 5500.0; break;
             case FLV_AUDIO_TAG_SOUND_RATE_11:  audio_khz = 11000.0; break;
-            case FLV_AUDIO_TAG_SOUND_RATE_22:  audio_khz = 22000.0; break;
-            case FLV_AUDIO_TAG_SOUND_RATE_44:  audio_khz = 44000.0; break;
+            case FLV_AUDIO_TAG_SOUND_RATE_22:  audio_khz = 22050.0; break;
+            case FLV_AUDIO_TAG_SOUND_RATE_44:  audio_khz = 44100.0; break;
         }
         amf_associative_array_add(meta->on_metadata, "audiosamplerate", amf_number_new(audio_khz));
         audio_sample_rate = 0.0;

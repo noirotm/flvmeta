@@ -34,7 +34,18 @@ if(WIN32)
   include_directories(compat)
 endif(WIN32)
 
+# libyaml
+
+# static build
+if (WIN32)
+  add_definitions(-DYAML_DECLARE_STATIC)
+endif (WIN32)
+
+include_directories(libyaml)
+add_subdirectory(libyaml)
+
 add_executable(flvmeta ${flvmeta_src})
+target_link_libraries(flvmeta yaml)
 
 if(WIN32)
   install(TARGETS flvmeta

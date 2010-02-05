@@ -970,7 +970,7 @@ json_stream_output (FILE * file, json_t * root)
 
       end:
 	{
-		fprintf (file, "\n");
+		/*fprintf (file, "\n");*/
 		return JSON_OK;
 	}
 }
