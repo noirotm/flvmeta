@@ -40,12 +40,12 @@ static void amf_data_yaml_dump(amf_data * data, yaml_emitter_t * emitter) {
         switch (data->type) {
             case AMF_TYPE_NUMBER:
                 sprintf(str, "%.12g", data->number_data);
-                yaml_scalar_event_initialize(&event, NULL, NULL, str, strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
+                yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)str, strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
                 yaml_emitter_emit(emitter, &event);
                 break;
             case AMF_TYPE_BOOLEAN:
                 sprintf(str, (data->boolean_data) ? "true" : "false");
-                yaml_scalar_event_initialize(&event, NULL, NULL, str, strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
+                yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)str, strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
                 yaml_emitter_emit(emitter, &event);
                 break;
             case AMF_TYPE_STRING:
@@ -69,7 +69,7 @@ static void amf_data_yaml_dump(amf_data * data, yaml_emitter_t * emitter) {
                 break;
             case AMF_TYPE_NULL:
             case AMF_TYPE_UNDEFINED:
-                yaml_scalar_event_initialize(&event, NULL, NULL, "null", 4, 1, 1, YAML_ANY_SCALAR_STYLE);
+                yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"null", 4, 1, 1, YAML_ANY_SCALAR_STYLE);
                 yaml_emitter_emit(emitter, &event);
                 break;
             case AMF_TYPE_ASSOCIATIVE_ARRAY:
@@ -103,7 +103,7 @@ static void amf_data_yaml_dump(amf_data * data, yaml_emitter_t * emitter) {
                 tzset();
                 t = localtime(&time);
                 strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", t);
-                yaml_scalar_event_initialize(&event, NULL, NULL, str, strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
+                yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)str, strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
                 yaml_emitter_emit(emitter, &event);
                 break;
             case AMF_TYPE_XML: break;
@@ -272,7 +272,7 @@ int yaml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, f
         yaml_emitter_emit(&emitter, &event);
 
         /* dump AMF into YAML */
-        yaml_scalar_event_initialize(&event, NULL, NULL, (char*)amf_string_get_bytes(name), amf_string_get_size(name), 1, 1, YAML_ANY_SCALAR_STYLE);
+        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)amf_string_get_bytes(name), amf_string_get_size(name), 1, 1, YAML_ANY_SCALAR_STYLE);
         yaml_emitter_emit(&emitter, &event);
 
         amf_data_yaml_dump(data, &emitter);
