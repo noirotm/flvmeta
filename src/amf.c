@@ -845,7 +845,12 @@ void amf_boolean_set_value(amf_data * data, uint8 value) {
 amf_data * amf_string_new(byte * str, uint16 size) {
     amf_data * data = amf_data_new(AMF_TYPE_STRING);
     if (data != NULL) {
-        data->string_data.size = size;
+        if (str == NULL) {
+            data->string_data.size = 0;
+        }
+        else {
+            data->string_data.size = size;
+        }
         data->string_data.mbstr = (byte*)calloc(size+1, sizeof(byte));
         if (data->string_data.mbstr != NULL) {
             if (size > 0) {
