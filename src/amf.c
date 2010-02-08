@@ -853,8 +853,8 @@ amf_data * amf_string_new(byte * str, uint16 size) {
         }
         data->string_data.mbstr = (byte*)calloc(size+1, sizeof(byte));
         if (data->string_data.mbstr != NULL) {
-            if (size > 0) {
-                memcpy(data->string_data.mbstr, str, size);
+            if (data->string_data.size > 0) {
+                memcpy(data->string_data.mbstr, str, data->string_data.size);
             }
         }
         else {
