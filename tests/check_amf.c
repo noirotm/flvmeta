@@ -120,8 +120,8 @@ START_TEST(test_amf_str_null) {
     fail_unless(amf_string_get_size(data) == 0,
         "invalid string length: expected 0, got %f", amf_string_get_size(data));
 
-    fail_unless(amf_string_get_bytes(data) == NULL,
-        "string data should be NULL");
+    fail_unless(!strcmp(amf_string_get_bytes(data), ""),
+        "string data should be an empty string");
 
     amf_data_free(data);
 }
@@ -147,8 +147,8 @@ START_TEST(test_amf_string_new_null) {
     fail_unless(amf_string_get_size(data) == 0,
         "invalid string length: expected 0, got %f", amf_string_get_size(data));
 
-    fail_unless(amf_string_get_bytes(data) == NULL,
-        "string data should be NULL");
+    fail_unless(!strcmp(amf_string_get_bytes(data),""),
+        "string data should be an empty string");
 
     amf_data_free(data);
 }

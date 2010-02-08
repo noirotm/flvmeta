@@ -1,6 +1,10 @@
-AM_CFLAGS = -Wall
+AM_CFLAGS = -Wall -I@srcdir@/libyaml
+
+SUBDIRS = libyaml
 
 bin_PROGRAMS = flvmeta
+
+flvmeta_LDADD = @builddir@/libyaml/libyaml.a
 
 flvmeta_SOURCES = amf.c \
                   amf.h \

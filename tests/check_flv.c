@@ -109,9 +109,9 @@ START_TEST(test_uint24_be_to_uint32) {
     uint24_be ile;
     uint32 ibe;
     
-    ile.b2 = 0x33;
-    ile.b1 = 0x22;
-    ile.b0 = 0x11;
+    ile.b[2] = 0x33;
+    ile.b[1] = 0x22;
+    ile.b[0] = 0x11;
     ibe = uint24_be_to_uint32(ile);
     fail_if(ibe != 0x00112233);
 }
@@ -124,9 +124,9 @@ START_TEST(test_uint32_to_uint24_be) {
     ile = 0x00112233;
     ibe = uint32_to_uint24_be(ile);
 
-    fail_if(ibe.b0 != 0x11);
-    fail_if(ibe.b1 != 0x22);
-    fail_if(ibe.b2 != 0x33);
+    fail_if(ibe.b[0] != 0x11);
+    fail_if(ibe.b[1] != 0x22);
+    fail_if(ibe.b[2] != 0x33);
 }
 END_TEST
 
@@ -137,9 +137,9 @@ START_TEST(test_uint32_to_uint24_be_truncate) {
     ile = 0x11223344;
     ibe = uint32_to_uint24_be(ile);
 
-    fail_if(ibe.b0 != 0x22);
-    fail_if(ibe.b1 != 0x33);
-    fail_if(ibe.b2 != 0x44);
+    fail_if(ibe.b[0] != 0x22);
+    fail_if(ibe.b[1] != 0x33);
+    fail_if(ibe.b[2] != 0x44);
 }
 END_TEST
 
