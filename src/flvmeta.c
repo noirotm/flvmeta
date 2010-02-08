@@ -43,6 +43,7 @@ static struct option long_options[] = {
     { "raw",           no_argument,         NULL, 'r'},
     { "yaml",          no_argument,         NULL, 'y'},
     { "xml",           no_argument,         NULL, 'x'},
+    { "dump-metadata", no_argument,         NULL, 'm'},
     { "add",           required_argument,   NULL, 'a'},
     { "no-lastsecond", no_argument,         NULL, 'l'},
     { "preserve",      no_argument,         NULL, 'p'},
@@ -54,6 +55,27 @@ static struct option long_options[] = {
     { "help",          no_argument,         NULL, 'h'},
     { 0, 0, 0, 0 }
 };
+
+/* short options */
+#define DUMP_OPTION                 "D"
+#define FULL_DUMP_OPTION            "F"
+#define CHECK_OPTION                "C"
+#define UPDATE_OPTION               "U"
+#define DUMP_FORMAT_OPTION          "d:"
+#define JSON_OPTION                 "j"
+#define RAW_OPTION                  "r"
+#define YAML_OPTION                 "y"
+#define XML_OPTION                  "x"
+#define DUMP_METADATA_OPTION        "m"
+#define ADD_OPTION                  "a:"
+#define NO_LASTSECOND_OPTION        "l"
+#define PRESERVE_OPTION             "p"
+#define FIX_OPTION                  "f"
+#define IGNORE_OPTION               "i"
+#define RESET_TIMESTAMPS_OPTIONS    "t"
+#define VERBOSE_OPTION              "v"
+#define VERSION_OPTION              "V"
+#define HELP_OPTION                 "h"
 
 void version(void) {
     fprintf(stderr, "%s\n", PACKAGE_STRING);
@@ -87,6 +109,7 @@ static void help(const char * name) {
     fprintf(stderr, "  -y, --yaml                equivalent to --dump-format=yaml\n");
     fprintf(stderr, "  -x, --xml                 equivalent to --dump-format=xml\n");
     fprintf(stderr, "\nUpdate options:\n");
+    fprintf(stderr, "  -m, --dump-metadata       dump metadata to stdout after update using the specified format\n");
     fprintf(stderr, "  -a, --add=NAME=VALUE      add a metadata string value to the output file\n");
     fprintf(stderr, "  -l, --no-lastsecond       do not create the onLastSecond tag\n");
     fprintf(stderr, "  -p, --preserve            preserve input file existing onMetadata tags\n");
@@ -111,6 +134,7 @@ int main(int argc, char ** argv) {
     options.input_file = NULL;
     options.output_file = NULL;
     options.metadata = NULL;
+    options.dump_metadata = 0;
     options.insert_onlastsecond = 1;
     options.reset_timestamps = 0;
     options.preserve_metadata = 0;
@@ -123,7 +147,26 @@ int main(int argc, char ** argv) {
     */
     option_index = 0;
     do {
-        option = getopt_long(argc, argv, "DFCUd:jryxa:lpfitvVh", long_options, &option_index);
+        option = getopt_long(argc, argv, 
+            DUMP_OPTION
+            FULL_DUMP_OPTION
+            CHECK_OPTION
+            UPDATE_OPTION
+            DUMP_FORMAT_OPTION
+            JSON_OPTION
+            RAW_OPTION
+            YAML_OPTION
+            XML_OPTION
+            ADD_OPTION
+            NO_LASTSECOND_OPTION
+            PRESERVE_OPTION
+            FIX_OPTION
+            IGNORE_OPTION
+            RESET_TIMESTAMPS_OPTIONS
+            VERBOSE_OPTION
+            VERSION_OPTION
+            HELP_OPTION,
+            long_options, &option_index);
         switch (option) {
             /*
                 commands
@@ -181,9 +224,10 @@ int main(int argc, char ** argv) {
                 break;
             case 'j': options.dump_format = FLVMETA_FORMAT_JSON;    break;
             case 'r': options.dump_format = FLVMETA_FORMAT_RAW;     break;
-            case 'y': options.dump_format = FLVMETA_FORMAT_XML;     break;
-            case 'x': options.dump_format = FLVMETA_FORMAT_YAML;    break;
+            case 'y': options.dump_format = FLVMETA_FORMAT_YAML;    break;
+            case 'x': options.dump_format = FLVMETA_FORMAT_XML;     break;
             /* update options */
+            case 'm': options.dump_metadata = 1;                    break;
             case 'a':
                 {
                     char * eq_pos;

@@ -5,6 +5,12 @@ set(flvmeta_src
   avc.h
   dump.c
   dump.h
+  dump_json.c
+  dump_json.h
+  dump_xml.c
+  dump_xml.h
+  dump_yaml.c
+  dump_yaml.h
   flv.c
   flv.h
   flvmeta.c

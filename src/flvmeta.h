@@ -45,6 +45,9 @@
 #define ERROR_WRITE         7
 #define ERROR_SAME_FILE     8
 
+/* stop file parsing without error */
+#define FLVMETA_DUMP_STOP_OK 10
+
 /* commands */
 #define FLVMETA_DEFAULT_COMMAND     0
 #define FLVMETA_DUMP_COMMAND        1
@@ -69,6 +72,7 @@ typedef struct __flvmeta_opts {
     char * input_file;
     char * output_file;
     amf_data * metadata;
+    int dump_metadata;
     int insert_onlastsecond;
     int reset_timestamps;
     int preserve_metadata;
