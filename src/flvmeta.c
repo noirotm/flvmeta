@@ -109,7 +109,8 @@ static void help(const char * name) {
     fprintf(stderr, "  -y, --yaml                equivalent to --dump-format=yaml\n");
     fprintf(stderr, "  -x, --xml                 equivalent to --dump-format=xml\n");
     fprintf(stderr, "\nUpdate options:\n");
-    fprintf(stderr, "  -m, --dump-metadata       dump metadata to stdout after update using the specified format\n");
+    fprintf(stderr, "  -m, --dump-metadata       dump metadata to stdout after update using\n");
+    fprintf(stderr, "                            the specified format\n");
     fprintf(stderr, "  -a, --add=NAME=VALUE      add a metadata string value to the output file\n");
     fprintf(stderr, "  -l, --no-lastsecond       do not create the onLastSecond tag\n");
     fprintf(stderr, "  -p, --preserve            preserve input file existing onMetadata tags\n");
