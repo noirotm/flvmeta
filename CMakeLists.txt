@@ -1,11 +1,33 @@
 cmake_minimum_required(VERSION 2.6)
 project(flvmeta C)
 
+set(FLVMETA_VERSION "1.1")
+
+# check whether we're in an instable branch
+string(REGEX MATCH "^[0-9]+\\.([0-9]+)" MATCHES "${FLVMETA_VERSION}")
+if(MATCHES)
+  math(EXPR FLVMETA_MINOR_ODD "${CMAKE_MATCH_1} % 2")
+  if(FLVMETA_MINOR_ODD)
+  # if so, check for svnversion, and retrieve current revision
+    find_program(SVNVERSION_FOUND "svnversion")
+    if(SVNVERSION_FOUND)
+      execute_process(COMMAND           svnversion -n
+                      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+                      OUTPUT_VARIABLE   SVNVERSION)
+      string(REGEX MATCH "[0-9]+" SVNVERSION_IS_NUMERIC "${SVNVERSION}")
+      if(SVNVERSION_IS_NUMERIC)
+        # if we have a numeric revision, use it as release number
+        set(FLVMETA_VERSION "${FLVMETA_VERSION}-r${SVNVERSION}")
+      endif(SVNVERSION_IS_NUMERIC)
+    endif(SVNVERSION_FOUND)
+  endif(FLVMETA_MINOR_ODD)
+endif(MATCHES)
+
 # generic variables
 set(PACKAGE           "flvmeta")
 set(PACKAGE_NAME      ${PACKAGE})
 set(PACKAGE_BUGREPORT "flvmeta-discussion@googlegroups.com")
-set(PACKAGE_VERSION   "1.1-dev")
+set(PACKAGE_VERSION   "${FLVMETA_VERSION}")
 set(PACKAGE_STRING    "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 
 #platform tests
