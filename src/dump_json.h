@@ -23,14 +23,7 @@
 */
 #include "flvmeta.h"
 
-/* JSON FLV file full dump callbacks */
-extern int json_on_header(flv_header * header, flv_parser * parser);
-extern int json_on_tag(flv_tag * tag, flv_parser * parser);
-extern int json_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser);
-extern int json_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser);
-extern int json_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser);
-extern int json_on_prev_tag_size(uint32 size, flv_parser * parser);
-extern int json_on_stream_end(flv_parser * parser);
-
-/* JSON FLV file metadata dump callback */
-extern int json_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser);
+/* JSON dumping functions */
+extern void dump_json_setup_metadata_dump(flv_parser * parser);
+extern void dump_json_setup_file_dump(flv_parser * parser);
+extern int dump_json_amf_data(FILE * out, const amf_data * data);

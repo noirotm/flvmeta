@@ -125,7 +125,7 @@ void xml_amf_data_dump(amf_data * data, int indent_level) {
 
 /* XML FLV file full dump callbacks */
 
-int xml_on_header(flv_header * header, flv_parser * parser) {
+static int xml_on_header(flv_header * header, flv_parser * parser) {
     puts("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>");
     printf("<flv xmlns=\"http://schemas.flvmeta.org/FLV/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/\" hasVideo=\"%s\" hasAudio=\"%s\" version=\"%i\">\n",
         flv_header_has_video(*header) ? "true" : "false",
@@ -134,7 +134,7 @@ int xml_on_header(flv_header * header, flv_parser * parser) {
     return OK;
 }
 
-int xml_on_tag(flv_tag * tag, flv_parser * parser) {
+static int xml_on_tag(flv_tag * tag, flv_parser * parser) {
     char * str;
 
     switch (tag->type) {
@@ -154,7 +154,7 @@ int xml_on_tag(flv_tag * tag, flv_parser * parser) {
     return OK;
 }
 
-int xml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
+static int xml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
     char * str;
 
     switch (flv_video_tag_codec_id(vt)) {
@@ -182,7 +182,7 @@ int xml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
     return OK;
 }
 
-int xml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
+static int xml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
     char * str;
 
     switch (flv_audio_tag_sound_type(at)) {
@@ -230,7 +230,7 @@ int xml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
     return OK;
 }
 
-int xml_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
+static int xml_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
     printf("    <scriptDataObject name=\"%s\">\n", amf_string_get_bytes(name));
     /* dump AMF data as XML, we start from level 3, meaning 6 indentations characters */
     xml_amf_data_dump(data, 3);
@@ -238,18 +238,18 @@ int xml_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_par
     return OK;
 }
 
-int xml_on_prev_tag_size(uint32 size, flv_parser * parser) {
+static int xml_on_prev_tag_size(uint32 size, flv_parser * parser) {
     puts("  </tag>");
     return OK;
 }
 
-int xml_on_stream_end(flv_parser * parser) {
+static int xml_on_stream_end(flv_parser * parser) {
     printf("</flv>");
     return OK;
 }
 
 /* XML FLV file metadata dump callbacks */
-int xml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
+static int xml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
     if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
         puts("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>");
         puts("<scriptDataObject name=\"onMetaData\" xmlns=\"http://schemas.flvmeta.org/FLV/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/\">");
@@ -258,4 +258,23 @@ int xml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, fl
         printf("</scriptDataObject>");
     }
     return FLVMETA_DUMP_STOP_OK;
+}
+
+/* dumping functions */
+void dump_xml_setup_metadata_dump(flv_parser * parser) {
+    if (parser != NULL) {
+        parser->on_metadata_tag = xml_on_metadata_tag_only;
+    }
+}
+
+void dump_xml_setup_file_dump(flv_parser * parser) {
+    if (parser != NULL) {
+        parser->on_header = xml_on_header;
+        parser->on_tag = xml_on_tag;
+        parser->on_audio_tag = xml_on_audio_tag;
+        parser->on_video_tag = xml_on_video_tag;
+        parser->on_metadata_tag = xml_on_metadata_tag;
+        parser->on_prev_tag_size = xml_on_prev_tag_size;
+        parser->on_stream_end = xml_on_stream_end;
+    }
 }

@@ -265,7 +265,7 @@ int yaml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, f
 
         yaml_emitter_open(&emitter);
 
-        yaml_document_start_event_initialize(&event, NULL, NULL, NULL, 1);
+        yaml_document_start_event_initialize(&event, NULL, NULL, NULL, 0);
         yaml_emitter_emit(&emitter, &event);
 
         yaml_mapping_start_event_initialize(&event, NULL, NULL, 1, YAML_ANY_MAPPING_STYLE);
@@ -291,4 +291,23 @@ int yaml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, f
     }
 
     return FLVMETA_DUMP_STOP_OK;
+}
+
+/* dumping functions */
+void dump_yaml_setup_metadata_dump(flv_parser * parser) {
+    if (parser != NULL) {
+        parser->on_metadata_tag = yaml_on_metadata_tag_only;
+    }
+}
+
+void dump_yaml_setup_file_dump(flv_parser * parser) {
+    if (parser != NULL) {
+        parser->on_header = yaml_on_header;
+        parser->on_tag = yaml_on_tag;
+        parser->on_audio_tag = yaml_on_audio_tag;
+        parser->on_video_tag = yaml_on_video_tag;
+        parser->on_metadata_tag = yaml_on_metadata_tag;
+        parser->on_prev_tag_size = yaml_on_prev_tag_size;
+        parser->on_stream_end = yaml_on_stream_end;
+    }
 }

@@ -100,7 +100,7 @@ static void amf_to_json(amf_data * data, json_t ** object) {
 
 /* JSON FLV file full dump callbacks */
 
-int json_on_header(flv_header * header, flv_parser * parser) {
+static int json_on_header(flv_header * header, flv_parser * parser) {
     printf("{\"magic\":\"%c%c%c\",\"hasVideo\":%s,\"hasAudio\":%s,\"version\":%i,\"tags\":[",
         header->signature[0], header->signature[1], header->signature[2],
         flv_header_has_video(*header) ? "true" : "false",
@@ -109,7 +109,7 @@ int json_on_header(flv_header * header, flv_parser * parser) {
     return OK;
 }
 
-int json_on_tag(flv_tag * tag, flv_parser * parser) {
+static int json_on_tag(flv_tag * tag, flv_parser * parser) {
     char * str;
     
     if (parser->user_data != NULL) {
@@ -136,7 +136,7 @@ int json_on_tag(flv_tag * tag, flv_parser * parser) {
     return OK;
 }
 
-int json_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
+static int json_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
     char * str;
 
     switch (flv_video_tag_codec_id(vt)) {
@@ -164,7 +164,7 @@ int json_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
     return OK;
 }
 
-int json_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
+static int json_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
     char * str;
 
     switch (flv_audio_tag_sound_type(at)) {
@@ -212,7 +212,7 @@ int json_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
     return OK;
 }
 
-int json_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
+static int json_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
     json_t * root;
 
     printf("\"scriptDataObject\":{\"name\":\"%s\",\"metadata\":", amf_string_get_bytes(name));
@@ -227,18 +227,18 @@ int json_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_pa
     return OK;
 }
 
-int json_on_prev_tag_size(uint32 size, flv_parser * parser) {
+static int json_on_prev_tag_size(uint32 size, flv_parser * parser) {
     printf("}");
     return OK;
 }
 
-int json_on_stream_end(flv_parser * parser) {
+static int json_on_stream_end(flv_parser * parser) {
     printf("]}");
     return OK;
 }
 
 /* JSON FLV file metadata dump callback */
-int json_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
+static int json_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
     json_t * root;
 
     if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
@@ -251,4 +251,24 @@ int json_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, f
 	    json_free_value(&root);
     }
     return FLVMETA_DUMP_STOP_OK;
+}
+
+/* setup dumping */
+
+void dump_json_setup_metadata_dump(flv_parser * parser) {
+    if (parser != NULL) {
+        parser->on_metadata_tag = json_on_metadata_tag_only;
+    }
+}
+
+void dump_json_setup_file_dump(flv_parser * parser) {
+    if (parser != NULL) {
+        parser->on_header = json_on_header;
+        parser->on_tag = json_on_tag;
+        parser->on_audio_tag = json_on_audio_tag;
+        parser->on_video_tag = json_on_video_tag;
+        parser->on_metadata_tag = json_on_metadata_tag;
+        parser->on_prev_tag_size = json_on_prev_tag_size;
+        parser->on_stream_end = json_on_stream_end;
+    }
 }

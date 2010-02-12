@@ -36,13 +36,13 @@ int dump_metadata(const flvmeta_opts * options) {
 
     switch (options->dump_format) {
         case FLVMETA_FORMAT_XML:
-            parser.on_metadata_tag = xml_on_metadata_tag_only;
+            dump_xml_setup_metadata_dump(&parser);
             break;
         case FLVMETA_FORMAT_JSON:
-            parser.on_metadata_tag = json_on_metadata_tag_only;
+            dump_json_setup_metadata_dump(&parser);
             break;
         case FLVMETA_FORMAT_YAML:
-            parser.on_metadata_tag = yaml_on_metadata_tag_only;
+            dump_yaml_setup_metadata_dump(&parser);
     }
 
     retval = flv_parse(options->input_file, &parser);
@@ -60,33 +60,13 @@ int dump_flv_file(const flvmeta_opts * options) {
 
     switch (options->dump_format) {
         case FLVMETA_FORMAT_XML:
-            parser.on_header = xml_on_header;
-            parser.on_tag = xml_on_tag;
-            parser.on_audio_tag = xml_on_audio_tag;
-            parser.on_video_tag = xml_on_video_tag;
-            parser.on_metadata_tag = xml_on_metadata_tag;
-            parser.on_prev_tag_size = xml_on_prev_tag_size;
-            parser.on_stream_end = xml_on_stream_end;
+            dump_xml_setup_file_dump(&parser);
             break;
         case FLVMETA_FORMAT_JSON:
-            parser.user_data = NULL;
-            parser.on_header = json_on_header;
-            parser.on_tag = json_on_tag;
-            parser.on_audio_tag = json_on_audio_tag;
-            parser.on_video_tag = json_on_video_tag;
-            parser.on_metadata_tag = json_on_metadata_tag;
-            parser.on_prev_tag_size = json_on_prev_tag_size;
-            parser.on_stream_end = json_on_stream_end;
+            dump_json_setup_file_dump(&parser);
             break;
         case FLVMETA_FORMAT_YAML:
-            parser.user_data = NULL;
-            parser.on_header = yaml_on_header;
-            parser.on_tag = yaml_on_tag;
-            parser.on_audio_tag = yaml_on_audio_tag;
-            parser.on_video_tag = yaml_on_video_tag;
-            parser.on_metadata_tag = yaml_on_metadata_tag;
-            parser.on_prev_tag_size = yaml_on_prev_tag_size;
-            parser.on_stream_end = yaml_on_stream_end;
+            dump_yaml_setup_file_dump(&parser);
             break;
     }
 

@@ -32,4 +32,7 @@ extern int dump_metadata(const flvmeta_opts * options);
 /* dump the full contents of an FLV file */
 extern int dump_flv_file(const flvmeta_opts * options);
 
+/* dump AMF data directly */
+extern int dump_amf_data(const amf_data * data, const flvmeta_opts * options);
+
 #endif /* __DUMP_H__ */

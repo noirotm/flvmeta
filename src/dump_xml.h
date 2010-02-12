@@ -23,14 +23,7 @@
 */
 #include "flvmeta.h"
 
-/* XML FLV file full dump callbacks */
-extern int xml_on_header(flv_header * header, flv_parser * parser);
-extern int xml_on_tag(flv_tag * tag, flv_parser * parser);
-extern int xml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser);
-extern int xml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser);
-extern int xml_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser);
-extern int xml_on_prev_tag_size(uint32 size, flv_parser * parser);
-extern int xml_on_stream_end(flv_parser * parser);
-
-/* XML FLV file metadata dump callback */
-extern int xml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser);
+/* XML dumping functions */
+extern void dump_xml_setup_metadata_dump(flv_parser * parser);
+extern void dump_xml_setup_file_dump(flv_parser * parser);
+extern int dump_xml_amf_data(FILE * out, const amf_data * data);
