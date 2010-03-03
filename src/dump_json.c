@@ -101,8 +101,8 @@ static void amf_to_json(amf_data * data, json_t ** object) {
 /* JSON FLV file full dump callbacks */
 
 static int json_on_header(flv_header * header, flv_parser * parser) {
-    printf("{\"magic\":\"%c%c%c\",\"hasVideo\":%s,\"hasAudio\":%s,\"version\":%i,\"tags\":[",
-        header->signature[0], header->signature[1], header->signature[2],
+    printf("{\"magic\":\"%.3s\",\"hasVideo\":%s,\"hasAudio\":%s,\"version\":%i,\"tags\":[",
+        header->signature,
         flv_header_has_video(*header) ? "true" : "false",
         flv_header_has_audio(*header) ? "true" : "false",
         header->version);

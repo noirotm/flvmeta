@@ -23,6 +23,7 @@
 */
 #include "flvmeta.h"
 #include "dump_json.h"
+#include "dump_raw.h"
 #include "dump_xml.h"
 #include "dump_yaml.h"
 
@@ -35,14 +36,18 @@ int dump_metadata(const flvmeta_opts * options) {
     memset(&parser, 0, sizeof(flv_parser));
 
     switch (options->dump_format) {
-        case FLVMETA_FORMAT_XML:
-            dump_xml_setup_metadata_dump(&parser);
-            break;
         case FLVMETA_FORMAT_JSON:
             dump_json_setup_metadata_dump(&parser);
             break;
+        case FLVMETA_FORMAT_RAW:
+            dump_raw_setup_metadata_dump(&parser);
+            break;
+        case FLVMETA_FORMAT_XML:
+            dump_xml_setup_metadata_dump(&parser);
+            break;
         case FLVMETA_FORMAT_YAML:
             dump_yaml_setup_metadata_dump(&parser);
+            break;
     }
 
     retval = flv_parse(options->input_file, &parser);
@@ -59,11 +64,14 @@ int dump_flv_file(const flvmeta_opts * options) {
     memset(&parser, 0, sizeof(flv_parser));
 
     switch (options->dump_format) {
-        case FLVMETA_FORMAT_XML:
-            dump_xml_setup_file_dump(&parser);
-            break;
         case FLVMETA_FORMAT_JSON:
             dump_json_setup_file_dump(&parser);
+            break;
+        case FLVMETA_FORMAT_RAW:
+            dump_raw_setup_file_dump(&parser);
+            break;
+        case FLVMETA_FORMAT_XML:
+            dump_xml_setup_file_dump(&parser);
             break;
         case FLVMETA_FORMAT_YAML:
             dump_yaml_setup_file_dump(&parser);

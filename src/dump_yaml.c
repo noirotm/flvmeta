@@ -140,7 +140,7 @@ int yaml_on_header(flv_header * header, flv_parser * parser) {
         yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"magic", 5, 1, 1, YAML_ANY_SCALAR_STYLE);
         yaml_emitter_emit(emitter, &event);
 
-        sprintf(buffer, "%c%c%c", header->signature[0], header->signature[1], header->signature[2]);
+        sprintf(buffer, "%.3s", header->signature);
         yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)buffer, strlen(buffer), 1, 1, YAML_ANY_SCALAR_STYLE);
         yaml_emitter_emit(emitter, &event);
 

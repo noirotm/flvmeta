@@ -41,8 +41,8 @@ static struct option long_options[] = {
     { "dump-format",   required_argument,   NULL, 'd'},
     { "json",          no_argument,         NULL, 'j'},
     { "raw",           no_argument,         NULL, 'r'},
-    { "yaml",          no_argument,         NULL, 'y'},
     { "xml",           no_argument,         NULL, 'x'},
+    { "yaml",          no_argument,         NULL, 'y'},
     { "dump-metadata", no_argument,         NULL, 'm'},
     { "add",           required_argument,   NULL, 'a'},
     { "no-lastsecond", no_argument,         NULL, 'l'},
@@ -64,8 +64,8 @@ static struct option long_options[] = {
 #define DUMP_FORMAT_OPTION          "d:"
 #define JSON_OPTION                 "j"
 #define RAW_OPTION                  "r"
-#define YAML_OPTION                 "y"
 #define XML_OPTION                  "x"
+#define YAML_OPTION                 "y"
 #define DUMP_METADATA_OPTION        "m"
 #define ADD_OPTION                  "a:"
 #define NO_LASTSECOND_OPTION        "l"
@@ -103,11 +103,11 @@ static void help(const char * name) {
     fprintf(stderr, "  -E, --extract-video       extract raw video data into OUTPUT_FILE\n");
     fprintf(stderr, "\nDump options:\n");
     fprintf(stderr, "  -d, --dump-format=TYPE    dump format is of type TYPE\n");
-    fprintf(stderr, "                            TYPE is 'xml' (default), 'raw', 'json', or 'yaml'\n");
+    fprintf(stderr, "                            TYPE is 'xml' (default), 'json', 'raw', or 'yaml'\n");
     fprintf(stderr, "  -j, --json                equivalent to --dump-format=json\n");
     fprintf(stderr, "  -r, --raw                 equivalent to --dump-format=raw\n");
-    fprintf(stderr, "  -y, --yaml                equivalent to --dump-format=yaml\n");
     fprintf(stderr, "  -x, --xml                 equivalent to --dump-format=xml\n");
+    fprintf(stderr, "  -y, --yaml                equivalent to --dump-format=yaml\n");
     fprintf(stderr, "\nUpdate options:\n");
     fprintf(stderr, "  -m, --dump-metadata       dump metadata to stdout after update using\n");
     fprintf(stderr, "                            the specified format\n");
@@ -156,8 +156,8 @@ int main(int argc, char ** argv) {
             DUMP_FORMAT_OPTION
             JSON_OPTION
             RAW_OPTION
-            YAML_OPTION
             XML_OPTION
+            YAML_OPTION
             ADD_OPTION
             NO_LASTSECOND_OPTION
             PRESERVE_OPTION
@@ -225,8 +225,8 @@ int main(int argc, char ** argv) {
                 break;
             case 'j': options.dump_format = FLVMETA_FORMAT_JSON;    break;
             case 'r': options.dump_format = FLVMETA_FORMAT_RAW;     break;
-            case 'y': options.dump_format = FLVMETA_FORMAT_YAML;    break;
             case 'x': options.dump_format = FLVMETA_FORMAT_XML;     break;
+            case 'y': options.dump_format = FLVMETA_FORMAT_YAML;    break;
             /* update options */
             case 'm': options.dump_metadata = 1;                    break;
             case 'a':
