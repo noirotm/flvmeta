@@ -29,7 +29,7 @@
 #include <string.h>
 
 /* JSON metadata dumping */
-static void amf_to_json(amf_data * data, json_t ** object) {
+static void amf_to_json(const amf_data * data, json_t ** object) {
     if (data != NULL) {
         json_t * value;
         amf_node * node;
@@ -239,18 +239,11 @@ static int json_on_stream_end(flv_parser * parser) {
 
 /* JSON FLV file metadata dump callback */
 static int json_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
-    json_t * root;
-
     if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
-        root = NULL;
-        /* dump AMF into JSON */
-        amf_to_json(data, &root);
-        /* print data */
-        json_stream_output(stdout, root);
-        /* cleanup */
-	    json_free_value(&root);
+        dump_json_amf_data(data);
+        return FLVMETA_DUMP_STOP_OK;
     }
-    return FLVMETA_DUMP_STOP_OK;
+    return OK;
 }
 
 /* setup dumping */
@@ -271,4 +264,20 @@ void dump_json_setup_file_dump(flv_parser * parser) {
         parser->on_prev_tag_size = json_on_prev_tag_size;
         parser->on_stream_end = json_on_stream_end;
     }
+}
+
+int dump_json_amf_data(const amf_data * data) {
+    json_t * root;
+
+    root = NULL;
+    /* dump AMF into JSON */
+    amf_to_json(data, &root);
+    /* print data */
+    json_stream_output(stdout, root);
+    /* cleanup */
+    json_free_value(&root);
+
+    printf("\n");
+
+    return OK;
 }

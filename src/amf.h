@@ -112,7 +112,7 @@ typedef size_t (*amf_write_proc)(const void * in_buffer, size_t size, void * use
 amf_data * amf_data_read(amf_read_proc read_proc, void * user_data);
 
 /* write AMF data */
-size_t amf_data_write(amf_data * data, amf_write_proc write_proc, void * user_data);
+size_t amf_data_write(const amf_data * data, amf_write_proc write_proc, void * user_data);
 
 /* generic functions */
 
@@ -123,45 +123,45 @@ amf_data * amf_data_buffer_read(byte * buffer, size_t maxbytes);
 /* load AMF data from stream */
 amf_data * amf_data_file_read(FILE * stream);
 /* AMF data size */
-size_t     amf_data_size(amf_data * data);
+size_t     amf_data_size(const amf_data * data);
 /* write encoded AMF data into a buffer */
 size_t     amf_data_buffer_write(amf_data * data, byte * buffer, size_t maxbytes);
 /* write encoded AMF data into a stream */
-size_t     amf_data_file_write(amf_data * data, FILE * stream);
+size_t     amf_data_file_write(const amf_data * data, FILE * stream);
 /* get the type of AMF data */
-byte       amf_data_get_type(amf_data * data);
+byte       amf_data_get_type(const amf_data * data);
 /* return a new copy of AMF data */
-amf_data * amf_data_clone(amf_data * data);
+amf_data * amf_data_clone(const amf_data * data);
 /* release the memory of AMF data */
 void       amf_data_free(amf_data * data);
 /* dump AMF data into a stream as text */
-void       amf_data_dump(FILE * stream, amf_data * data, int indent_level);
+void       amf_data_dump(FILE * stream, const amf_data * data, int indent_level);
 
 /* number functions */
 amf_data * amf_number_new(number64 value);
-number64   amf_number_get_value(amf_data * data);
+number64   amf_number_get_value(const amf_data * data);
 void       amf_number_set_value(amf_data * data, number64 value);
 
 /* boolean functions */
 amf_data * amf_boolean_new(uint8 value);
-uint8      amf_boolean_get_value(amf_data * data);
+uint8      amf_boolean_get_value(const amf_data * data);
 void       amf_boolean_set_value(amf_data * data, uint8 value);
 
 /* string functions */
 amf_data * amf_string_new(byte * str, uint16 size);
 amf_data * amf_str(const char * str);
-uint16     amf_string_get_size(amf_data * data);
-byte *     amf_string_get_bytes(amf_data * data);
+uint16     amf_string_get_size(const amf_data * data);
+byte *     amf_string_get_bytes(const amf_data * data);
 
 /* object functions */
 amf_data * amf_object_new(void);
-uint32     amf_object_size(amf_data * data);
+uint32     amf_object_size(const amf_data * data);
 amf_data * amf_object_add(amf_data * data, const char * name, amf_data * element);
-amf_data * amf_object_get(amf_data * data, const char * name);
+amf_data * amf_object_get(const amf_data * data, const char * name);
 amf_data * amf_object_set(amf_data * data, const char * name, amf_data * element);
 amf_data * amf_object_delete(amf_data * data, const char * name);
-amf_node * amf_object_first(amf_data * data);
-amf_node * amf_object_last(amf_data * data);
+amf_node * amf_object_first(const amf_data * data);
+amf_node * amf_object_last(const amf_data * data);
 amf_node * amf_object_next(amf_node * node);
 amf_node * amf_object_prev(amf_node * node);
 amf_data * amf_object_get_name(amf_node * node);
@@ -189,24 +189,24 @@ amf_data * amf_associative_array_new(void);
 
 /* array functions */
 amf_data * amf_array_new(void);
-uint32     amf_array_size(amf_data * data);
+uint32     amf_array_size(const amf_data * data);
 amf_data * amf_array_push(amf_data * data, amf_data * element);
 amf_data * amf_array_pop(amf_data * data);
-amf_node * amf_array_first(amf_data * data);
-amf_node * amf_array_last(amf_data * data);
+amf_node * amf_array_first(const amf_data * data);
+amf_node * amf_array_last(const amf_data * data);
 amf_node * amf_array_next(amf_node * node);
 amf_node * amf_array_prev(amf_node * node);
 amf_data * amf_array_get(amf_node * node);
-amf_data * amf_array_get_at(amf_data * data, uint32 n);
+amf_data * amf_array_get_at(const amf_data * data, uint32 n);
 amf_data * amf_array_delete(amf_data * data, amf_node * node);
 amf_data * amf_array_insert_before(amf_data * data, amf_node * node, amf_data * element);
 amf_data * amf_array_insert_after(amf_data * data, amf_node * node, amf_data * element);
 
 /* date functions */
 amf_data * amf_date_new(number64 milliseconds, sint16 timezone);
-number64   amf_date_get_milliseconds(amf_data * data);
-sint16     amf_date_get_timezone(amf_data * data);
-time_t     amf_date_to_time_t(amf_data * data);
+number64   amf_date_get_milliseconds(const amf_data * data);
+sint16     amf_date_get_timezone(const amf_data * data);
+time_t     amf_date_to_time_t(const amf_data * data);
 
 #ifdef __cplusplus
 }

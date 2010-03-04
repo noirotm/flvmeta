@@ -26,4 +26,4 @@
 /* YAML dumping functions */
 extern void dump_yaml_setup_metadata_dump(flv_parser * parser);
 extern void dump_yaml_setup_file_dump(flv_parser * parser);
-extern int dump_yaml_amf_data(FILE * out, const amf_data * data);
+extern int dump_yaml_amf_data(const amf_data * data);

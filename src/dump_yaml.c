@@ -29,7 +29,7 @@
 #include <string.h>
 
 /* YAML metadata dumping */
-static void amf_data_yaml_dump(amf_data * data, yaml_emitter_t * emitter) {
+static void amf_data_yaml_dump(const amf_data * data, yaml_emitter_t * emitter) {
     if (data != NULL) {
         amf_node * node;
         yaml_event_t event;
@@ -112,8 +112,6 @@ static void amf_data_yaml_dump(amf_data * data, yaml_emitter_t * emitter) {
         }
     }
 }
-
-
 
 /* YAML FLV file full dump callbacks */
 
@@ -418,38 +416,11 @@ int yaml_on_stream_end(flv_parser * parser) {
 
 /* YAML FLV file metadata dump callbacks */
 int yaml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
-    yaml_emitter_t emitter;
-    yaml_event_t event;
-
     if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
-        yaml_emitter_initialize(&emitter);
-        yaml_emitter_set_output_file(&emitter, stdout);
-        yaml_emitter_open(&emitter);
-
-        yaml_document_start_event_initialize(&event, NULL, NULL, NULL, 0);
-        yaml_emitter_emit(&emitter, &event);
-
-        yaml_mapping_start_event_initialize(&event, NULL, NULL, 1, YAML_ANY_MAPPING_STYLE);
-        yaml_emitter_emit(&emitter, &event);
-
-        /* dump AMF into YAML */
-        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)amf_string_get_bytes(name), amf_string_get_size(name), 1, 1, YAML_ANY_SCALAR_STYLE);
-        yaml_emitter_emit(&emitter, &event);
-
-        amf_data_yaml_dump(data, &emitter);
-
-        yaml_mapping_end_event_initialize(&event);
-        yaml_emitter_emit(&emitter, &event);
-
-        yaml_document_end_event_initialize(&event, 1);
-        yaml_emitter_emit(&emitter, &event);
-
-        yaml_emitter_flush(&emitter);
-        yaml_emitter_close(&emitter);
-        yaml_emitter_delete(&emitter);
+        dump_yaml_amf_data(data);
+        return FLVMETA_DUMP_STOP_OK;
     }
-
-    return FLVMETA_DUMP_STOP_OK;
+    return OK;
 }
 
 /* dumping functions */
@@ -469,4 +440,28 @@ void dump_yaml_setup_file_dump(flv_parser * parser) {
         parser->on_prev_tag_size = yaml_on_prev_tag_size;
         parser->on_stream_end = yaml_on_stream_end;
     }
+}
+
+int dump_yaml_amf_data(const amf_data * data) {
+    yaml_emitter_t emitter;
+    yaml_event_t event;
+
+    yaml_emitter_initialize(&emitter);
+    yaml_emitter_set_output_file(&emitter, stdout);
+    yaml_emitter_open(&emitter);
+
+    yaml_document_start_event_initialize(&event, NULL, NULL, NULL, 0);
+    yaml_emitter_emit(&emitter, &event);
+
+    /* dump AMF into YAML */
+    amf_data_yaml_dump(data, &emitter);
+
+    yaml_document_end_event_initialize(&event, 1);
+    yaml_emitter_emit(&emitter, &event);
+
+    yaml_emitter_flush(&emitter);
+    yaml_emitter_close(&emitter);
+    yaml_emitter_delete(&emitter);
+
+    return OK;
 }

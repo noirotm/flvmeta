@@ -80,3 +80,19 @@ int dump_flv_file(const flvmeta_opts * options) {
 
     return flv_parse(options->input_file, &parser);
 }
+
+/* dump AMF data directly */
+int dump_amf_data(const amf_data * data, const flvmeta_opts * options) {
+    switch (options->dump_format) {
+        case FLVMETA_FORMAT_JSON:
+            return dump_json_amf_data(data);
+        case FLVMETA_FORMAT_RAW:
+            return dump_raw_amf_data(data);
+        case FLVMETA_FORMAT_XML:
+            return dump_xml_amf_data(data);
+        case FLVMETA_FORMAT_YAML:
+            return dump_yaml_amf_data(data);
+        default:
+            return OK;
+    }
+}

@@ -121,7 +121,7 @@ static amf_data * amf_list_delete(amf_list * list, amf_node * node) {
     return data;
 }
 
-static amf_data * amf_list_get_at(amf_list * list, uint32 n) {
+static amf_data * amf_list_get_at(const amf_list * list, uint32 n) {
     if (n < list->size) {
         uint32 i;
         amf_node * node = list->first_element;
@@ -137,11 +137,11 @@ static amf_data * amf_list_pop(amf_list * list) {
     return amf_list_delete(list, list->last_element);
 }
 
-static amf_node * amf_list_first(amf_list * list) {
+static amf_node * amf_list_first(const amf_list * list) {
     return list->first_element;
 }
 
-static amf_node * amf_list_last(amf_list * list) {
+static amf_node * amf_list_last(const amf_list * list) {
     return list->last_element;
 }
 
@@ -157,7 +157,7 @@ static void amf_list_clear(amf_list * list) {
     list->size = 0;
 }
 
-static amf_list * amf_list_clone(amf_list * list, amf_list * out_list) {
+static amf_list * amf_list_clone(const amf_list * list, amf_list * out_list) {
     amf_node * node;
     node = list->first_element;
     while (node != NULL) {
@@ -245,7 +245,7 @@ amf_data * amf_data_file_read(FILE * stream) {
 }
 
 /* write AMF data into a file stream */
-size_t amf_data_file_write(amf_data * data, FILE * stream) {
+size_t amf_data_file_write(const amf_data * data, FILE * stream) {
     return amf_data_write(data, file_write, stream);
 }
 
@@ -452,7 +452,7 @@ amf_data * amf_data_read(amf_read_proc read_proc, void * user_data) {
 }
 
 /* determines the size of the given AMF data */
-size_t amf_data_size(amf_data * data) {
+size_t amf_data_size(const amf_data * data) {
     size_t s = 0;
     amf_node * node;
     if (data != NULL) {
@@ -514,18 +514,18 @@ size_t amf_data_size(amf_data * data) {
 }
 
 /* write a number */
-static size_t amf_number_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
+static size_t amf_number_write(const amf_data * data, amf_write_proc write_proc, void * user_data) {
     number64 n = swap_number64(data->number_data);
     return write_proc(&n, sizeof(number64_be), user_data);
 }
 
 /* write a boolean */
-static size_t amf_boolean_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
+static size_t amf_boolean_write(const amf_data * data, amf_write_proc write_proc, void * user_data) {
     return write_proc(&(data->boolean_data), sizeof(uint8), user_data);
 }
 
 /* write a string */
-static size_t amf_string_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
+static size_t amf_string_write(const amf_data * data, amf_write_proc write_proc, void * user_data) {
     uint16 s;
     size_t w = 0;
 
@@ -539,7 +539,7 @@ static size_t amf_string_write(amf_data * data, amf_write_proc write_proc, void 
 }
 
 /* write an object */
-static size_t amf_object_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
+static size_t amf_object_write(const amf_data * data, amf_write_proc write_proc, void * user_data) {
     amf_node * node;
     size_t w = 0;
     uint16_be filler = swap_uint16(0);
@@ -561,7 +561,7 @@ static size_t amf_object_write(amf_data * data, amf_write_proc write_proc, void 
 }
 
 /* write an associative array */
-static size_t amf_associative_array_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
+static size_t amf_associative_array_write(const amf_data * data, amf_write_proc write_proc, void * user_data) {
     amf_node * node;
     size_t w = 0;
     uint32_be s;
@@ -586,7 +586,7 @@ static size_t amf_associative_array_write(amf_data * data, amf_write_proc write_
 }
 
 /* write an array */
-static size_t amf_array_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
+static size_t amf_array_write(const amf_data * data, amf_write_proc write_proc, void * user_data) {
     amf_node * node;
     size_t w = 0;
     uint32_be s;
@@ -603,7 +603,7 @@ static size_t amf_array_write(amf_data * data, amf_write_proc write_proc, void *
 }
 
 /* write a date */
-static size_t amf_date_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
+static size_t amf_date_write(const amf_data * data, amf_write_proc write_proc, void * user_data) {
     size_t w = 0;
     number64_be milli;
     sint16_be tz;
@@ -617,7 +617,7 @@ static size_t amf_date_write(amf_data * data, amf_write_proc write_proc, void * 
 }
 
 /* write amf data to stream */
-size_t amf_data_write(amf_data * data, amf_write_proc write_proc, void * user_data) {
+size_t amf_data_write(const amf_data * data, amf_write_proc write_proc, void * user_data) {
     size_t s = 0;
     if (data != NULL) {
         s += write_proc(&(data->type), sizeof(byte), user_data);
@@ -660,12 +660,12 @@ size_t amf_data_write(amf_data * data, amf_write_proc write_proc, void * user_da
 }
 
 /* data type */
-byte amf_data_get_type(amf_data * data) {
+byte amf_data_get_type(const amf_data * data) {
     return (data != NULL) ? data->type : AMF_TYPE_NULL;
 }
 
 /* clone AMF data */
-amf_data * amf_data_clone(amf_data * data) {
+amf_data * amf_data_clone(const amf_data * data) {
     /* we copy data recursively */
     if (data != NULL) {
         switch (data->type) {
@@ -728,7 +728,7 @@ void amf_data_free(amf_data * data) {
 }
 
 /* dump AMF data into a stream as text */
-void amf_data_dump(FILE * stream, amf_data * data, int indent_level) {
+void amf_data_dump(FILE * stream, const amf_data * data, int indent_level) {
     if (data != NULL) {
         amf_node * node;
         time_t time;
@@ -812,7 +812,7 @@ amf_data * amf_number_new(number64 value) {
     return data;
 }
 
-number64 amf_number_get_value(amf_data * data) {
+number64 amf_number_get_value(const amf_data * data) {
     return (data != NULL) ? data->number_data : 0;
 }
 
@@ -831,7 +831,7 @@ amf_data * amf_boolean_new(uint8 value) {
     return data;
 }
 
-uint8 amf_boolean_get_value(amf_data * data) {
+uint8 amf_boolean_get_value(const amf_data * data) {
     return (data != NULL) ? data->boolean_data : 0;
 }
 
@@ -869,11 +869,11 @@ amf_data * amf_str(const char * str) {
     return amf_string_new((byte *)str, (uint16)(str != NULL ? strlen(str) : 0));
 }
 
-uint16 amf_string_get_size(amf_data * data) {
+uint16 amf_string_get_size(const amf_data * data) {
     return (data != NULL) ? data->string_data.size : 0;
 }
 
-byte * amf_string_get_bytes(amf_data * data) {
+byte * amf_string_get_bytes(const amf_data * data) {
     return (data != NULL) ? data->string_data.mbstr : NULL;
 }
 
@@ -886,7 +886,7 @@ amf_data * amf_object_new(void) {
     return data;
 }
 
-uint32 amf_object_size(amf_data * data) {
+uint32 amf_object_size(const amf_data * data) {
     return (data != NULL) ? data->list_data.size / 2 : 0;
 }
 
@@ -904,7 +904,7 @@ amf_data * amf_object_add(amf_data * data, const char * name, amf_data * element
     return NULL;
 }
 
-amf_data * amf_object_get(amf_data * data, const char * name) {
+amf_data * amf_object_get(const amf_data * data, const char * name) {
     if (data != NULL) {
         amf_node * node = amf_list_first(&(data->list_data));
         while (node != NULL) {
@@ -956,11 +956,11 @@ amf_data * amf_object_delete(amf_data * data, const char * name) {
     return NULL;
 }
 
-amf_node * amf_object_first(amf_data * data) {
+amf_node * amf_object_first(const amf_data * data) {
     return (data != NULL) ? amf_list_first(&data->list_data) : NULL;
 }
 
-amf_node * amf_object_last(amf_data * data) {
+amf_node * amf_object_last(const amf_data * data) {
     if (data != NULL) {
         amf_node * node = amf_list_last(&data->list_data);
         if (node != NULL) {
@@ -1022,7 +1022,7 @@ amf_data * amf_array_new(void) {
     return data;
 }
 
-uint32 amf_array_size(amf_data * data) {
+uint32 amf_array_size(const amf_data * data) {
     return (data != NULL) ? data->list_data.size : 0;
 }
 
@@ -1034,11 +1034,11 @@ amf_data * amf_array_pop(amf_data * data) {
     return (data != NULL) ? amf_list_pop(&data->list_data) : NULL;
 }
 
-amf_node * amf_array_first(amf_data * data) {
+amf_node * amf_array_first(const amf_data * data) {
     return (data != NULL) ? amf_list_first(&data->list_data) : NULL;
 }
 
-amf_node * amf_array_last(amf_data * data) {
+amf_node * amf_array_last(const amf_data * data) {
     return (data != NULL) ? amf_list_last(&data->list_data) : NULL;
 }
 
@@ -1054,7 +1054,7 @@ amf_data * amf_array_get(amf_node * node) {
     return (node != NULL) ? node->data : NULL;
 }
 
-amf_data * amf_array_get_at(amf_data * data, uint32 n) {
+amf_data * amf_array_get_at(const amf_data * data, uint32 n) {
     return (data != NULL) ? amf_list_get_at(&data->list_data, n) : NULL;
 }
 
@@ -1080,14 +1080,14 @@ amf_data * amf_date_new(number64 milliseconds, sint16 timezone) {
     return data;
 }
 
-number64 amf_date_get_milliseconds(amf_data * data) {
+number64 amf_date_get_milliseconds(const amf_data * data) {
     return (data != NULL) ? data->date_data.milliseconds : 0.0;
 }
 
-sint16 amf_date_get_timezone(amf_data * data) {
+sint16 amf_date_get_timezone(const amf_data * data) {
     return (data != NULL) ? data->date_data.timezone : 0;
 }
 
-time_t amf_date_to_time_t(amf_data * data) {
+time_t amf_date_to_time_t(const amf_data * data) {
     return (time_t)((data != NULL) ? data->date_data.milliseconds / 1000 : 0);
 }

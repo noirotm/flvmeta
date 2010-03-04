@@ -25,6 +25,7 @@
 #include "flv.h"
 #include "amf.h"
 #include "avc.h"
+#include "dump.h"
 #include "update.h"
 #include "util.h"
 
@@ -995,7 +996,6 @@ int update_metadata(const flvmeta_opts * opts) {
     amf_data_free(meta.on_last_second_name);
     amf_data_free(meta.on_last_second);
     amf_data_free(meta.on_metadata_name);
-    amf_data_free(meta.on_metadata);
     amf_data_free(info.original_on_metadata);
 
     /* copy data into the original file if needed */
@@ -1006,6 +1006,7 @@ int update_metadata(const flvmeta_opts * opts) {
 
         flv_out_real = fopen(opts->output_file, "wb");
         if (flv_out_real == NULL) {
+            amf_data_free(meta.on_metadata);
             return ERROR_OPEN_WRITE;
         }
 
@@ -1017,20 +1018,27 @@ int update_metadata(const flvmeta_opts * opts) {
                 if (fwrite(copy_buffer, sizeof(byte), bytes_read, flv_out_real) < bytes_read) {
                     fclose(flv_out_real);
                     fclose(flv_out);
+                    amf_data_free(meta.on_metadata);
                     return ERROR_WRITE;
                 }
             }
             else {
                 fclose(flv_out_real);
                 fclose(flv_out);
+                amf_data_free(meta.on_metadata);
                 return ERROR_WRITE;
             }
         }
         
         fclose(flv_out_real);
     }
-
     fclose(flv_out);
+
+    /* dump computed metadata if we have to */
+    if (opts->dump_metadata == 1) {
+        dump_amf_data(meta.on_metadata, opts);
+    }
     
+    amf_data_free(meta.on_metadata);
     return res;
 }

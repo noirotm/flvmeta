@@ -22,8 +22,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "dump_json.h"
-#include "json.h"
+#include "dump_xml.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -40,7 +39,7 @@ static int has_xml_markers(const char * str, int len) {
 }
 
 /* XML metadata dumping */
-void xml_amf_data_dump(amf_data * data, int indent_level) {
+void xml_amf_data_dump(const amf_data * data, int indent_level) {
     if (data != NULL) {
         amf_node * node;
         time_t time;
@@ -251,13 +250,10 @@ static int xml_on_stream_end(flv_parser * parser) {
 /* XML FLV file metadata dump callbacks */
 static int xml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
     if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
-        puts("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>");
-        puts("<scriptDataObject name=\"onMetaData\" xmlns=\"http://schemas.flvmeta.org/FLV/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/\">");
-        /* dump AMF data as XML, we start from level 3, meaning 6 indentations characters */
-        xml_amf_data_dump(data, 1);
-        printf("</scriptDataObject>");
+        dump_xml_amf_data(data);
+        return FLVMETA_DUMP_STOP_OK;
     }
-    return FLVMETA_DUMP_STOP_OK;
+    return OK;
 }
 
 /* dumping functions */
@@ -277,4 +273,14 @@ void dump_xml_setup_file_dump(flv_parser * parser) {
         parser->on_prev_tag_size = xml_on_prev_tag_size;
         parser->on_stream_end = xml_on_stream_end;
     }
+}
+
+int dump_xml_amf_data(const amf_data * data) {
+    puts("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>");
+    puts("<scriptDataObject name=\"onMetaData\" xmlns=\"http://schemas.flvmeta.org/FLV/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/\">");
+    /* dump AMF data as XML, we start from level 3, meaning 6 indentations characters */
+    xml_amf_data_dump(data, 1);
+    printf("</scriptDataObject>\n");
+
+    return OK;
 }

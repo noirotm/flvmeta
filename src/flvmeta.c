@@ -43,7 +43,7 @@ static struct option long_options[] = {
     { "raw",           no_argument,         NULL, 'r'},
     { "xml",           no_argument,         NULL, 'x'},
     { "yaml",          no_argument,         NULL, 'y'},
-    { "dump-metadata", no_argument,         NULL, 'm'},
+    { "print-metadata", no_argument,        NULL, 'm'},
     { "add",           required_argument,   NULL, 'a'},
     { "no-lastsecond", no_argument,         NULL, 'l'},
     { "preserve",      no_argument,         NULL, 'p'},
@@ -57,16 +57,16 @@ static struct option long_options[] = {
 };
 
 /* short options */
-#define DUMP_OPTION                 "D"
-#define FULL_DUMP_OPTION            "F"
-#define CHECK_OPTION                "C"
-#define UPDATE_OPTION               "U"
+#define DUMP_COMMAND                "D"
+#define FULL_DUMP_COMMAND           "F"
+#define CHECK_COMMAND               "C"
+#define UPDATE_COMMAND              "U"
 #define DUMP_FORMAT_OPTION          "d:"
 #define JSON_OPTION                 "j"
 #define RAW_OPTION                  "r"
 #define XML_OPTION                  "x"
 #define YAML_OPTION                 "y"
-#define DUMP_METADATA_OPTION        "m"
+#define PRINT_METADATA_OPTION       "m"
 #define ADD_OPTION                  "a:"
 #define NO_LASTSECOND_OPTION        "l"
 #define PRESERVE_OPTION             "p"
@@ -99,8 +99,8 @@ static void help(const char * name) {
     fprintf(stderr, "  -C, --check               check the validity of INPUT_FILE\n");
     fprintf(stderr, "  -U, --update              update computed onMetaData tag from INPUT_FILE\n");
     fprintf(stderr, "                            into OUTPUT_FILE (default with output file)\n");
-    fprintf(stderr, "  -A, --extract-audio       extract raw audio data into OUTPUT_FILE\n");
-    fprintf(stderr, "  -E, --extract-video       extract raw video data into OUTPUT_FILE\n");
+/*    fprintf(stderr, "  -A, --extract-audio       extract raw audio data into OUTPUT_FILE\n");*/
+/*    fprintf(stderr, "  -E, --extract-video       extract raw video data into OUTPUT_FILE\n");*/
     fprintf(stderr, "\nDump options:\n");
     fprintf(stderr, "  -d, --dump-format=TYPE    dump format is of type TYPE\n");
     fprintf(stderr, "                            TYPE is 'xml' (default), 'json', 'raw', or 'yaml'\n");
@@ -109,7 +109,7 @@ static void help(const char * name) {
     fprintf(stderr, "  -x, --xml                 equivalent to --dump-format=xml\n");
     fprintf(stderr, "  -y, --yaml                equivalent to --dump-format=yaml\n");
     fprintf(stderr, "\nUpdate options:\n");
-    fprintf(stderr, "  -m, --dump-metadata       dump metadata to stdout after update using\n");
+    fprintf(stderr, "  -m, --print-metadata      print metadata to stdout after update using\n");
     fprintf(stderr, "                            the specified format\n");
     fprintf(stderr, "  -a, --add=NAME=VALUE      add a metadata string value to the output file\n");
     fprintf(stderr, "  -l, --no-lastsecond       do not create the onLastSecond tag\n");
@@ -149,15 +149,16 @@ int main(int argc, char ** argv) {
     option_index = 0;
     do {
         option = getopt_long(argc, argv, 
-            DUMP_OPTION
-            FULL_DUMP_OPTION
-            CHECK_OPTION
-            UPDATE_OPTION
+            DUMP_COMMAND
+            FULL_DUMP_COMMAND
+            CHECK_COMMAND
+            UPDATE_COMMAND
             DUMP_FORMAT_OPTION
             JSON_OPTION
             RAW_OPTION
             XML_OPTION
             YAML_OPTION
+            PRINT_METADATA_OPTION
             ADD_OPTION
             NO_LASTSECOND_OPTION
             PRESERVE_OPTION

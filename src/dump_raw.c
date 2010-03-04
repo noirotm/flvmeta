@@ -168,10 +168,10 @@ static int raw_on_stream_end(flv_parser * parser) {
 /* raw FLV file metadata dump callback */
 static int raw_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
     if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
-        amf_data_dump(stdout, data, 0);
-        printf("\n");
+        dump_raw_amf_data(data);
+        return FLVMETA_DUMP_STOP_OK;
     }
-    return FLVMETA_DUMP_STOP_OK;
+    return OK;
 }
 
 /* setup dumping */
@@ -192,4 +192,10 @@ void dump_raw_setup_file_dump(flv_parser * parser) {
         parser->on_prev_tag_size = raw_on_prev_tag_size;
         parser->on_stream_end = raw_on_stream_end;
     }
+}
+
+int dump_raw_amf_data(const amf_data * data) {
+    amf_data_dump(stdout, data, 0);
+    printf("\n");
+    return OK;
 }
