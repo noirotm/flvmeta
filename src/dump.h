@@ -26,6 +26,15 @@
 
 #include "flvmeta.h"
 
+/* common FLV strings */
+const char * dump_string_get_tag_type(flv_tag * tag);
+const char * dump_string_get_video_codec(flv_video_tag tag);
+const char * dump_string_get_video_frame_type(flv_video_tag tag);
+const char * dump_string_get_sound_type(flv_audio_tag tag);
+const char * dump_string_get_sound_size(flv_audio_tag tag);
+const char * dump_string_get_sound_rate(flv_audio_tag tag);
+const char * dump_string_get_sound_format(flv_audio_tag tag);
+
 /* dump metadata from a FLV file */
 extern int dump_metadata(const flvmeta_opts * options);
 

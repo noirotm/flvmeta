@@ -22,6 +22,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include "dump.h"
 #include "dump_yaml.h"
 #include "yaml.h"
 
@@ -181,19 +182,14 @@ int yaml_on_header(flv_header * header, flv_parser * parser) {
 }
 
 int yaml_on_tag(flv_tag * tag, flv_parser * parser) {
-    char * str;
+    const char * str;
     yaml_emitter_t * emitter;
     yaml_event_t event;
     char buffer[20];
 
     emitter = (yaml_emitter_t *)parser->user_data;
 
-    switch (tag->type) {
-        case FLV_TAG_TYPE_AUDIO: str = "audio"; break;
-        case FLV_TAG_TYPE_VIDEO: str = "video"; break;
-        case FLV_TAG_TYPE_META: str = "scriptData"; break;
-        default: str = "Unknown";
-    }
+    str = dump_string_get_tag_type(tag);
 
     yaml_mapping_start_event_initialize(&event, NULL, NULL, 1, YAML_ANY_MAPPING_STYLE);
     yaml_emitter_emit(emitter, &event);
@@ -233,7 +229,7 @@ int yaml_on_tag(flv_tag * tag, flv_parser * parser) {
 }
 
 int yaml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
-    char * str;
+    const char * str;
     yaml_emitter_t * emitter;
     yaml_event_t event;
 
@@ -245,16 +241,7 @@ int yaml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
     yaml_mapping_start_event_initialize(&event, NULL, NULL, 1, YAML_ANY_MAPPING_STYLE);
     yaml_emitter_emit(emitter, &event);
 
-    switch (flv_video_tag_codec_id(vt)) {
-        case FLV_VIDEO_TAG_CODEC_JPEG: str = "JPEG"; break;
-        case FLV_VIDEO_TAG_CODEC_SORENSEN_H263: str = "Sorenson H.263"; break;
-        case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO: str = "Screen video"; break;
-        case FLV_VIDEO_TAG_CODEC_ON2_VP6: str = "On2 VP6"; break;
-        case FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA: str = "On2 VP6 with alpha channel"; break;
-        case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2: str = "Screen video version 2"; break;
-        case FLV_VIDEO_TAG_CODEC_AVC: str = "AVC"; break;
-        default: str = "Unknown";
-    }
+    str = dump_string_get_video_codec(vt);
 
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"codecID", 7, 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
@@ -262,14 +249,7 @@ int yaml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)str, strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
 
-    switch (flv_video_tag_frame_type(vt)) {
-        case FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME: str = "keyframe"; break;
-        case FLV_VIDEO_TAG_FRAME_TYPE_INTERFRAME: str = "inter frame"; break;
-        case FLV_VIDEO_TAG_FRAME_TYPE_DISPOSABLE_INTERFRAME: str = "disposable inter frame"; break;
-        case FLV_VIDEO_TAG_FRAME_TYPE_GENERATED_KEYFRAME: str = "generated keyframe"; break;
-        case FLV_VIDEO_TAG_FRAME_TYPE_COMMAND_FRAME: str = "video info/command frame"; break;
-        default: str = "Unknown";
-    }
+    str = dump_string_get_video_frame_type(vt);
 
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"frameType", 9, 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
@@ -284,7 +264,7 @@ int yaml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
 }
 
 int yaml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
-    char * str;
+    const char * str;
     yaml_emitter_t * emitter;
     yaml_event_t event;
 
@@ -296,11 +276,7 @@ int yaml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
     yaml_mapping_start_event_initialize(&event, NULL, NULL, 1, YAML_ANY_MAPPING_STYLE);
     yaml_emitter_emit(emitter, &event);
 
-    switch (flv_audio_tag_sound_type(at)) {
-        case FLV_AUDIO_TAG_SOUND_TYPE_MONO: str = "mono"; break;
-        case FLV_AUDIO_TAG_SOUND_TYPE_STEREO: str = "stereo"; break;
-        default: str = "Unknown";
-    }
+    str = dump_string_get_sound_type(at);
 
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"type", 4, 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
@@ -308,11 +284,7 @@ int yaml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)str, strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
 
-    switch (flv_audio_tag_sound_size(at)) {
-        case FLV_AUDIO_TAG_SOUND_SIZE_8: str = "8"; break;
-        case FLV_AUDIO_TAG_SOUND_SIZE_16: str = "16"; break;
-        default: str = "Unknown";
-    }
+    str = dump_string_get_sound_size(at);
 
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"size", 4, 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
@@ -320,13 +292,7 @@ int yaml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)str, strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
 
-    switch (flv_audio_tag_sound_rate(at)) {
-        case FLV_AUDIO_TAG_SOUND_RATE_5_5: str = "5.5"; break;
-        case FLV_AUDIO_TAG_SOUND_RATE_11: str = "11"; break;
-        case FLV_AUDIO_TAG_SOUND_RATE_22: str = "22"; break;
-        case FLV_AUDIO_TAG_SOUND_RATE_44: str = "44"; break;
-        default: str = "Unknown";
-    }
+    str = dump_string_get_sound_rate(at);
 
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"rate", 4, 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
@@ -334,23 +300,7 @@ int yaml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)str, strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
 
-    switch (flv_audio_tag_sound_format(at)) {
-        case FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM: str = "Linear PCM, platform endian"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_ADPCM: str = "ADPCM"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_MP3: str = "MP3"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM_LE: str = "Linear PCM, little-endian"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER_16_MONO: str = "Nellymoser 16-kHz mono"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER_8_MONO: str = "Nellymoser 8-kHz mono"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER: str = "Nellymoser"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_G711_A: str = "G.711 A-law logarithmic PCM"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_G711_MU: str = "G.711 mu-law logarithmic PCM"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_RESERVED: str = "reserved"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_AAC: str = "AAC"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_SPEEX: str = "Speex"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_MP3_8: str = "MP3 8-Khz"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_DEVICE_SPECIFIC: str = "Device-specific sound"; break;
-        default: str = "Unknown";
-    }
+    str = dump_string_get_sound_format(at);
 
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"format", 6, 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);

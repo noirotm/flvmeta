@@ -22,6 +22,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include "dump.h"
 #include "dump_json.h"
 #include "json.h"
 
@@ -110,8 +111,6 @@ static int json_on_header(flv_header * header, flv_parser * parser) {
 }
 
 static int json_on_tag(flv_tag * tag, flv_parser * parser) {
-    char * str;
-    
     if (parser->user_data != NULL) {
         printf(",");
     }
@@ -119,15 +118,8 @@ static int json_on_tag(flv_tag * tag, flv_parser * parser) {
         parser->user_data = tag;
     }
 
-    switch (tag->type) {
-        case FLV_TAG_TYPE_AUDIO: str = "audio"; break;
-        case FLV_TAG_TYPE_VIDEO: str = "video"; break;
-        case FLV_TAG_TYPE_META: str = "scriptData"; break;
-        default: str = "Unknown";
-    }
-
     printf("{\"type\":\"%s\",\"timestamp\":%i,\"dataSize\":%i",
-        str,
+        dump_string_get_tag_type(tag),
         flv_tag_get_timestamp(*tag),
         uint24_be_to_uint32(tag->body_length));
     printf(",\"offset\":%" FILE_OFFSET_PRINTF_FORMAT "i,",
@@ -137,78 +129,16 @@ static int json_on_tag(flv_tag * tag, flv_parser * parser) {
 }
 
 static int json_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
-    char * str;
-
-    switch (flv_video_tag_codec_id(vt)) {
-        case FLV_VIDEO_TAG_CODEC_JPEG: str = "JPEG"; break;
-        case FLV_VIDEO_TAG_CODEC_SORENSEN_H263: str = "Sorenson H.263"; break;
-        case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO: str = "Screen video"; break;
-        case FLV_VIDEO_TAG_CODEC_ON2_VP6: str = "On2 VP6"; break;
-        case FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA: str = "On2 VP6 with alpha channel"; break;
-        case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2: str = "Screen video version 2"; break;
-        case FLV_VIDEO_TAG_CODEC_AVC: str = "AVC"; break;
-        default: str = "Unknown";
-    }
-    printf("\"videoData\":{\"codecID\":\"%s\"", str);
-
-    switch (flv_video_tag_frame_type(vt)) {
-        case FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME: str = "keyframe"; break;
-        case FLV_VIDEO_TAG_FRAME_TYPE_INTERFRAME: str = "inter frame"; break;
-        case FLV_VIDEO_TAG_FRAME_TYPE_DISPOSABLE_INTERFRAME: str = "disposable inter frame"; break;
-        case FLV_VIDEO_TAG_FRAME_TYPE_GENERATED_KEYFRAME: str = "generated keyframe"; break;
-        case FLV_VIDEO_TAG_FRAME_TYPE_COMMAND_FRAME: str = "video info/command frame"; break;
-        default: str = "Unknown";
-    }
-    printf(",\"frameType\":\"%s\"}", str);
-
+    printf("\"videoData\":{\"codecID\":\"%s\"", dump_string_get_video_codec(vt));
+    printf(",\"frameType\":\"%s\"}", dump_string_get_video_frame_type(vt));
     return OK;
 }
 
 static int json_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
-    char * str;
-
-    switch (flv_audio_tag_sound_type(at)) {
-        case FLV_AUDIO_TAG_SOUND_TYPE_MONO: str = "mono"; break;
-        case FLV_AUDIO_TAG_SOUND_TYPE_STEREO: str = "stereo"; break;
-        default: str = "Unknown";
-    }
-    printf("\"audioData\":{\"type\":\"%s\"", str);
-
-    switch (flv_audio_tag_sound_size(at)) {
-        case FLV_AUDIO_TAG_SOUND_SIZE_8: str = "8"; break;
-        case FLV_AUDIO_TAG_SOUND_SIZE_16: str = "16"; break;
-        default: str = "Unknown";
-    }
-    printf(",\"size\":\"%s\"", str);
-
-    switch (flv_audio_tag_sound_rate(at)) {
-        case FLV_AUDIO_TAG_SOUND_RATE_5_5: str = "5.5"; break;
-        case FLV_AUDIO_TAG_SOUND_RATE_11: str = "11"; break;
-        case FLV_AUDIO_TAG_SOUND_RATE_22: str = "22"; break;
-        case FLV_AUDIO_TAG_SOUND_RATE_44: str = "44"; break;
-        default: str = "Unknown";
-    }
-    printf(",\"rate\":\"%s\"", str);
-
-    switch (flv_audio_tag_sound_format(at)) {
-        case FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM: str = "Linear PCM, platform endian"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_ADPCM: str = "ADPCM"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_MP3: str = "MP3"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM_LE: str = "Linear PCM, little-endian"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER_16_MONO: str = "Nellymoser 16-kHz mono"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER_8_MONO: str = "Nellymoser 8-kHz mono"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER: str = "Nellymoser"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_G711_A: str = "G.711 A-law logarithmic PCM"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_G711_MU: str = "G.711 mu-law logarithmic PCM"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_RESERVED: str = "reserved"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_AAC: str = "AAC"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_SPEEX: str = "Speex"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_MP3_8: str = "MP3 8-Khz"; break;
-        case FLV_AUDIO_TAG_SOUND_FORMAT_DEVICE_SPECIFIC: str = "Device-specific sound"; break;
-        default: str = "Unknown";
-    }
-    printf(",\"format\":\"%s\"}", str);
-
+    printf("\"audioData\":{\"type\":\"%s\"", dump_string_get_sound_type(at));
+    printf(",\"size\":\"%s\"", dump_string_get_sound_size(at));
+    printf(",\"rate\":\"%s\"", dump_string_get_sound_rate(at));
+    printf(",\"format\":\"%s\"}", dump_string_get_sound_format(at));
     return OK;
 }
 

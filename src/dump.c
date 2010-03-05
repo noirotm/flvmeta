@@ -29,6 +29,85 @@
 
 #include <string.h>
 
+const char * dump_string_get_tag_type(flv_tag * tag) {
+    switch (tag->type) {
+        case FLV_TAG_TYPE_AUDIO: return "audio";
+        case FLV_TAG_TYPE_VIDEO: return "video";
+        case FLV_TAG_TYPE_META: return "scriptData";
+        default: return "Unknown";
+    }
+}
+
+const char * dump_string_get_video_codec(flv_video_tag tag) {
+    switch (flv_video_tag_codec_id(tag)) {
+        case FLV_VIDEO_TAG_CODEC_JPEG: return "JPEG";
+        case FLV_VIDEO_TAG_CODEC_SORENSEN_H263: return "Sorenson H.263";
+        case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO: return "Screen video";
+        case FLV_VIDEO_TAG_CODEC_ON2_VP6: return "On2 VP6";
+        case FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA: return "On2 VP6 with alpha channel";
+        case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2: return "Screen video version 2";
+        case FLV_VIDEO_TAG_CODEC_AVC: return "AVC";
+        default: return "Unknown";
+    }
+}
+
+const char * dump_string_get_video_frame_type(flv_video_tag tag) {
+    switch (flv_video_tag_frame_type(tag)) {
+        case FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME: return "keyframe";
+        case FLV_VIDEO_TAG_FRAME_TYPE_INTERFRAME: return "inter frame";
+        case FLV_VIDEO_TAG_FRAME_TYPE_DISPOSABLE_INTERFRAME: return "disposable inter frame";
+        case FLV_VIDEO_TAG_FRAME_TYPE_GENERATED_KEYFRAME: return "generated keyframe";
+        case FLV_VIDEO_TAG_FRAME_TYPE_COMMAND_FRAME: return "video info/command frame";
+        default: return "Unknown";
+    }
+}
+
+const char * dump_string_get_sound_type(flv_audio_tag tag) {
+    switch (flv_audio_tag_sound_type(tag)) {
+        case FLV_AUDIO_TAG_SOUND_TYPE_MONO: return "mono";
+        case FLV_AUDIO_TAG_SOUND_TYPE_STEREO: return "stereo";
+        default: return "Unknown";
+    }
+}
+
+const char * dump_string_get_sound_size(flv_audio_tag tag) {
+    switch (flv_audio_tag_sound_size(tag)) {
+        case FLV_AUDIO_TAG_SOUND_SIZE_8: return "8";
+        case FLV_AUDIO_TAG_SOUND_SIZE_16: return "16";
+        default: return "Unknown";
+    }
+}
+
+const char * dump_string_get_sound_rate(flv_audio_tag tag) {
+    switch (flv_audio_tag_sound_rate(tag)) {
+        case FLV_AUDIO_TAG_SOUND_RATE_5_5: return "5.5";
+        case FLV_AUDIO_TAG_SOUND_RATE_11: return "11";
+        case FLV_AUDIO_TAG_SOUND_RATE_22: return "22";
+        case FLV_AUDIO_TAG_SOUND_RATE_44: return "44";
+        default: return "Unknown";
+    }
+}
+
+const char * dump_string_get_sound_format(flv_audio_tag tag) {
+    switch (flv_audio_tag_sound_format(tag)) {
+        case FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM: return "Linear PCM, platform endian";
+        case FLV_AUDIO_TAG_SOUND_FORMAT_ADPCM: return "ADPCM";
+        case FLV_AUDIO_TAG_SOUND_FORMAT_MP3: return "MP3";
+        case FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM_LE: return "Linear PCM, little-endian";
+        case FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER_16_MONO: return "Nellymoser 16-kHz mono";
+        case FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER_8_MONO: return "Nellymoser 8-kHz mono";
+        case FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER: return "Nellymoser";
+        case FLV_AUDIO_TAG_SOUND_FORMAT_G711_A: return "G.711 A-law logarithmic PCM";
+        case FLV_AUDIO_TAG_SOUND_FORMAT_G711_MU: return "G.711 mu-law logarithmic PCM";
+        case FLV_AUDIO_TAG_SOUND_FORMAT_RESERVED: return "reserved";
+        case FLV_AUDIO_TAG_SOUND_FORMAT_AAC: return "AAC";
+        case FLV_AUDIO_TAG_SOUND_FORMAT_SPEEX: return "Speex";
+        case FLV_AUDIO_TAG_SOUND_FORMAT_MP3_8: return "MP3 8-Khz";
+        case FLV_AUDIO_TAG_SOUND_FORMAT_DEVICE_SPECIFIC: return "Device-specific sound";
+        default: return "Unknown";
+    }
+}
+
 /* dump metadata from a FLV file */
 int dump_metadata(const flvmeta_opts * options) {
     int retval;
