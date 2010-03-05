@@ -18,18 +18,11 @@
     </xs:complexType>
   </xs:element>
 
-  <xs:element name="scriptDataObject">
-    <xs:complexType>
-      <xs:group ref="amf:tData" />
-      <xs:attribute name="name" use="required" type="xs:string" />
-    </xs:complexType>
-  </xs:element>
-
   <xs:complexType name="tFlvTag">
     <xs:choice>
       <xs:element name="videoData" type="tVideoData"/>
       <xs:element name="audioData" type="tAudioData"/>
-      <xs:element ref="scriptDataObject" />
+      <xs:element name="scriptDataObject" type="tScriptDataObject"/>
     </xs:choice>
     <xs:attribute name="type" type="tTagType" use="required"/>
     <xs:attribute name="dataSize" type="xs:nonNegativeInteger" use="optional"/>
@@ -121,5 +114,10 @@
       <xs:enumeration value="AVC"/>
     </xs:restriction>
   </xs:simpleType>
+
+  <xs:complexType name="tScriptDataObject">
+    <xs:group ref="amf:tData" />
+    <xs:attribute name="name" use="required" type="xs:string" />
+  </xs:complexType>
 
 </xs:schema>

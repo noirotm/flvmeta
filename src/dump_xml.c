@@ -39,81 +39,119 @@ static int has_xml_markers(const char * str, int len) {
 }
 
 /* XML metadata dumping */
-void xml_amf_data_dump(const amf_data * data, int indent_level) {
+static void xml_amf_data_dump(const amf_data * data, int qualified, int indent_level) {
     if (data != NULL) {
         amf_node * node;
         time_t time;
         struct tm * t;
         char datestr[128];
         int markers;
+        char * ns;
+        char ns_decl[50];
+
+        /* namespace to use whether we're using qualified mode */
+        ns = (qualified == 1) ? "amf:" : "";
+
+        /* if indent_level is zero, that means we're at the root of the xml document
+           therefore we need to insert the namespace definition */
+        if (indent_level == 0) {
+            sprintf(ns_decl, " xmlns%s=\"http://schemas.flvmeta.org/AMF0/\"", ns);
+        }
+        else {
+            sprintf(ns_decl, "");
+        }
 
         /* print indentation spaces */
         printf("%*s", indent_level * 2, "");
 
         switch (data->type) {
             case AMF_TYPE_NUMBER:
-                printf("<amf:number value=\"%.12g\"/>\n", data->number_data);
+                printf("<%snumber%s value=\"%.12g\"/>\n", ns, ns_decl, data->number_data);
                 break;
             case AMF_TYPE_BOOLEAN:
-                printf("<amf:boolean value=\"%s\"/>\n", (data->boolean_data) ? "true" : "false");
+                printf("<%sboolean%s value=\"%s\"/>\n", ns, ns_decl, (data->boolean_data) ? "true" : "false");
                 break;
             case AMF_TYPE_STRING:
-                printf("<amf:string>");
-                /* check whether the string contains xml characters, if so, CDATA it */
-                markers = has_xml_markers((char*)amf_string_get_bytes(data), amf_string_get_size(data));
-                if (markers) {
-                    printf("<![CDATA[");
+                if (amf_string_get_size(data) > 0) {
+                    printf("<%sstring%s>", ns, ns_decl);
+                    /* check whether the string contains xml characters, if so, CDATA it */
+                    markers = has_xml_markers((char*)amf_string_get_bytes(data), amf_string_get_size(data));
+                    if (markers) {
+                        printf("<![CDATA[");
+                    }
+                    /* do not print more than the actual length of string */
+                    printf("%.*s", (int)amf_string_get_size(data), amf_string_get_bytes(data));
+                    if (markers) {
+                        printf("]]>");
+                    }
+                    printf("</%sstring>\n", ns);
                 }
-                /* do not print more than the actual length of string */
-                printf("%.*s", (int)amf_string_get_size(data), amf_string_get_bytes(data));
-                if (markers) {
-                    printf("]]>");
+                else {
+                    /* simplify empty xml element into a more compact form */
+                    printf("<%sstring%s/>\n", ns, ns_decl);
                 }
-                puts("</amf:string>");
                 break;
             case AMF_TYPE_OBJECT:
-                puts("<amf:object>");
-                node = amf_object_first(data);
-                while (node != NULL) {
-                    printf("%*s<amf:element name=\"%s\">\n", (indent_level + 1) * 2, "", amf_string_get_bytes(amf_object_get_name(node)));
-                    xml_amf_data_dump(amf_object_get_data(node), indent_level + 2);
-                    node = amf_object_next(node);
-                    printf("%*s</amf:element>\n", (indent_level + 1) * 2, "");
+                if (amf_object_size(data) > 0) {
+                    printf("<%sobject%s>\n", ns, ns_decl);
+                    node = amf_object_first(data);
+                    while (node != NULL) {
+                        printf("%*s<%sentry name=\"%s\">\n", (indent_level + 1) * 2, "", ns, amf_string_get_bytes(amf_object_get_name(node)));
+                        xml_amf_data_dump(amf_object_get_data(node), qualified, indent_level + 2);
+                        node = amf_object_next(node);
+                        printf("%*s</%sentry>\n", (indent_level + 1) * 2, "", ns);
+                    }
+                    printf("%*s</%sobject>\n", indent_level * 2, "", ns);
                 }
-                printf("%*s</amf:object>\n", indent_level * 2, "");
+                else {
+                    /* simplify empty xml element into a more compact form */
+                    printf("<%sobject%s/>\n", ns, ns_decl);
+                }
                 break;
             case AMF_TYPE_NULL:
-                puts("<amf:null/>");
+                printf("<%snull%s/>\n", ns, ns_decl);
                 break;
             case AMF_TYPE_UNDEFINED:
-                puts("<amf:undefined/>");
+                printf("<%sundefined%s/>\n", ns, ns_decl);
                 break;
             case AMF_TYPE_ASSOCIATIVE_ARRAY:
-                puts("<amf:associativeArray>");
-                node = amf_associative_array_first(data);
-                while (node != NULL) {
-                    printf("%*s<amf:element name=\"%s\">\n", (indent_level + 1) * 2, "", amf_string_get_bytes(amf_associative_array_get_name(node)));
-                    xml_amf_data_dump(amf_associative_array_get_data(node), indent_level + 2);
-                    node = amf_associative_array_next(node);
-                    printf("%*s</amf:element>\n", (indent_level + 1) * 2, "");
+                if (amf_associative_array_size(data) > 0) {
+                    printf("<%sassociativeArray%s>\n", ns, ns_decl);
+                    node = amf_associative_array_first(data);
+                    while (node != NULL) {
+                        printf("%*s<%sentry name=\"%s\">\n", (indent_level + 1) * 2, "", ns, amf_string_get_bytes(amf_associative_array_get_name(node)));
+                        xml_amf_data_dump(amf_associative_array_get_data(node), qualified, indent_level + 2);
+                        node = amf_associative_array_next(node);
+                        printf("%*s</%sentry>\n", (indent_level + 1) * 2, "", ns);
+                    }
+                    printf("%*s</%sassociativeArray>\n", indent_level * 2, "", ns);
                 }
-                printf("%*s</amf:associativeArray>\n", indent_level * 2, "");
+                else {
+                    /* simplify empty xml element into a more compact form */
+                    printf("<%sassociativeArray%s/>\n", ns, ns_decl);
+                }
                 break;
             case AMF_TYPE_ARRAY:
-                puts("<amf:array>");
-                node = amf_array_first(data);
-                while (node != NULL) {
-                    xml_amf_data_dump(amf_array_get(node), indent_level + 1);
-                    node = amf_array_next(node);
+                if (amf_array_size(data) > 0) {
+                    printf("<%sarray%s>\n", ns, ns_decl);
+                    node = amf_array_first(data);
+                    while (node != NULL) {
+                        xml_amf_data_dump(amf_array_get(node), qualified, indent_level + 1);
+                        node = amf_array_next(node);
+                    }
+                    printf("%*s</%sarray>\n", indent_level * 2, "", ns);
                 }
-                printf("%*s</amf:array>\n", indent_level * 2, "");
+                else {
+                    /* simplify empty xml element into a more compact form */
+                    printf("<%sarray%s/>\n", ns, ns_decl);
+                }
                 break;
             case AMF_TYPE_DATE:
                 time = amf_date_to_time_t(data);
                 tzset();
                 t = localtime(&time);
                 strftime(datestr, sizeof(datestr), "%Y-%m-%dT%H:%M:%S", t);
-                printf("<amf:date value=\"%s\"/>\n", datestr);
+                printf("<%sdate%s value=\"%s\"/>\n", ns, ns_decl, datestr);
                 break;
             case AMF_TYPE_XML: break;
             case AMF_TYPE_CLASS: break;
@@ -232,7 +270,7 @@ static int xml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser
 static int xml_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
     printf("    <scriptDataObject name=\"%s\">\n", amf_string_get_bytes(name));
     /* dump AMF data as XML, we start from level 3, meaning 6 indentations characters */
-    xml_amf_data_dump(data, 3);
+    xml_amf_data_dump(data, 1, 3);
     puts("    </scriptDataObject>");
     return OK;
 }
@@ -277,10 +315,6 @@ void dump_xml_setup_file_dump(flv_parser * parser) {
 
 int dump_xml_amf_data(const amf_data * data) {
     puts("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>");
-    puts("<scriptDataObject name=\"onMetaData\" xmlns=\"http://schemas.flvmeta.org/FLV/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/\">");
-    /* dump AMF data as XML, we start from level 3, meaning 6 indentations characters */
-    xml_amf_data_dump(data, 1);
-    printf("</scriptDataObject>\n");
-
+    xml_amf_data_dump(data, 0, 0);
     return OK;
 }

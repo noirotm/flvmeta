@@ -1,42 +1,40 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<scriptDataObject name="onMetadata" xmlns="http://schemas.flvmeta.org/FLV/" xmlns:amf="http://schemas.flvmeta.org/AMF0/">
-  <amf:associativeArray>
-    <amf:element name="hasMetadata">
-      <amf:boolean value="true"/>
-    </amf:element>
-    <amf:element name="hasVideo">
-      <amf:boolean value="true"/>
-    </amf:element>
-    <amf:element name="hasAudio">
-      <amf:boolean value="true"/>
-    </amf:element>
-    <amf:element name="duration">
-      <amf:number value="597.56"/>
-    </amf:element>
-    <amf:element name="metadatacreator">
-      <amf:string>flvmeta 1.0.8</amf:string>
-    </amf:element>
-    <amf:element name="hascuepoints">
-      <amf:boolean value="false"/>
-    </amf:element>
-    <amf:element name="cuepoints">
-      <amf:array/>
-    </amf:element>
-    <amf:element name="keyframes">
-      <amf:associativeArray>
-        <amf:element name="times">
-          <amf:array>
-            <amf:number value="0.0"/>
-            <amf:number value="0.2"/>
-          </amf:array>
-        </amf:element>
-        <amf:element name="filepositions">
-          <amf:array>
-            <amf:number value="3142.0"/>
-            <amf:number value="3221.0"/>
-          </amf:array>
-        </amf:element>
-      </amf:associativeArray>
-    </amf:element>
-  </amf:associativeArray>
-</scriptDataObject>
+<associativeArray xmlns="http://schemas.flvmeta.org/AMF0/">
+  <entry name="hasMetadata">
+    <boolean value="true"/>
+  </entry>
+  <entry name="hasVideo">
+    <boolean value="true"/>
+  </entry>
+  <entry name="hasAudio">
+    <boolean value="true"/>
+  </entry>
+  <entry name="duration">
+    <number value="597.56"/>
+  </entry>
+  <entry name="metadatacreator">
+    <string>flvmeta 1.0.8</string>
+  </entry>
+  <entry name="hascuepoints">
+    <boolean value="false"/>
+  </entry>
+  <entry name="cuepoints">
+    <array/>
+  </entry>
+  <entry name="keyframes">
+    <associativeArray>
+      <entry name="times">
+        <array>
+          <number value="0.0"/>
+          <number value="0.2"/>
+        </array>
+      </entry>
+      <entry name="filepositions">
+        <array>
+          <number value="3142.0"/>
+          <number value="3221.0"/>
+        </array>
+      </entry>
+    </associativeArray>
+  </entry>
+</associativeArray>
