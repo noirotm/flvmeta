@@ -117,7 +117,7 @@ static void help(const char * name) {
     fprintf(stderr, "\nCheck options:\n");
     fprintf(stderr, "  -l, --level=LEVEL         print only messages where level is at least LEVEL\n");
     fprintf(stderr, "                            LEVEL is 'info', 'warning' (default), 'error', or 'fatal'\n");
-    fprintf(stderr, "  -q, --quiet               do not print messages, only return an status code\n");
+    fprintf(stderr, "  -q, --quiet               do not print messages, only return the status code\n");
     fprintf(stderr, "  -x, --xml                 generate an XML report\n");
     fprintf(stderr, "\nUpdate options:\n");
     fprintf(stderr, "  -m, --print-metadata      print metadata to stdout after update using\n");
