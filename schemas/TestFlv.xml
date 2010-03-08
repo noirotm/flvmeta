@@ -1,54 +1,54 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<flv xmlns="http://schemas.flvmeta.org/FLV/" xmlns:amf="http://schemas.flvmeta.org/AMF0/" hasAudio="1" hasVideo="1">
+<flv xmlns="http://schemas.flvmeta.org/FLV/1.0/" xmlns:amf="http://schemas.flvmeta.org/AMF0/1.0/" hasAudio="1" hasVideo="1">
   <tag type="scriptData" dataSize="8974" timestamp="0" offset="21">
     <scriptDataObject name="onMetadata">
       <amf:associativeArray>
-        <amf:element name="encodingDate">
+        <amf:entry name="encodingDate">
           <amf:date value="2009-05-07T12:23:45"/>
-        </amf:element>
-        <amf:element name="hasMetadata">
+        </amf:entry>
+        <amf:entry name="hasMetadata">
           <amf:boolean value="true"/>
-        </amf:element>
-        <amf:element name="hasVideo">
+        </amf:entry>
+        <amf:entry name="hasVideo">
           <amf:boolean value="true"/>
-        </amf:element>
-        <amf:element name="hasAudio">
+        </amf:entry>
+        <amf:entry name="hasAudio">
           <amf:boolean value="true"/>
-        </amf:element>
-        <amf:element name="duration">
+        </amf:entry>
+        <amf:entry name="duration">
           <amf:number value="597.56"/>
-        </amf:element>
-        <amf:element name="metadatacreator">
+        </amf:entry>
+        <amf:entry name="metadatacreator">
           <amf:string>flvmeta 1.0.8</amf:string>
-        </amf:element>
-        <amf:element name="hascuepoints">
+        </amf:entry>
+        <amf:entry name="hascuepoints">
           <amf:boolean value="false"/>
-        </amf:element>
-        <amf:element name="test">
+        </amf:entry>
+        <amf:entry name="test">
           <amf:null/>
-        </amf:element>
-        <amf:element name="test2">
+        </amf:entry>
+        <amf:entry name="test2">
           <amf:undefined/>
-        </amf:element>
-        <amf:element name="cuepoints">
+        </amf:entry>
+        <amf:entry name="cuepoints">
           <amf:array/>
-        </amf:element>
-        <amf:element name="keyframes">
+        </amf:entry>
+        <amf:entry name="keyframes">
           <amf:associativeArray>
-            <amf:element name="times">
+            <amf:entry name="times">
               <amf:array>
                 <amf:number value="0.0"/>
                 <amf:number value="0.2"/>
               </amf:array>
-            </amf:element>
-            <amf:element name="filepositions">
+            </amf:entry>
+            <amf:entry name="filepositions">
               <amf:array>
                 <amf:number value="3142.0"/>
                 <amf:number value="3221.0"/>
               </amf:array>
-            </amf:element>
+            </amf:entry>
           </amf:associativeArray>
-        </amf:element>
+        </amf:entry>
       </amf:associativeArray>
     </scriptDataObject>
   </tag>

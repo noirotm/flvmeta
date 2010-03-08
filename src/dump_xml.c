@@ -21,7 +21,6 @@
     along with FLVMeta; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 #include "dump.h"
 #include "dump_xml.h"
 
@@ -56,7 +55,7 @@ static void xml_amf_data_dump(const amf_data * data, int qualified, int indent_l
         /* if indent_level is zero, that means we're at the root of the xml document
            therefore we need to insert the namespace definition */
         if (indent_level == 0) {
-            sprintf(ns_decl, " xmlns%s=\"http://schemas.flvmeta.org/AMF0/\"", ns);
+            sprintf(ns_decl, " xmlns%s=\"http://schemas.flvmeta.org/AMF0/1.0/\"", ns);
         }
         else {
             sprintf(ns_decl, "");
@@ -165,7 +164,7 @@ static void xml_amf_data_dump(const amf_data * data, int qualified, int indent_l
 
 static int xml_on_header(flv_header * header, flv_parser * parser) {
     puts("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>");
-    printf("<flv xmlns=\"http://schemas.flvmeta.org/FLV/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/\" hasVideo=\"%s\" hasAudio=\"%s\" version=\"%i\">\n",
+    printf("<flv xmlns=\"http://schemas.flvmeta.org/FLV/1.0/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/1.0/\" hasVideo=\"%s\" hasAudio=\"%s\" version=\"%i\">\n",
         flv_header_has_video(*header) ? "true" : "false",
         flv_header_has_audio(*header) ? "true" : "false",
         header->version);

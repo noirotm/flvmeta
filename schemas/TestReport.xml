@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<report xmlns="http://schemas.flvmeta.org/report/1.0/">
+  <metadata>
+    <filename>schmurk.flv</filename>
+    <creation-date>2010-03-05T14:22:52</creation-date>
+    <generator>flvmeta 1.2.0</generator>
+  </metadata>
+  <messages>
+    <message level="info" code="I10001" offset="54197">invalid codec</message>
+    <message level="error" code="E51051" offset="9875">unknown file user</message>
+  </messages>
+</report>

@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include "flvmeta.h"
+#include "check.h"
 #include "dump.h"
 #include "update.h"
 
@@ -45,7 +46,7 @@ static struct option long_options[] = {
     { "yaml",          no_argument,         NULL, 'y'},
     { "print-metadata", no_argument,        NULL, 'm'},
     { "add",           required_argument,   NULL, 'a'},
-    { "no-lastsecond", no_argument,         NULL, 'l'},
+    { "no-lastsecond", no_argument,         NULL, 's'},
     { "preserve",      no_argument,         NULL, 'p'},
     { "fix",           no_argument,         NULL, 'f'},
     { "ignore",        no_argument,         NULL, 'i'},
@@ -68,7 +69,7 @@ static struct option long_options[] = {
 #define YAML_OPTION                 "y"
 #define PRINT_METADATA_OPTION       "m"
 #define ADD_OPTION                  "a:"
-#define NO_LASTSECOND_OPTION        "l"
+#define NO_LASTSECOND_OPTION        "s"
 #define PRESERVE_OPTION             "p"
 #define FIX_OPTION                  "f"
 #define IGNORE_OPTION               "i"
@@ -108,11 +109,15 @@ static void help(const char * name) {
     fprintf(stderr, "  -r, --raw                 equivalent to --dump-format=raw\n");
     fprintf(stderr, "  -x, --xml                 equivalent to --dump-format=xml\n");
     fprintf(stderr, "  -y, --yaml                equivalent to --dump-format=yaml\n");
+    fprintf(stderr, "\nCheck options:\n");
+    fprintf(stderr, "  -l, --level=LEVEL         print only messages where level is at least LEVEL\n");
+    fprintf(stderr, "                            LEVEL is 'info', 'warning' (default), 'error', or 'fatal'\n");
+    fprintf(stderr, "  -x, --xml                 generate an XML report\n");
     fprintf(stderr, "\nUpdate options:\n");
     fprintf(stderr, "  -m, --print-metadata      print metadata to stdout after update using\n");
     fprintf(stderr, "                            the specified format\n");
     fprintf(stderr, "  -a, --add=NAME=VALUE      add a metadata string value to the output file\n");
-    fprintf(stderr, "  -l, --no-lastsecond       do not create the onLastSecond tag\n");
+    fprintf(stderr, "  -s, --no-lastsecond       do not create the onLastSecond tag\n");
     fprintf(stderr, "  -p, --preserve            preserve input file existing onMetadata tags\n");
     fprintf(stderr, "  -f, --fix                 fix invalid tags from the input file\n");
     fprintf(stderr, "  -i, --ignore              ignore invalid tags from the input file\n");
@@ -135,6 +140,8 @@ int main(int argc, char ** argv) {
     options.input_file = NULL;
     options.output_file = NULL;
     options.metadata = NULL;
+    options.check_level = FLVMETA_CHECK_LEVEL_WARNING;
+    options.check_xml_report = 0;
     options.dump_metadata = 0;
     options.insert_onlastsecond = 1;
     options.reset_timestamps = 0;
@@ -204,6 +211,26 @@ int main(int argc, char ** argv) {
             /*
                 options
             */
+            /* check options */
+            case 'l':
+                if (!strcmp(optarg, "info")) {
+                    options.check_level = FLVMETA_CHECK_LEVEL_INFO;
+                }
+                if (!strcmp(optarg, "warning")) {
+                    options.check_level = FLVMETA_CHECK_LEVEL_WARNING;
+                }
+                else if (!strcmp(optarg, "error")) {
+                    options.check_level = FLVMETA_CHECK_LEVEL_ERROR;
+                }
+                else if (!strcmp(optarg, "fatal")) {
+                    options.check_level = FLVMETA_CHECK_LEVEL_FATAL;
+                }
+                else {
+                    fprintf(stderr, "%s: invalid level -- %s\n", argv[0], optarg);
+                    usage(argv[0]);
+                    exit(EXIT_FAILURE);
+                }
+                break;
             /* dump options */
             case 'd':
                 if (!strcmp(optarg, "xml")) {
@@ -226,7 +253,11 @@ int main(int argc, char ** argv) {
                 break;
             case 'j': options.dump_format = FLVMETA_FORMAT_JSON;    break;
             case 'r': options.dump_format = FLVMETA_FORMAT_RAW;     break;
-            case 'x': options.dump_format = FLVMETA_FORMAT_XML;     break;
+            case 'x':
+                /* xml dump format, or generation of xml report */
+                options.dump_format = FLVMETA_FORMAT_XML;
+                options.check_xml_report = 1;
+                break;
             case 'y': options.dump_format = FLVMETA_FORMAT_YAML;    break;
             /* update options */
             case 'm': options.dump_metadata = 1;                    break;
@@ -247,7 +278,7 @@ int main(int argc, char ** argv) {
                         exit(EXIT_FAILURE);
                     }
                 } break;
-            case 'l': options.insert_onlastsecond = 0;                  break;
+            case 's': options.insert_onlastsecond = 0;                  break;
             case 'p': options.preserve_metadata = 1;                    break;
             case 'f': options.error_handling = FLVMETA_FIX_ERRORS;      break;
             case 'i': options.error_handling = FLVMETA_IGNORE_ERRORS;   break;
@@ -317,7 +348,7 @@ int main(int argc, char ** argv) {
     switch (options.command) {
         case FLVMETA_DUMP_COMMAND: errcode = dump_metadata(&options); break;
         case FLVMETA_FULL_DUMP_COMMAND: errcode = dump_flv_file(&options); break;
-        case FLVMETA_CHECK_COMMAND: break;
+        case FLVMETA_CHECK_COMMAND: errcode = check_flv_file(&options); break;
         case FLVMETA_UPDATE_COMMAND: errcode = update_metadata(&options); break;
     }
 

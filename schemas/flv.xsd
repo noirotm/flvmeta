@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<xs:schema targetNamespace="http://schemas.flvmeta.org/FLV/"
+<xs:schema targetNamespace="http://schemas.flvmeta.org/FLV/1.0/"
     elementFormDefault="qualified"
-    xmlns="http://schemas.flvmeta.org/FLV/"
-    xmlns:amf="http://schemas.flvmeta.org/AMF0/"
+    xmlns="http://schemas.flvmeta.org/FLV/1.0/"
+    xmlns:amf="http://schemas.flvmeta.org/AMF0/1.0/"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
 >
-  <xs:import namespace="http://schemas.flvmeta.org/AMF0/" schemaLocation="Amf0.xsd"/>
+  <xs:import namespace="http://schemas.flvmeta.org/AMF0/1.0/" schemaLocation="Amf0.xsd"/>
 
   <xs:element name="flv">
     <xs:complexType>

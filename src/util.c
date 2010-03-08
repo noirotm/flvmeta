@@ -21,11 +21,10 @@
     along with FLVMeta; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 #ifdef WIN32
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>
-#else /* WIN32 */
+#else /* !WIN32 */
 # include <sys/types.h>
 # include <sys/stat.h>
 # include <unistd.h>
@@ -56,7 +55,7 @@ int same_file(const char * file1, const char * file2) {
     return (info1.dwVolumeSerialNumber == info2.dwVolumeSerialNumber
         && info1.nFileIndexHigh == info2.nFileIndexHigh
         && info1.nFileIndexLow == info2.nFileIndexLow);
-#else /* WIN32 */
+#else /* !WIN32 */
     /* if not in Windows, we must stat each file and compare device and inode numbers */
     struct stat s1, s2;
     if (stat(file1, &s1) != 0) {

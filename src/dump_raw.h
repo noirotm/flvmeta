@@ -21,9 +21,14 @@
     along with FLVMeta; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#ifndef __DUMP_RAW_H__
+#define __DUMP_RAW_H__
+
 #include "flvmeta.h"
 
 /* raw dumping functions */
 extern void dump_raw_setup_metadata_dump(flv_parser * parser);
 extern void dump_raw_setup_file_dump(flv_parser * parser);
 extern int dump_raw_amf_data(const amf_data * data);
+
+#endif /* __DUMP_RAW_H__ */

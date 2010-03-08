@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<xs:schema targetNamespace="http://schemas.flvmeta.org/AMF0/"
+<xs:schema targetNamespace="http://schemas.flvmeta.org/AMF0/1.0/"
     elementFormDefault="qualified"
-    xmlns:amf="http://schemas.flvmeta.org/AMF0/"
+    xmlns:amf="http://schemas.flvmeta.org/AMF0/1.0/"
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
 >
   <xs:element name="number" type="amf:tNumber"/>
@@ -38,8 +38,8 @@
     <xs:sequence>
       <xs:element name="entry" minOccurs="0" maxOccurs="unbounded">
         <xs:complexType>
-          <xs:sequence minOccurs="1" maxOccurs="1">
-            <xs:group ref="amf:tData" />
+          <xs:sequence>
+            <xs:group ref="amf:tData" minOccurs="1" maxOccurs="1"/>
           </xs:sequence>
           <xs:attribute name="name" use="required" type="amf:tString" />
         </xs:complexType>

@@ -10,6 +10,8 @@ flvmeta_SOURCES = amf.c \
                   amf.h \
                   avc.c \
                   avc.h \
+                  check.c \
+                  check.h \
                   dump.c \
                   dump.h \
                   dump_json.c \

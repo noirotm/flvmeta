@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema targetNamespace="http://schemas.flvmeta.org/report/1.0/"
+    elementFormDefault="qualified"
+    xmlns="http://schemas.flvmeta.org/report/1.0/"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+>
+  <xs:element name="report">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="metadata" type="tMetadata"/>
+        <xs:element name="messages" type="tMessages"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="tMetadata">
+    <xs:sequence>
+      <xs:element name="filename" minOccurs="0" maxOccurs="1" type="xs:string"/>
+      <xs:element name="creation-date" type="xs:dateTime"/>
+      <xs:element name="generator" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tMessages">
+    <xs:sequence>
+      <xs:element name="message" minOccurs="0" maxOccurs="unbounded" type="tMessage"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tMessage">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="level" use="required" type="tMessageLevel"/>
+        <xs:attribute name="offset" use="optional" type="xs:nonNegativeInteger"/>
+        <xs:attribute name="code" use="required" type="tMessageCode"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="tMessageLevel">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="info"/>
+      <xs:enumeration value="warning"/>
+      <xs:enumeration value="error"/>
+      <xs:enumeration value="fatal"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="tMessageCode">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[IWEF][0-9]{5}"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>

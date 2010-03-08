@@ -60,6 +60,12 @@
 #define FLVMETA_FIX_ERRORS          1
 #define FLVMETA_IGNORE_ERRORS       2
 
+/* check levels */
+#define FLVMETA_CHECK_LEVEL_INFO    0
+#define FLVMETA_CHECK_LEVEL_WARNING 1
+#define FLVMETA_CHECK_LEVEL_ERROR   2
+#define FLVMETA_CHECK_LEVEL_FATAL   3
+
 /* dump formats */
 #define FLVMETA_FORMAT_XML          0
 #define FLVMETA_FORMAT_RAW          1
@@ -73,6 +79,8 @@ typedef struct __flvmeta_opts {
     char * output_file;
     amf_data * metadata;
     int dump_metadata;
+    int check_level;
+    int check_xml_report;
     int insert_onlastsecond;
     int reset_timestamps;
     int preserve_metadata;

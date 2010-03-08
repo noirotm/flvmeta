@@ -1,5 +1,5 @@
 /*
-    $Id: util.h 144 2009-12-10 10:55:31Z marc.noirot $
+    $Id: check.c 176 2010-03-05 14:54:21Z marc.noirot $
 
     FLV Metadata updater
 
@@ -21,18 +21,9 @@
     along with FLVMeta; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#ifndef __UTIL_H__
-#define __UTIL_H__
+#include "check.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-/* determine whether two paths physically point to the same file */
-int same_file(const char * file1, const char * file2);
-
-#ifdef __cplusplus
+/* check FLV file validity */
+int check_flv_file(flvmeta_opts * opts) {
+    return OK;
 }
-#endif /* __cplusplus */
-
-#endif /* __UTIL_H__ */
