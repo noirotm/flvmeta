@@ -58,7 +58,7 @@ static void xml_amf_data_dump(const amf_data * data, int qualified, int indent_l
             sprintf(ns_decl, " xmlns%s=\"http://schemas.flvmeta.org/AMF0/1.0/\"", ns);
         }
         else {
-            sprintf(ns_decl, "");
+            strcpy(ns_decl, "");
         }
 
         /* print indentation spaces */

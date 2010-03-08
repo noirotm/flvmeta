@@ -44,6 +44,8 @@ static struct option long_options[] = {
     { "raw",           no_argument,         NULL, 'r'},
     { "xml",           no_argument,         NULL, 'x'},
     { "yaml",          no_argument,         NULL, 'y'},
+    { "level",         required_argument,   NULL, 'l'},
+    { "quiet",         no_argument,         NULL, 'q'},
     { "print-metadata", no_argument,        NULL, 'm'},
     { "add",           required_argument,   NULL, 'a'},
     { "no-lastsecond", no_argument,         NULL, 's'},
@@ -67,6 +69,8 @@ static struct option long_options[] = {
 #define RAW_OPTION                  "r"
 #define XML_OPTION                  "x"
 #define YAML_OPTION                 "y"
+#define LEVEL_OPTION                "l:"
+#define QUIET_OPTION                "q"
 #define PRINT_METADATA_OPTION       "m"
 #define ADD_OPTION                  "a:"
 #define NO_LASTSECOND_OPTION        "s"
@@ -97,7 +101,8 @@ static void help(const char * name) {
     fprintf(stderr, "\nCommands:\n");
     fprintf(stderr, "  -D, --dump                dump onMetaData tag (default without output file)\n");
     fprintf(stderr, "  -F, --full-dump           dump all tags\n");
-    fprintf(stderr, "  -C, --check               check the validity of INPUT_FILE\n");
+    fprintf(stderr, "  -C, --check               check the validity of INPUT_FILE, returning 0 if\n");
+    fprintf(stderr, "                            the file is valid, or 9 if it contains errors\n");
     fprintf(stderr, "  -U, --update              update computed onMetaData tag from INPUT_FILE\n");
     fprintf(stderr, "                            into OUTPUT_FILE (default with output file)\n");
 /*    fprintf(stderr, "  -A, --extract-audio       extract raw audio data into OUTPUT_FILE\n");*/
@@ -112,6 +117,7 @@ static void help(const char * name) {
     fprintf(stderr, "\nCheck options:\n");
     fprintf(stderr, "  -l, --level=LEVEL         print only messages where level is at least LEVEL\n");
     fprintf(stderr, "                            LEVEL is 'info', 'warning' (default), 'error', or 'fatal'\n");
+    fprintf(stderr, "  -q, --quiet               do not print messages, only return an status code\n");
     fprintf(stderr, "  -x, --xml                 generate an XML report\n");
     fprintf(stderr, "\nUpdate options:\n");
     fprintf(stderr, "  -m, --print-metadata      print metadata to stdout after update using\n");
@@ -141,6 +147,7 @@ int main(int argc, char ** argv) {
     options.output_file = NULL;
     options.metadata = NULL;
     options.check_level = FLVMETA_CHECK_LEVEL_WARNING;
+    options.quiet = 0;
     options.check_xml_report = 0;
     options.dump_metadata = 0;
     options.insert_onlastsecond = 1;
@@ -165,6 +172,8 @@ int main(int argc, char ** argv) {
             RAW_OPTION
             XML_OPTION
             YAML_OPTION
+            LEVEL_OPTION
+            QUIET_OPTION
             PRINT_METADATA_OPTION
             ADD_OPTION
             NO_LASTSECOND_OPTION
@@ -216,7 +225,7 @@ int main(int argc, char ** argv) {
                 if (!strcmp(optarg, "info")) {
                     options.check_level = FLVMETA_CHECK_LEVEL_INFO;
                 }
-                if (!strcmp(optarg, "warning")) {
+                else if (!strcmp(optarg, "warning")) {
                     options.check_level = FLVMETA_CHECK_LEVEL_WARNING;
                 }
                 else if (!strcmp(optarg, "error")) {
@@ -226,11 +235,12 @@ int main(int argc, char ** argv) {
                     options.check_level = FLVMETA_CHECK_LEVEL_FATAL;
                 }
                 else {
-                    fprintf(stderr, "%s: invalid level -- %s\n", argv[0], optarg);
+                    fprintf(stderr, "%s: invalid message level -- %s\n", argv[0], optarg);
                     usage(argv[0]);
                     exit(EXIT_FAILURE);
                 }
                 break;
+            case 'q': options.quiet = 1; break;
             /* dump options */
             case 'd':
                 if (!strcmp(optarg, "xml")) {

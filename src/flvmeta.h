@@ -45,6 +45,9 @@
 #define ERROR_WRITE         7
 #define ERROR_SAME_FILE     8
 
+/* invalid flv file reported by the check command (one or more errors) */
+#define ERROR_INVALID_FLV_FILE 9
+
 /* stop file parsing without error */
 #define FLVMETA_DUMP_STOP_OK 10
 
@@ -80,6 +83,7 @@ typedef struct __flvmeta_opts {
     amf_data * metadata;
     int dump_metadata;
     int check_level;
+    int quiet;
     int check_xml_report;
     int insert_onlastsecond;
     int reset_timestamps;
