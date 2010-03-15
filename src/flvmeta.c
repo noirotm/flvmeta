@@ -83,10 +83,10 @@ static struct option long_options[] = {
 #define HELP_OPTION                 "h"
 
 void version(void) {
-    fprintf(stderr, "%s\n", PACKAGE_STRING);
-    fprintf(stderr, "%s\n", COPYRIGHT_STR);
-    fprintf(stderr, "This is free software; see the source for copying conditions. There is NO\n"
-                    "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n");
+    printf("%s\n\n", PACKAGE_STRING);
+    printf("%s\n", COPYRIGHT_STR);
+    printf("This is free software; see the source for copying conditions. There is NO\n"
+           "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n");
 }
 
 void usage(const char * name) {
@@ -95,46 +95,45 @@ void usage(const char * name) {
 }
 
 static void help(const char * name) {
-    version();
-    fprintf(stderr, "\nUsage: %s [COMMAND] [OPTIONS] INPUT_FILE [OUTPUT_FILE]\n", name);
-    fprintf(stderr, "\nIf OUTPUT_FILE is ommitted for commands using it, INPUT_FILE will be overwritten instead.\n");
-    fprintf(stderr, "\nCommands:\n");
-    fprintf(stderr, "  -D, --dump                dump onMetaData tag (default without output file)\n");
-    fprintf(stderr, "  -F, --full-dump           dump all tags\n");
-    fprintf(stderr, "  -C, --check               check the validity of INPUT_FILE, returning 0 if\n");
-    fprintf(stderr, "                            the file is valid, or 9 if it contains errors\n");
-    fprintf(stderr, "  -U, --update              update computed onMetaData tag from INPUT_FILE\n");
-    fprintf(stderr, "                            into OUTPUT_FILE (default with output file)\n");
-/*    fprintf(stderr, "  -A, --extract-audio       extract raw audio data into OUTPUT_FILE\n");*/
-/*    fprintf(stderr, "  -E, --extract-video       extract raw video data into OUTPUT_FILE\n");*/
-    fprintf(stderr, "\nDump options:\n");
-    fprintf(stderr, "  -d, --dump-format=TYPE    dump format is of type TYPE\n");
-    fprintf(stderr, "                            TYPE is 'xml' (default), 'json', 'raw', or 'yaml'\n");
-    fprintf(stderr, "  -j, --json                equivalent to --dump-format=json\n");
-    fprintf(stderr, "  -r, --raw                 equivalent to --dump-format=raw\n");
-    fprintf(stderr, "  -x, --xml                 equivalent to --dump-format=xml\n");
-    fprintf(stderr, "  -y, --yaml                equivalent to --dump-format=yaml\n");
-    fprintf(stderr, "\nCheck options:\n");
-    fprintf(stderr, "  -l, --level=LEVEL         print only messages where level is at least LEVEL\n");
-    fprintf(stderr, "                            LEVEL is 'info', 'warning' (default), 'error', or 'fatal'\n");
-    fprintf(stderr, "  -q, --quiet               do not print messages, only return the status code\n");
-    fprintf(stderr, "  -x, --xml                 generate an XML report\n");
-    fprintf(stderr, "\nUpdate options:\n");
-    fprintf(stderr, "  -m, --print-metadata      print metadata to stdout after update using\n");
-    fprintf(stderr, "                            the specified format\n");
-    fprintf(stderr, "  -a, --add=NAME=VALUE      add a metadata string value to the output file\n");
-    fprintf(stderr, "  -s, --no-lastsecond       do not create the onLastSecond tag\n");
-    fprintf(stderr, "  -p, --preserve            preserve input file existing onMetadata tags\n");
-    fprintf(stderr, "  -f, --fix                 fix invalid tags from the input file\n");
-    fprintf(stderr, "  -i, --ignore              ignore invalid tags from the input file\n");
-    fprintf(stderr, "                            (the default is to stop with an error)\n");
-    fprintf(stderr, "  -t, --reset-timestamps    reset timestamps so OUTPUT_FILE starts at zero\n");
-    fprintf(stderr, "\nCommon options:\n");
-    fprintf(stderr, "  -v, --verbose             display informative messages\n");
-    fprintf(stderr, "\nMiscellaneous:\n");
-    fprintf(stderr, "  -V, --version             print version information and exit\n");
-    fprintf(stderr, "  -h, --help                display this information and exit\n");
-    fprintf(stderr, "\nPlease report bugs to <%s>\n", PACKAGE_BUGREPORT);
+    printf("Usage: %s [COMMAND] [OPTIONS] INPUT_FILE [OUTPUT_FILE]\n", name);
+    printf("\nIf OUTPUT_FILE is ommitted for commands using it, INPUT_FILE will be overwritten instead.\n"
+           "\nCommands:\n"
+           "  -D, --dump                dump onMetaData tag (default without output file)\n"
+           "  -F, --full-dump           dump all tags\n"
+           "  -C, --check               check the validity of INPUT_FILE, returning 0 if\n"
+           "                            the file is valid, or 9 if it contains errors\n"
+           "  -U, --update              update computed onMetaData tag from INPUT_FILE\n"
+           "                            into OUTPUT_FILE (default with output file)\n"
+           /*    "  -A, --extract-audio       extract raw audio data into OUTPUT_FILE\n"*/
+           /*    "  -E, --extract-video       extract raw video data into OUTPUT_FILE\n"*/
+           "\nDump options:\n"
+           "  -d, --dump-format=TYPE    dump format is of type TYPE\n"
+           "                            TYPE is 'xml' (default), 'json', 'raw', or 'yaml'\n"
+           "  -j, --json                equivalent to --dump-format=json\n"
+           "  -r, --raw                 equivalent to --dump-format=raw\n"
+           "  -x, --xml                 equivalent to --dump-format=xml\n"
+           "  -y, --yaml                equivalent to --dump-format=yaml\n"
+           "\nCheck options:\n"
+           "  -l, --level=LEVEL         print only messages where level is at least LEVEL\n"
+           "                            LEVEL is 'info', 'warning' (default), 'error', or 'fatal'\n"
+           "  -q, --quiet               do not print messages, only return the status code\n"
+           "  -x, --xml                 generate an XML report\n"
+           "\nUpdate options:\n"
+           "  -m, --print-metadata      print metadata to stdout after update using\n"
+           "                            the specified format\n"
+           "  -a, --add=NAME=VALUE      add a metadata string value to the output file\n"
+           "  -s, --no-lastsecond       do not create the onLastSecond tag\n"
+           "  -p, --preserve            preserve input file existing onMetadata tags\n"
+           "  -f, --fix                 fix invalid tags from the input file\n"
+           "  -i, --ignore              ignore invalid tags from the input file\n"
+           "                            (the default is to stop with an error)\n"
+           "  -t, --reset-timestamps    reset timestamps so OUTPUT_FILE starts at zero\n"
+           "\nCommon options:\n"
+           "  -v, --verbose             display informative messages\n"
+           "\nMiscellaneous:\n"
+           "  -V, --version             print version information and exit\n"
+           "  -h, --help                display this information and exit\n");
+    printf("\nPlease report bugs to <%s>\n", PACKAGE_BUGREPORT);
 }
 
 int main(int argc, char ** argv) {
