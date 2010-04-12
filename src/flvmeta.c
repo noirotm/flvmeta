@@ -96,7 +96,7 @@ void usage(const char * name) {
 
 static void help(const char * name) {
     printf("Usage: %s [COMMAND] [OPTIONS] INPUT_FILE [OUTPUT_FILE]\n", name);
-    printf("\nIf OUTPUT_FILE is ommitted for commands using it, INPUT_FILE will be overwritten instead.\n"
+    printf("\nIf OUTPUT_FILE is ommitted for commands needing it, INPUT_FILE will be overwritten instead.\n"
            "\nCommands:\n"
            "  -D, --dump                dump onMetaData tag (default without output file)\n"
            "  -F, --full-dump           dump all tags\n"

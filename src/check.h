@@ -27,6 +27,6 @@
 #include "flvmeta.h"
 
 /* check FLV file validity */
-int check_flv_file(flvmeta_opts * opts);
+int check_flv_file(const flvmeta_opts * opts);
 
 #endif /* __CHECK_H__ */
