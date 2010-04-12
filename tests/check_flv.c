@@ -1,7 +1,7 @@
 #include <check.h>
 #include <stdlib.h>
 #include <string.h>
-#include "flv.h"
+#include "src/flv.h"
 
 /**
     FLV types

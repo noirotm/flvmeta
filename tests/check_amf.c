@@ -1,7 +1,7 @@
 #include <check.h>
 #include <stdlib.h>
 #include <string.h>
-#include "amf.h"
+#include "src/amf.h"
 
 amf_data * data;
 

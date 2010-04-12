@@ -7,7 +7,7 @@ if MAKE_TESTS
                           $(top_srcdir)/src/amf.h \
                           $(top_srcdir)/src/flv.h \
                           $(top_srcdir)/src/types.h
-  check_flvmeta_CFLAGS = -I$(top_srcdir)/src @CHECK_CFLAGS@
+  check_flvmeta_CFLAGS = -I$(top_srcdir) @CHECK_CFLAGS@
   check_flvmeta_LDADD  = @CHECK_LIBS@ \
                          $(top_builddir)/src/amf.o \
                          $(top_builddir)/src/flv.o \
