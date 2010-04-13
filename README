@@ -17,6 +17,10 @@ been successfully compiled and tested on Ubuntu Feisty, MacOSX 10.4, and
 Windows XP).
 FLVmeta is fast and has a very small memory footprint.
 
+The FLVmeta source package includes and uses the following software:
+- the mjson JSON document parser and emitter (http://mjson.sourceforge.net/)
+- the libyaml YAML parser and emitter (http://pyyaml.org/wiki/LibYAML)
+
 
 FLVmeta is provided "as is" with no warranty.  The exact terms
 under which you may use and (re)distribute this program are detailed

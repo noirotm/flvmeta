@@ -1,3 +1,43 @@
+Version 1.1 (2010-??-??)
+  - Beta release. All features should be considered relatively
+    stable unless explicitely stated otherwise.
+  - Added proper command line handling and help.
+  - Added the possibility to overwrite the input file
+    when the output file is not specified or when both files
+    are physically the same.
+  - Added support for CMake builds in addition to autotools.
+    It is now the official way to build flvmeta on Windows.
+  - Added metadata and full file dumping, integrating former
+    flvdump functionality into flvmeta.
+  - Added support for XML, YAML, and JSON formats for dumping.
+  - Added XML schemas describing the various formats used by flvmeta.
+  - Added a file checking feature (currently unimplemented)
+  - Added the possibility to print output file metadata after
+    a successful update using one of the supported formats.
+  - Added a feature to insert custom metadata strings while updating.
+  - Added an option to disable insertion of the onLastSecond event.
+  - Added an option to preserve existing metadata tags if possible.
+  - Added an option to fix invalid tags while updating (this is
+    a highly experimental feature, should be used with caution)
+  - Added an option to ignore invalid tags as much as possible
+    instead of exiting at the first error detected.
+  - Added an option to reset the file timestamps in order to
+    correctly start at zero, for example if the file has been
+    incorrectly split by buggy tools
+  - Added an option to display informative messages while processing
+    (not quite exhaustive for the moment)
+
+Version 1.0.11 (2010-01-25)
+  - Bug fix release.
+  - Fixed video resolution detection when the first video frame
+    is not a keyframe.
+  - Fixed invalid timestamp handling in the case of decreasing timestamps.
+  - Fixed AVC resolution computation when frame cropping rectangle
+    is used.
+  - Fixed handling of files with a non-zero starting timestamp.
+  - Fixed datasize tag computation so only metadata are taken
+    into account.
+
 Version 1.0.10 (2009-09-02)
   - Bug fix release.
   - Fixed amf_data_dump numeric format.

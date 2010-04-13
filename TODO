@@ -1,33 +1,18 @@
 Full AMF0 support.
 
-##
-
-Allow user to specify custom metadata tags.
-
-##
+Metadata injection from xml file spec.
 
 i18n support.
 The programs don't have much output, mainly errors, so it should be easy
 to translate it in several languages.
-
 If you want to contribute, send an email to flvmeta-discussion@googlegroups.com.
 
-##
+Man page (infotex).
 
-Various speed enhancements.
-
-##
-
-Command line options.
-
-##
-
-Fix metadata parameters case.
-
-##
-
-Man page.
-
-##
+Complete verbose mode.
 
 Fix onLastSecond insertion, which should be before the last second.
+
+Stream extraction.
+
+Complete test suites.
