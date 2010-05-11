@@ -49,8 +49,14 @@ static void amf_data_yaml_dump(const amf_data * data, yaml_emitter_t * emitter) 
                 yaml_emitter_emit(emitter, &event);
                 break;
             case AMF_TYPE_STRING:
-                yaml_scalar_event_initialize(&event, NULL, NULL, amf_string_get_bytes(data), amf_string_get_size(data), 1, 1, YAML_ANY_SCALAR_STYLE);
-                yaml_emitter_emit(emitter, &event);
+                /* this can fail if the passed string is not valid UTF-8, write a null instead */
+                if (yaml_scalar_event_initialize(&event, NULL, NULL, amf_string_get_bytes(data), amf_string_get_size(data), 1, 1, YAML_ANY_SCALAR_STYLE)) {
+                    yaml_emitter_emit(emitter, &event);
+                }
+                else {
+                    yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"null", 4, 1, 1, YAML_ANY_SCALAR_STYLE);
+                    yaml_emitter_emit(emitter, &event);
+                }
                 break;
             case AMF_TYPE_OBJECT:
                 yaml_mapping_start_event_initialize(&event, NULL, NULL, 1, YAML_ANY_MAPPING_STYLE);
@@ -59,9 +65,11 @@ static void amf_data_yaml_dump(const amf_data * data, yaml_emitter_t * emitter) 
                 while (node != NULL) {
                     amf_data * name;
                     name = amf_object_get_name(node);
-                    yaml_scalar_event_initialize(&event, NULL, NULL, amf_string_get_bytes(name), amf_string_get_size(name), 1, 1, YAML_ANY_SCALAR_STYLE);
-                    yaml_emitter_emit(emitter, &event);
-                    amf_data_yaml_dump(amf_object_get_data(node), emitter);
+                    /* if this fails, we skip the current entry */
+                    if (yaml_scalar_event_initialize(&event, NULL, NULL, amf_string_get_bytes(name), amf_string_get_size(name), 1, 1, YAML_ANY_SCALAR_STYLE)) {
+                        yaml_emitter_emit(emitter, &event);
+                        amf_data_yaml_dump(amf_object_get_data(node), emitter);
+                    }
                     node = amf_object_next(node);
                 }
                 yaml_mapping_end_event_initialize(&event);
@@ -79,9 +87,11 @@ static void amf_data_yaml_dump(const amf_data * data, yaml_emitter_t * emitter) 
                 while (node != NULL) {
                     amf_data * name;
                     name = amf_associative_array_get_name(node);
-                    yaml_scalar_event_initialize(&event, NULL, NULL, amf_string_get_bytes(name), amf_string_get_size(name), 1, 1, YAML_ANY_SCALAR_STYLE);
-                    yaml_emitter_emit(emitter, &event);
-                    amf_data_yaml_dump(amf_associative_array_get_data(node), emitter);
+                    /* if this fails, we skip the current entry */
+                    if (yaml_scalar_event_initialize(&event, NULL, NULL, amf_string_get_bytes(name), amf_string_get_size(name), 1, 1, YAML_ANY_SCALAR_STYLE)) {
+                        yaml_emitter_emit(emitter, &event);
+                        amf_data_yaml_dump(amf_associative_array_get_data(node), emitter);
+                    }
                     node = amf_associative_array_next(node);
                 }
                 yaml_mapping_end_event_initialize(&event);
