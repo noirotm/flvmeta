@@ -37,12 +37,18 @@
          1))
 
 /*
- * Copy a character from a string into buffer.
+ * Copy a byte from a string into buffer.
  */
 
 #define WRITE(emitter,string)                                                   \
     (FLUSH(emitter)                                                             \
      && (COPY(emitter->buffer,string),                                          \
+         emitter->column ++,                                                    \
+         1))
+
+#define WRITEN(emitter,string,n)                                                \
+    (FLUSH(emitter)                                                             \
+     && (COPYN(emitter->buffer,string,n),                                       \
          emitter->column ++,                                                    \
          1))
 
@@ -56,7 +62,7 @@
          (PUT_BREAK(emitter),                                                   \
           string.pointer ++,                                                    \
           1) :                                                                  \
-         (COPY(emitter->buffer,string),                                         \
+         (COPYN(emitter->buffer,string,WIDTH(string)),                          \
           emitter->column = 0,                                                  \
           emitter->line ++,                                                     \
           1)))
@@ -1471,6 +1477,57 @@ yaml_emitter_analyze_tag(yaml_emitter_t *emitter,
     return 1;
 }
 
+/**
+  Return the number of bytes in the next UTF-8 character.
+
+  Returns 0 for any error, includinge incorrect bytes, not enough
+  bytes before the end pointer, and overlong encodings. If 0 is
+  returned, pointer[0] will always have the high bit set and will
+  thus never match any ASCII character.
+
+  The encodings of surrogate halves are allowed! Otherwise it is not
+  possible to losslessly encode invalid UTF-16 into UTF-8.  (There is
+  a vocal contingent trying to sabotage UTF-8 by declaring surrogate
+  half encodings invalid. Anybody such claim should be investigated
+  carefully: if that user's code does not also reject invalid UTF-16,
+  then they are being hypocrites and can be ignored.)
+*/
+static unsigned int utf8_width(yaml_char_t* pointer, yaml_char_t* end)
+{
+    unsigned char octet = pointer[0];
+    if (octet < 0x80) {
+        /* 1-byte character */
+        return 1;
+    } else if (octet < 0xC2) {
+        /* continuation byte or overlong 2-byte encoding */
+        return 0;
+    } else if (octet < 0xE0) {
+        /* 2-byte character */
+        if (end-pointer < 2) return 0;
+        if ((pointer[1] & 0xC0) != 0x80) return 0;
+        return 2;
+    } else if (octet < 0xF0) {
+        /* 3-byte character */
+        if (end-pointer < 3) return 0;
+        if (octet == 0xE0 && pointer[1] < 0xA0) return 0; /* overlong */
+        if ((pointer[1] & 0xC0) != 0x80) return 0;
+        if ((pointer[2] & 0xC0) != 0x80) return 0;
+        return 3;
+    } else if (octet < 0xF5) {
+        /* 4-byte character */
+        if (end-pointer < 4) return 0;
+        if (octet == 0xF0 && pointer[1] < 0x90) return 0; /* overlong */
+        if (octet == 0xF4 && pointer[1] > 0x8F) return 0; /* > 0x10FFFF */
+        if ((pointer[1] & 0xC0) != 0x80) return 0;
+        if ((pointer[2] & 0xC0) != 0x80) return 0;
+        if ((pointer[3] & 0xC0) != 0x80) return 0;
+        return 4;
+    } else {
+        /* can never appear in UTF-8 */
+        return 0;
+    }
+}
+
 /*
  * Check if a scalar is valid.
  */
@@ -1494,7 +1551,6 @@ yaml_emitter_analyze_scalar(yaml_emitter_t *emitter,
     int space_break = 0;
 
     int preceeded_by_whitespace = 0;
-    int followed_by_whitespace = 0;
     int previous_space = 0;
     int previous_break = 0;
 
@@ -1525,10 +1581,17 @@ yaml_emitter_analyze_scalar(yaml_emitter_t *emitter,
     }
 
     preceeded_by_whitespace = 1;
-    followed_by_whitespace = IS_BLANKZ_AT(string, WIDTH(string));
 
     while (string.pointer != string.end)
     {
+        unsigned int width = utf8_width(string.pointer, string.end);
+
+        if (!width) {
+            special_characters = 1;
+            string.pointer++;
+            continue;
+        }
+
         if (string.start == string.pointer)
         {
             if (CHECK(string, '#') || CHECK(string, ',')
@@ -1545,12 +1608,12 @@ yaml_emitter_analyze_scalar(yaml_emitter_t *emitter,
 
             if (CHECK(string, '?') || CHECK(string, ':')) {
                 flow_indicators = 1;
-                if (followed_by_whitespace) {
+                if (IS_BLANKZ_AT(string, 1)) {
                     block_indicators = 1;
                 }
             }
 
-            if (CHECK(string, '-') && followed_by_whitespace) {
+            if (CHECK(string, '-') && IS_BLANKZ_AT(string, 1)) {
                 flow_indicators = 1;
                 block_indicators = 1;
             }
@@ -1565,7 +1628,7 @@ yaml_emitter_analyze_scalar(yaml_emitter_t *emitter,
 
             if (CHECK(string, ':')) {
                 flow_indicators = 1;
-                if (followed_by_whitespace) {
+                if (IS_BLANKZ_AT(string, 1)) {
                     block_indicators = 1;
                 }
             }
@@ -1579,10 +1642,6 @@ yaml_emitter_analyze_scalar(yaml_emitter_t *emitter,
         if (!IS_PRINTABLE(string)
                 || (!IS_ASCII(string) && !emitter->unicode)) {
             special_characters = 1;
-        }
-
-        if (IS_BREAK(string)) {
-            line_breaks = 1;
         }
 
         if (IS_SPACE(string))
@@ -1601,6 +1660,7 @@ yaml_emitter_analyze_scalar(yaml_emitter_t *emitter,
         }
         else if (IS_BREAK(string))
         {
+            line_breaks = 1;
             if (string.start == string.pointer) {
                 leading_break = 1;
             }
@@ -1620,10 +1680,7 @@ yaml_emitter_analyze_scalar(yaml_emitter_t *emitter,
         }
 
         preceeded_by_whitespace = IS_BLANKZ(string);
-        MOVE(string);
-        if (string.pointer != string.end) {
-            followed_by_whitespace = IS_BLANKZ_AT(string, WIDTH(string));
-        }
+        MOVEN(string, width);
     }
 
     emitter->scalar_data.multiline = line_breaks;
@@ -1873,18 +1930,15 @@ yaml_emitter_write_tag_content(yaml_emitter_t *emitter,
             if (!WRITE(emitter, string)) return 0;
         }
         else {
-            int width = WIDTH(string);
-            unsigned int value;
-            while (width --) {
-                value = *(string.pointer++);
-                if (!PUT(emitter, '%')) return 0;
-                if (!PUT(emitter, (value >> 4)
-                            + ((value >> 4) < 10 ? '0' : 'A' - 10)))
-                    return 0;
-                if (!PUT(emitter, (value & 0x0F)
-                            + ((value & 0x0F) < 10 ? '0' : 'A' - 10)))
-                    return 0;
-            }
+            /* %-encode all other bytes, including valid and invalid UTF-8 */
+            unsigned char value = *(string.pointer++);
+            if (!PUT(emitter, '%')) return 0;
+            if (!PUT(emitter, (value >> 4)
+                     + ((value >> 4) < 10 ? '0' : 'A' - 10)))
+                return 0;
+            if (!PUT(emitter, (value & 0x0F)
+                     + ((value & 0x0F) < 10 ? '0' : 'A' - 10)))
+                return 0;
         }
     }
 
@@ -2017,6 +2071,8 @@ yaml_emitter_write_single_quoted_scalar(yaml_emitter_t *emitter,
     return 1;
 }
 
+static unsigned char utf8_mask[5] = {0xFF, 0x7F, 0x1F, 0x0F, 0x07};
+
 static int
 yaml_emitter_write_double_quoted_scalar(yaml_emitter_t *emitter,
         yaml_char_t *value, size_t length, int allow_breaks)
@@ -2031,27 +2087,40 @@ yaml_emitter_write_double_quoted_scalar(yaml_emitter_t *emitter,
 
     while (string.pointer != string.end)
     {
+        unsigned int width = utf8_width(string.pointer, string.end);
+
+        if (width == 0) {
+            /*
+              UTF-8 encoding error.  This is a byte with the high bit
+              set.  The parser has been altered to read \XNN as a raw
+              byte.  I would prefer to use lowercase x but the old
+              writer produces that for legal UTF-8 encodings of
+              U+0080..U+00FF. It is not clear what other parsers will
+              do with this, though previous libyaml threw an error.
+            */
+            unsigned int value = string.pointer[0];
+            int digit;
+            if (!PUT(emitter, '\\')) return 0;
+            if (!PUT(emitter, 'x')) return 0;
+            digit = (value >> 4) & 0x0F;
+            if (!PUT(emitter, digit + (digit < 10 ? '0' : 'A'-10))) return 0;
+            digit = value & 0x0F;
+            if (!PUT(emitter, digit + (digit < 10 ? '0' : 'A'-10))) return 0;
+            MOVE(string);
+            spaces = 0;
+            continue;
+        }
+
         if (!IS_PRINTABLE(string) || (!emitter->unicode && !IS_ASCII(string))
                 || IS_BOM(string) || IS_BREAK(string)
                 || CHECK(string, '"') || CHECK(string, '\\'))
         {
-            unsigned char octet;
-            unsigned int width;
             unsigned int value;
             int k;
 
-            octet = string.pointer[0];
-            width = (octet & 0x80) == 0x00 ? 1 :
-                    (octet & 0xE0) == 0xC0 ? 2 :
-                    (octet & 0xF0) == 0xE0 ? 3 :
-                    (octet & 0xF8) == 0xF0 ? 4 : 0;
-            value = (octet & 0x80) == 0x00 ? octet & 0x7F :
-                    (octet & 0xE0) == 0xC0 ? octet & 0x1F :
-                    (octet & 0xF0) == 0xE0 ? octet & 0x0F :
-                    (octet & 0xF8) == 0xF0 ? octet & 0x07 : 0;
+            value = string.pointer[0] & utf8_mask[width];
             for (k = 1; k < (int)width; k ++) {
-                octet = string.pointer[k];
-                value = (value << 6) + (octet & 0x3F);
+                value = (value << 6) + (string.pointer[k] & 0x3F);
             }
             string.pointer += width;
 
@@ -2120,11 +2189,13 @@ yaml_emitter_write_double_quoted_scalar(yaml_emitter_t *emitter,
                     break;
 
                 default:
-                    if (value <= 0xFF) {
+                    // \xNN sequence is disabled so that it may be used in the
+                    // future for invalid byte sequences
+                    /*if (value <= 0xFF) {
                         if (!PUT(emitter, 'x')) return 0;
                         width = 2;
                     }
-                    else if (value <= 0xFFFF) {
+                    else*/ if (value <= 0xFFFF) {
                         if (!PUT(emitter, 'u')) return 0;
                         width = 4;
                     }
@@ -2159,7 +2230,7 @@ yaml_emitter_write_double_quoted_scalar(yaml_emitter_t *emitter,
         }
         else
         {
-            if (!WRITE(emitter, string)) return 0;
+            if (!WRITEN(emitter, string, width)) return 0;
             spaces = 0;
         }
     }

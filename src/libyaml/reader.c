@@ -192,11 +192,9 @@ yaml_parser_update_buffer(yaml_parser_t *parser, size_t length)
         while (parser->raw_buffer.pointer != parser->raw_buffer.last)
         {
             unsigned int value = 0, value2 = 0;
-            int incomplete = 0;
             unsigned char octet;
             unsigned int width = 0;
             int low, high;
-            size_t k;
             size_t raw_unread = parser->raw_buffer.last - parser->raw_buffer.pointer;
 
             /* Decode the next character. */
@@ -204,96 +202,22 @@ yaml_parser_update_buffer(yaml_parser_t *parser, size_t length)
             switch (parser->encoding)
             {
                 case YAML_UTF8_ENCODING:
-
-                    /*
-                     * Decode a UTF-8 character.  Check RFC 3629
-                     * (http://www.ietf.org/rfc/rfc3629.txt) for more details.
-                     *
-                     * The following table (taken from the RFC) is used for
-                     * decoding.
-                     *
-                     *    Char. number range |        UTF-8 octet sequence
-                     *      (hexadecimal)    |              (binary)
-                     *   --------------------+------------------------------------
-                     *   0000 0000-0000 007F | 0xxxxxxx
-                     *   0000 0080-0000 07FF | 110xxxxx 10xxxxxx
-                     *   0000 0800-0000 FFFF | 1110xxxx 10xxxxxx 10xxxxxx
-                     *   0001 0000-0010 FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-                     *
-                     * Additionally, the characters in the range 0xD800-0xDFFF
-                     * are prohibited as they are reserved for use with UTF-16
-                     * surrogate pairs.
-                     */
-
-                    /* Determine the length of the UTF-8 sequence. */
-
                     octet = parser->raw_buffer.pointer[0];
-                    width = (octet & 0x80) == 0x00 ? 1 :
-                            (octet & 0xE0) == 0xC0 ? 2 :
-                            (octet & 0xF0) == 0xE0 ? 3 :
-                            (octet & 0xF8) == 0xF0 ? 4 : 0;
-
-                    /* Check if the leading octet is valid. */
-
-                    if (!width)
+                    /*
+                      We can only disallow characters without the high
+                      bit set. Characters with the high bit set are required
+                      for invalid UTF-8 strings to be encoded, as we
+                      cannot rely on any backslash sequences working.
+                    */
+                    if (! (octet == 0x09 || octet == 0x0A || octet == 0x0D
+                           || (octet >= 0x20 && octet != 0x7F) ))
                         return yaml_parser_set_reader_error(parser,
-                                "invalid leading UTF-8 octet",
-                                parser->offset, octet);
-
-                    /* Check if the raw buffer contains an incomplete character. */
-
-                    if (width > raw_unread) {
-                        if (parser->eof) {
-                            return yaml_parser_set_reader_error(parser,
-                                    "incomplete UTF-8 octet sequence",
-                                    parser->offset, -1);
-                        }
-                        incomplete = 1;
-                        break;
-                    }
-
-                    /* Decode the leading octet. */
-
-                    value = (octet & 0x80) == 0x00 ? octet & 0x7F :
-                            (octet & 0xE0) == 0xC0 ? octet & 0x1F :
-                            (octet & 0xF0) == 0xE0 ? octet & 0x0F :
-                            (octet & 0xF8) == 0xF0 ? octet & 0x07 : 0;
-
-                    /* Check and decode the trailing octets. */
-
-                    for (k = 1; k < width; k ++)
-                    {
-                        octet = parser->raw_buffer.pointer[k];
-
-                        /* Check if the octet is valid. */
-
-                        if ((octet & 0xC0) != 0x80)
-                            return yaml_parser_set_reader_error(parser,
-                                    "invalid trailing UTF-8 octet",
-                                    parser->offset+k, octet);
-
-                        /* Decode the octet. */
-
-                        value = (value << 6) + (octet & 0x3F);
-                    }
-
-                    /* Check the length of the sequence against the value. */
-
-                    if (!((width == 1) ||
-                            (width == 2 && value >= 0x80) ||
-                            (width == 3 && value >= 0x800) ||
-                            (width == 4 && value >= 0x10000)))
-                        return yaml_parser_set_reader_error(parser,
-                                "invalid length of a UTF-8 sequence",
-                                parser->offset, -1);
-
-                    /* Check the range of the value. */
-
-                    if ((value >= 0xD800 && value <= 0xDFFF) || value > 0x10FFFF)
-                        return yaml_parser_set_reader_error(parser,
-                                "invalid Unicode character",
+                                "Control characters are not allowed",
                                 parser->offset, value);
 
+                    parser->raw_buffer.pointer++;
+                    parser->offset++;
+                    *(parser->buffer.last++) = octet;
                     break;
                 
                 case YAML_UTF16LE_ENCODING:
@@ -336,7 +260,6 @@ yaml_parser_update_buffer(yaml_parser_t *parser, size_t length)
                                     "incomplete UTF-16 character",
                                     parser->offset, -1);
                         }
-                        incomplete = 1;
                         break;
                     }
 
@@ -344,107 +267,86 @@ yaml_parser_update_buffer(yaml_parser_t *parser, size_t length)
 
                     value = parser->raw_buffer.pointer[low]
                         + (parser->raw_buffer.pointer[high] << 8);
-
-                    /* Check for unexpected low surrogate area. */
-
-                    if ((value & 0xFC00) == 0xDC00)
-                        return yaml_parser_set_reader_error(parser,
-                                "unexpected low surrogate area",
-                                parser->offset, value);
+                    width = 2;
 
                     /* Check for a high surrogate area. */
 
                     if ((value & 0xFC00) == 0xD800) {
 
-                        width = 4;
-
                         /* Check for incomplete surrogate pair. */
 
                         if (raw_unread < 4) {
-                            if (parser->eof) {
-                                return yaml_parser_set_reader_error(parser,
-                                        "incomplete UTF-16 surrogate pair",
-                                        parser->offset, -1);
+                            if (parser->eof) { /* trailing high surrogate */
+                                width = 2;
+                            } else {
+                                break; /* Can't tell until we have more raw characters */
                             }
-                            incomplete = 1;
-                            break;
+                        } else {
+
+                            /* Get the next character. */
+
+                            value2 = parser->raw_buffer.pointer[low+2]
+                                + (parser->raw_buffer.pointer[high+2] << 8);
+
+                            /* Check for a low surrogate area. */
+                            if ((value2 & 0xFC00) == 0xDC00) {
+                                width = 4;
+                                /* Generate the value of the surrogate pair. */
+                                value = 0x10000 + ((value & 0x3FF) << 10) + (value2 & 0x3FF);
+                            }
                         }
-
-                        /* Get the next character. */
-
-                        value2 = parser->raw_buffer.pointer[low+2]
-                            + (parser->raw_buffer.pointer[high+2] << 8);
-
-                        /* Check for a low surrogate area. */
-
-                        if ((value2 & 0xFC00) != 0xDC00)
-                            return yaml_parser_set_reader_error(parser,
-                                    "expected low surrogate area",
-                                    parser->offset+2, value2);
-
-                        /* Generate the value of the surrogate pair. */
-
-                        value = 0x10000 + ((value & 0x3FF) << 10) + (value2 & 0x3FF);
                     }
 
+                    /* Check if the raw buffer contains enough bytes to form a character. */
+
+                    /*
+                     * Check if the character is in the allowed range:
+                     *      #x9 | #xA | #xD | [#x20-#x7E]               (8 bit)
+                     *      | #x85 | [#xA0-#xD7FF] | [#xE000-#xFFFD]    (16 bit)
+                     *      | [#x10000-#x10FFFF]                        (32 bit)
+                     */
+                    /* Modified to allow all 16-bit values as \uNNNN may not
+                     work for some parsers for these values. */
+                    if (! (value == 0x09 || value == 0x0A || value == 0x0D
+                           || (value >= 0x20 && value <= 0x7E)
+                           || (value == 0x85) || value >= 0xA0))
+                        return yaml_parser_set_reader_error(parser,
+                                "Control characters are not allowed",
+                                parser->offset, value);
+
+                    /* Move the raw pointers. */
+
+                    parser->raw_buffer.pointer += width;
+                    parser->offset += width;
+
+                    /* Finally put the character into the buffer. */
+
+                    /* 0000 0000-0000 007F -> 0xxxxxxx */
+                    if (value <= 0x7F) {
+                        *(parser->buffer.last++) = value;
+                    }
+                    /* 0000 0080-0000 07FF -> 110xxxxx 10xxxxxx */
+                    else if (value <= 0x7FF) {
+                        *(parser->buffer.last++) = 0xC0 + (value >> 6);
+                        *(parser->buffer.last++) = 0x80 + (value & 0x3F);
+                    }
+                    /* 0000 0800-0000 FFFF -> 1110xxxx 10xxxxxx 10xxxxxx */
+                    else if (value <= 0xFFFF) {
+                        *(parser->buffer.last++) = 0xE0 + (value >> 12);
+                        *(parser->buffer.last++) = 0x80 + ((value >> 6) & 0x3F);
+                        *(parser->buffer.last++) = 0x80 + (value & 0x3F);
+                    }
+                    /* 0001 0000-0010 FFFF -> 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
                     else {
-                        width = 2;
+                        *(parser->buffer.last++) = 0xF0 + (value >> 18);
+                        *(parser->buffer.last++) = 0x80 + ((value >> 12) & 0x3F);
+                        *(parser->buffer.last++) = 0x80 + ((value >> 6) & 0x3F);
+                        *(parser->buffer.last++) = 0x80 + (value & 0x3F);
                     }
-
                     break;
 
                 default:
                     assert(1);      /* Impossible. */
-            }
-
-            /* Check if the raw buffer contains enough bytes to form a character. */
-
-            if (incomplete) break;
-
-            /*
-             * Check if the character is in the allowed range:
-             *      #x9 | #xA | #xD | [#x20-#x7E]               (8 bit)
-             *      | #x85 | [#xA0-#xD7FF] | [#xE000-#xFFFD]    (16 bit)
-             *      | [#x10000-#x10FFFF]                        (32 bit)
-             */
-
-            if (! (value == 0x09 || value == 0x0A || value == 0x0D
-                        || (value >= 0x20 && value <= 0x7E)
-                        || (value == 0x85) || (value >= 0xA0 && value <= 0xD7FF)
-                        || (value >= 0xE000 && value <= 0xFFFD)
-                        || (value >= 0x10000 && value <= 0x10FFFF)))
-                return yaml_parser_set_reader_error(parser,
-                        "control characters are not allowed",
-                        parser->offset, value);
-
-            /* Move the raw pointers. */
-
-            parser->raw_buffer.pointer += width;
-            parser->offset += width;
-
-            /* Finally put the character into the buffer. */
-
-            /* 0000 0000-0000 007F -> 0xxxxxxx */
-            if (value <= 0x7F) {
-                *(parser->buffer.last++) = value;
-            }
-            /* 0000 0080-0000 07FF -> 110xxxxx 10xxxxxx */
-            else if (value <= 0x7FF) {
-                *(parser->buffer.last++) = 0xC0 + (value >> 6);
-                *(parser->buffer.last++) = 0x80 + (value & 0x3F);
-            }
-            /* 0000 0800-0000 FFFF -> 1110xxxx 10xxxxxx 10xxxxxx */
-            else if (value <= 0xFFFF) {
-                *(parser->buffer.last++) = 0xE0 + (value >> 12);
-                *(parser->buffer.last++) = 0x80 + ((value >> 6) & 0x3F);
-                *(parser->buffer.last++) = 0x80 + (value & 0x3F);
-            }
-            /* 0001 0000-0010 FFFF -> 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx */
-            else {
-                *(parser->buffer.last++) = 0xF0 + (value >> 18);
-                *(parser->buffer.last++) = 0x80 + ((value >> 12) & 0x3F);
-                *(parser->buffer.last++) = 0x80 + ((value >> 6) & 0x3F);
-                *(parser->buffer.last++) = 0x80 + (value & 0x3F);
             }
 
             parser->unread ++;

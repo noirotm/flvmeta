@@ -49,14 +49,8 @@ static void amf_data_yaml_dump(const amf_data * data, yaml_emitter_t * emitter) 
                 yaml_emitter_emit(emitter, &event);
                 break;
             case AMF_TYPE_STRING:
-                /* this can fail if the passed string is not valid UTF-8, write a null instead */
-                if (yaml_scalar_event_initialize(&event, NULL, NULL, amf_string_get_bytes(data), amf_string_get_size(data), 1, 1, YAML_ANY_SCALAR_STYLE)) {
-                    yaml_emitter_emit(emitter, &event);
-                }
-                else {
-                    yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"null", 4, 1, 1, YAML_ANY_SCALAR_STYLE);
-                    yaml_emitter_emit(emitter, &event);
-                }
+                yaml_scalar_event_initialize(&event, NULL, NULL, amf_string_get_bytes(data), amf_string_get_size(data), 1, 1, YAML_ANY_SCALAR_STYLE);
+                yaml_emitter_emit(emitter, &event);
                 break;
             case AMF_TYPE_OBJECT:
                 yaml_mapping_start_event_initialize(&event, NULL, NULL, 1, YAML_ANY_MAPPING_STYLE);

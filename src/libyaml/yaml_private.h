@@ -25,7 +25,7 @@ YAML_DECLARE(yaml_char_t *)
 yaml_strdup(const yaml_char_t *);
 
 /*
- * Reader: Ensure that the buffer contains at least `length` characters.
+ * Reader: Ensure that the buffer contains at least `length` bytes.
  */
 
 YAML_DECLARE(int)
@@ -242,6 +242,7 @@ yaml_string_join(
 
 /*
  * Check if the character can be printed unescaped.
+ * Only correct if you know you are looking at valid UTF-8!
  */
 
 #define IS_PRINTABLE_AT(string,offset)                                          \
@@ -360,6 +361,7 @@ yaml_string_join(
 
 /*
  * Determine the width of the character.
+ * Only correct if you know you are looking at valid UTF-8!
  */
 
 #define WIDTH_AT(string,offset)                                                 \
@@ -371,30 +373,23 @@ yaml_string_join(
 #define WIDTH(string)   WIDTH_AT((string),0)
 
 /*
- * Move the string pointer to the next character.
+ * Move the string pointer to the next byte.
  */
 
-#define MOVE(string)    ((string).pointer += WIDTH((string)))
+#define MOVE(string)    ((string).pointer++)
+
+#define MOVEN(string,n)  ((string).pointer += n)
 
 /*
- * Copy a character and move the pointers of both strings.
+ * Copy a byte and move the pointers of both strings.
  */
 
 #define COPY(string_a,string_b)                                                 \
-    ((*(string_b).pointer & 0x80) == 0x00 ?                                     \
-     (*((string_a).pointer++) = *((string_b).pointer++)) :                      \
-     (*(string_b).pointer & 0xE0) == 0xC0 ?                                     \
-     (*((string_a).pointer++) = *((string_b).pointer++),                        \
-      *((string_a).pointer++) = *((string_b).pointer++)) :                      \
-     (*(string_b).pointer & 0xF0) == 0xE0 ?                                     \
-     (*((string_a).pointer++) = *((string_b).pointer++),                        \
-      *((string_a).pointer++) = *((string_b).pointer++),                        \
-      *((string_a).pointer++) = *((string_b).pointer++)) :                      \
-     (*(string_b).pointer & 0xF8) == 0xF0 ?                                     \
-     (*((string_a).pointer++) = *((string_b).pointer++),                        \
-      *((string_a).pointer++) = *((string_b).pointer++),                        \
-      *((string_a).pointer++) = *((string_b).pointer++),                        \
-      *((string_a).pointer++) = *((string_b).pointer++)) : 0)
+     (*((string_a).pointer++) = *((string_b).pointer++))
+
+#define COPYN(string_a,string_b,n)                                              \
+  (memcpy(string_a.pointer, string_b.pointer, n),                               \
+   string_a.pointer += n, string_b.pointer += n)
 
 /*
  * Stack and queue management.

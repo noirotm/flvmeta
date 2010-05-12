@@ -495,8 +495,13 @@
      (parser->mark.index ++,                                                    \
       parser->mark.column ++,                                                   \
       parser->unread --,                                                        \
-      parser->buffer.pointer += WIDTH(parser->buffer))
+      parser->buffer.pointer ++)
 
+#define SKIPN(parser,n)                                                         \
+     (parser->mark.index ++,                                                    \
+      parser->mark.column ++,                                                   \
+      parser->unread --,                                                        \
+      parser->buffer.pointer += (n))
 #define SKIP_LINE(parser)                                                       \
      (IS_CRLF(parser->buffer) ?                                                 \
       (parser->mark.index += 2,                                                 \
@@ -518,6 +523,14 @@
 #define READ(parser,string)                                                     \
      (STRING_EXTEND(parser,string) ?                                            \
          (COPY(string,parser->buffer),                                          \
+          parser->mark.index ++,                                                \
+          parser->mark.column ++,                                               \
+          parser->unread --,                                                    \
+          1) : 0)
+
+#define READN(parser,string,n)                                                  \
+     (STRING_EXTEND(parser,string) ?                                            \
+         (COPYN(string,parser->buffer,n),                                       \
           parser->mark.index ++,                                                \
           parser->mark.column ++,                                               \
           parser->unread --,                                                    \
@@ -1926,7 +1939,7 @@ yaml_parser_scan_to_next_token(yaml_parser_t *parser)
         if (!CACHE(parser, 1)) return 0;
 
         if (parser->mark.column == 0 && IS_BOM(parser->buffer))
-            SKIP(parser);
+            SKIPN(parser,3); /* UTF-8 BOM is 3 bytes */
 
         /*
          * Eat whitespaces.
@@ -2659,63 +2672,30 @@ static int
 yaml_parser_scan_uri_escapes(yaml_parser_t *parser, int directive,
         yaml_mark_t start_mark, yaml_string_t *string)
 {
-    int width = 0;
+    unsigned char octet = 0;
 
-    /* Decode the required number of characters. */
+    /* Check for a URI-escaped octet. */
 
-    do {
+    if (!CACHE(parser, 3)) return 0;
 
-        unsigned char octet = 0;
+    if (!(CHECK(parser->buffer, '%')
+          && IS_HEX_AT(parser->buffer, 1)
+          && IS_HEX_AT(parser->buffer, 2))) {
+        return yaml_parser_set_scanner_error(parser, directive ?
+                "while parsing a %TAG directive" : "while parsing a tag",
+                start_mark, "did not find URI escaped octet");
+    }
 
-        /* Check for a URI-escaped octet. */
+    /* Get the octet. */
 
-        if (!CACHE(parser, 3)) return 0;
+    octet = (AS_HEX_AT(parser->buffer, 1) << 4) + AS_HEX_AT(parser->buffer, 2);
 
-        if (!(CHECK(parser->buffer, '%')
-                    && IS_HEX_AT(parser->buffer, 1)
-                    && IS_HEX_AT(parser->buffer, 2))) {
-            return yaml_parser_set_scanner_error(parser, directive ?
-                    "while parsing a %TAG directive" : "while parsing a tag",
-                    start_mark, "did not find URI escaped octet");
-        }
+    /* Copy the octet and move the pointers. */
 
-        /* Get the octet. */
-
-        octet = (AS_HEX_AT(parser->buffer, 1) << 4) + AS_HEX_AT(parser->buffer, 2);
-
-        /* If it is the leading octet, determine the length of the UTF-8 sequence. */
-
-        if (!width)
-        {
-            width = (octet & 0x80) == 0x00 ? 1 :
-                    (octet & 0xE0) == 0xC0 ? 2 :
-                    (octet & 0xF0) == 0xE0 ? 3 :
-                    (octet & 0xF8) == 0xF0 ? 4 : 0;
-            if (!width) {
-                return yaml_parser_set_scanner_error(parser, directive ?
-                        "while parsing a %TAG directive" : "while parsing a tag",
-                        start_mark, "found an incorrect leading UTF-8 octet");
-            }
-        }
-        else
-        {
-            /* Check if the trailing octet is correct. */
-
-            if ((octet & 0xC0) != 0x80) {
-                return yaml_parser_set_scanner_error(parser, directive ?
-                        "while parsing a %TAG directive" : "while parsing a tag",
-                        start_mark, "found an incorrect trailing UTF-8 octet");
-            }
-        }
-
-        /* Copy the octet and move the pointers. */
-
-        *(string->pointer++) = octet;
-        SKIP(parser);
-        SKIP(parser);
-        SKIP(parser);
-
-    } while (--width);
+    *(string->pointer++) = octet;
+    SKIP(parser);
+    SKIP(parser);
+    SKIP(parser);
 
     return 1;
 }
@@ -3104,6 +3084,7 @@ yaml_parser_scan_flow_scalar(yaml_parser_t *parser, yaml_token_t *token,
             else if (!single && CHECK(parser->buffer, '\\'))
             {
                 size_t code_length = 0;
+                int raw_code = 0;
 
                 if (!STRING_EXTEND(parser, string)) goto error;
 
@@ -3190,6 +3171,11 @@ yaml_parser_scan_flow_scalar(yaml_parser_t *parser, yaml_token_t *token,
                         code_length = 2;
                         break;
 
+                    case 'X':
+                        code_length = 2;
+                        raw_code = 1;
+                        break;
+
                     case 'u':
                         code_length = 4;
                         break;
@@ -3235,7 +3221,7 @@ yaml_parser_scan_flow_scalar(yaml_parser_t *parser, yaml_token_t *token,
                         goto error;
                     }
 
-                    if (value <= 0x7F) {
+                    if (value <= 0x7F || raw_code) {
                         *(string.pointer++) = value;
                     }
                     else if (value <= 0x7FF) {
@@ -3264,7 +3250,7 @@ yaml_parser_scan_flow_scalar(yaml_parser_t *parser, yaml_token_t *token,
 
             else
             {
-                /* It is a non-escaped non-blank character. */
+                /* It is a non-escaped non-blank byte. */
 
                 if (!READ(parser, string)) goto error;
             }
@@ -3476,7 +3462,7 @@ yaml_parser_scan_plain_scalar(yaml_parser_t *parser, yaml_token_t *token)
                 }
             }
 
-            /* Copy the character. */
+            /* Copy the byte. */
 
             if (!READ(parser, string)) goto error;
 

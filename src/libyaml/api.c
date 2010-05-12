@@ -611,51 +611,6 @@ yaml_token_delete(yaml_token_t *token)
 }
 
 /*
- * Check if a string is a valid UTF-8 sequence.
- *
- * Check 'reader.c' for more details on UTF-8 encoding.
- */
-
-static int
-yaml_check_utf8(yaml_char_t *start, size_t length)
-{
-    yaml_char_t *end = start+length;
-    yaml_char_t *pointer = start;
-
-    while (pointer < end) {
-        unsigned char octet;
-        unsigned int width;
-        unsigned int value;
-        size_t k;
-
-        octet = pointer[0];
-        width = (octet & 0x80) == 0x00 ? 1 :
-                (octet & 0xE0) == 0xC0 ? 2 :
-                (octet & 0xF0) == 0xE0 ? 3 :
-                (octet & 0xF8) == 0xF0 ? 4 : 0;
-        value = (octet & 0x80) == 0x00 ? octet & 0x7F :
-                (octet & 0xE0) == 0xC0 ? octet & 0x1F :
-                (octet & 0xF0) == 0xE0 ? octet & 0x0F :
-                (octet & 0xF8) == 0xF0 ? octet & 0x07 : 0;
-        if (!width) return 0;
-        if (pointer+width > end) return 0;
-        for (k = 1; k < width; k ++) {
-            octet = pointer[k];
-            if ((octet & 0xC0) != 0x80) return 0;
-            value = (value << 6) + (octet & 0x3F);
-        }
-        if (!((width == 1) ||
-            (width == 2 && value >= 0x80) ||
-            (width == 3 && value >= 0x800) ||
-            (width == 4 && value >= 0x10000))) return 0;
-
-        pointer += width;
-    }
-
-    return 1;
-}
-
-/*
  * Create STREAM-START.
  */
 
@@ -731,12 +686,6 @@ yaml_document_start_event_initialize(yaml_event_t *event,
                 tag_directive != tag_directives_end; tag_directive ++) {
             assert(tag_directive->handle);
             assert(tag_directive->prefix);
-            if (!yaml_check_utf8(tag_directive->handle,
-                        strlen((char *)tag_directive->handle)))
-                goto error;
-            if (!yaml_check_utf8(tag_directive->prefix,
-                        strlen((char *)tag_directive->prefix)))
-                goto error;
             value.handle = yaml_strdup(tag_directive->handle);
             value.prefix = yaml_strdup(tag_directive->prefix);
             if (!value.handle || !value.prefix) goto error;
@@ -796,8 +745,6 @@ yaml_alias_event_initialize(yaml_event_t *event, yaml_char_t *anchor)
     assert(event);      /* Non-NULL event object is expected. */
     assert(anchor);     /* Non-NULL anchor is expected. */
 
-    if (!yaml_check_utf8(anchor, strlen((char *)anchor))) return 0;
-
     anchor_copy = yaml_strdup(anchor);
     if (!anchor_copy)
         return 0;
@@ -827,13 +774,11 @@ yaml_scalar_event_initialize(yaml_event_t *event,
     assert(value);      /* Non-NULL anchor is expected. */
 
     if (anchor) {
-        if (!yaml_check_utf8(anchor, strlen((char *)anchor))) goto error;
         anchor_copy = yaml_strdup(anchor);
         if (!anchor_copy) goto error;
     }
 
     if (tag) {
-        if (!yaml_check_utf8(tag, strlen((char *)tag))) goto error;
         tag_copy = yaml_strdup(tag);
         if (!tag_copy) goto error;
     }
@@ -842,7 +787,6 @@ yaml_scalar_event_initialize(yaml_event_t *event,
         length = strlen((char *)value);
     }
 
-    if (!yaml_check_utf8(value, length)) goto error;
     value_copy = yaml_malloc(length+1);
     if (!value_copy) goto error;
     memcpy(value_copy, value, length);
@@ -877,13 +821,11 @@ yaml_sequence_start_event_initialize(yaml_event_t *event,
     assert(event);      /* Non-NULL event object is expected. */
 
     if (anchor) {
-        if (!yaml_check_utf8(anchor, strlen((char *)anchor))) goto error;
         anchor_copy = yaml_strdup(anchor);
         if (!anchor_copy) goto error;
     }
 
     if (tag) {
-        if (!yaml_check_utf8(tag, strlen((char *)tag))) goto error;
         tag_copy = yaml_strdup(tag);
         if (!tag_copy) goto error;
     }
@@ -932,13 +874,11 @@ yaml_mapping_start_event_initialize(yaml_event_t *event,
     assert(event);      /* Non-NULL event object is expected. */
 
     if (anchor) {
-        if (!yaml_check_utf8(anchor, strlen((char *)anchor))) goto error;
         anchor_copy = yaml_strdup(anchor);
         if (!anchor_copy) goto error;
     }
 
     if (tag) {
-        if (!yaml_check_utf8(tag, strlen((char *)tag))) goto error;
         tag_copy = yaml_strdup(tag);
         if (!tag_copy) goto error;
     }
@@ -1072,12 +1012,6 @@ yaml_document_initialize(yaml_document_t *document,
                 tag_directive != tag_directives_end; tag_directive ++) {
             assert(tag_directive->handle);
             assert(tag_directive->prefix);
-            if (!yaml_check_utf8(tag_directive->handle,
-                        strlen((char *)tag_directive->handle)))
-                goto error;
-            if (!yaml_check_utf8(tag_directive->prefix,
-                        strlen((char *)tag_directive->prefix)))
-                goto error;
             value.handle = yaml_strdup(tag_directive->handle);
             value.prefix = yaml_strdup(tag_directive->prefix);
             if (!value.handle || !value.prefix) goto error;
@@ -1210,7 +1144,6 @@ yaml_document_add_scalar(yaml_document_t *document,
         tag = (yaml_char_t *)YAML_DEFAULT_SCALAR_TAG;
     }
 
-    if (!yaml_check_utf8(tag, strlen((char *)tag))) goto error;
     tag_copy = yaml_strdup(tag);
     if (!tag_copy) goto error;
 
@@ -1218,7 +1151,6 @@ yaml_document_add_scalar(yaml_document_t *document,
         length = strlen((char *)value);
     }
 
-    if (!yaml_check_utf8(value, length)) goto error;
     value_copy = yaml_malloc(length+1);
     if (!value_copy) goto error;
     memcpy(value_copy, value, length);
@@ -1262,7 +1194,6 @@ yaml_document_add_sequence(yaml_document_t *document,
         tag = (yaml_char_t *)YAML_DEFAULT_SEQUENCE_TAG;
     }
 
-    if (!yaml_check_utf8(tag, strlen((char *)tag))) goto error;
     tag_copy = yaml_strdup(tag);
     if (!tag_copy) goto error;
 
@@ -1307,7 +1238,6 @@ yaml_document_add_mapping(yaml_document_t *document,
         tag = (yaml_char_t *)YAML_DEFAULT_MAPPING_TAG;
     }
 
-    if (!yaml_check_utf8(tag, strlen((char *)tag))) goto error;
     tag_copy = yaml_strdup(tag);
     if (!tag_copy) goto error;
 
