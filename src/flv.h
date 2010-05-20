@@ -59,6 +59,7 @@ typedef struct __flv_header {
 
 #define flv_header_has_video(header)    ((header).flags & FLV_FLAG_VIDEO)
 #define flv_header_has_audio(header)    ((header).flags & FLV_FLAG_AUDIO)
+#define flv_header_get_offset(header)   (swap_uint32((header).offset))
 
 /* FLV tag */
 #define FLV_TAG_TYPE_AUDIO  ((uint8)0x08)
@@ -76,6 +77,7 @@ typedef struct __flv_tag {
 
 #define FLV_TAG_SIZE 11
 
+#define flv_tag_get_body_length(tag)    (uint24_be_to_uint32((tag).body_length))
 #define flv_tag_get_timestamp(tag) \
     (uint24_be_to_uint32((tag).timestamp) + ((tag).timestamp_extended << 24))
 

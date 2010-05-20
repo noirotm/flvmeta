@@ -57,7 +57,7 @@ static void report_end(const flvmeta_opts * opts, int errors, int warnings) {
         puts("</report>");
     }
     else {
-        printf("(%d) error(s), (%d) warning(s)\n", errors, warnings);
+        printf("%d error(s), %d warning(s)\n", errors, warnings);
     }
 }
 
@@ -89,7 +89,7 @@ static void report_print_message(
         else {
             /* raw report entry */
             printf("%s", opts->input_file);
-            printf("(%" FILE_OFFSET_PRINTF_FORMAT "x) : ", offset);
+            printf("(0x%.8" FILE_OFFSET_PRINTF_FORMAT "x) ", offset);
             printf("%s %s: %s\n", levelstr, code, message);
         }
     }
@@ -99,20 +99,24 @@ static void report_print_message(
 #define print_info(code, offset, message) \
     report_print_message(FLVMETA_CHECK_LEVEL_INFO, code, offset, message, opts)
 #define print_warning(code, offset, message) \
-    ++warnings; \
+    if (opts->check_level <= FLVMETA_CHECK_LEVEL_WARNING) ++warnings; \
     report_print_message(FLVMETA_CHECK_LEVEL_WARNING, code, offset, message, opts)
 #define print_error(code, offset, message) \
-    ++errors; \
+    if (opts->check_level <= FLVMETA_CHECK_LEVEL_ERROR) ++errors; \
     report_print_message(FLVMETA_CHECK_LEVEL_ERROR, code, offset, message, opts)
 #define print_fatal(code, offset, message) \
-    ++errors; \
+    if (opts->check_level <= FLVMETA_CHECK_LEVEL_FATAL) ++errors; \
     report_print_message(FLVMETA_CHECK_LEVEL_FATAL, code, offset, message, opts)
 
 
 /* check FLV file validity */
 int check_flv_file(const flvmeta_opts * opts) {
     flv_stream * flv_in;
+    flv_header header;
     int errors, warnings;
+    int result;
+    char message[256];
+    uint32 prev_tag_size;
 
     flv_in = flv_open(opts->input_file);
     if (flv_in == NULL) {
@@ -122,6 +126,62 @@ int check_flv_file(const flvmeta_opts * opts) {
     errors = warnings = 0;
 
     report_start(opts);
+
+    /** check header **/
+
+    /* check signature */
+    result = flv_read_header(flv_in, &header);
+    if (result == FLV_ERROR_EOF) {
+        print_fatal("F11001", 0, "unexpected end of file in header");
+        goto end;
+    }
+    else if (result == FLV_ERROR_NO_FLV) {
+        print_fatal("F11002", 0, "FLV signature not found in header");
+        goto end;
+    }
+
+    /* version */
+    if (header.version != FLV_VERSION) {
+        sprintf(message, "header version should be 1, %d found instead", header.version);
+        print_error("E11006", 3, message);
+    }
+
+    /* video and audio flags */
+    if (!flv_header_has_audio(header) && !flv_header_has_video(header)) {
+        print_error("E11003", 4, "header signals the file does not contain video tags or audio tags");
+    }
+    else if (!flv_header_has_audio(header)) {
+        print_info("I11004", 4, "header signals the file does not contain audio tags");
+    }
+    else if (!flv_header_has_video(header)) {
+        print_warning("W11005", 4, "header signals the file does not contain video tags");
+    }
+
+    /* reserved flags */
+    if (header.flags & 0xFA) {
+        print_error("E11007", 4, "header reserved flags are not zero");
+    }
+
+    /* offset */
+    if (flv_header_get_offset(header) != 9) {
+        sprintf(message, "header offset should be 9, %d found instead", flv_header_get_offset(header));
+        print_error("E11008", 5, message);
+    }
+
+    /** check first previous tag size **/
+
+    result = flv_read_prev_tag_size(flv_in, &prev_tag_size);
+    if (result == FLV_ERROR_EOF) {
+        print_fatal("F12003", 9, "unexpected end of file in previous tag size");
+        goto end;
+    }
+    else if (prev_tag_size != 0) {
+        sprintf(message, "first previous tag size should be 0, %d found instead", prev_tag_size);
+        print_error("E12009", 9, message);
+    }
+
+
+end:
     report_end(opts, errors, warnings);
     
     flv_close(flv_in);
