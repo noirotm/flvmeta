@@ -310,10 +310,6 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
         return ERROR_NO_FLV;
     }
 
-    if (info->header.signature[0] != 'F' || info->header.signature[1] != 'L' || info->header.signature[2] != 'V') {
-        return ERROR_NO_FLV;
-    }
-
     info->keyframes = amf_object_new();
     info->times = amf_array_new();
     info->filepositions = amf_array_new();
