@@ -24,6 +24,10 @@
 #include "check.h"
 
 #include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#define MAX_ACCEPTABLE_TAG_BODY_LENGTH 50000
 
 /* start the report */
 static void report_start(const flvmeta_opts * opts) {
@@ -88,8 +92,8 @@ static void report_print_message(
         }
         else {
             /* raw report entry */
-            printf("%s", opts->input_file);
-            printf("(0x%.8" FILE_OFFSET_PRINTF_FORMAT "x) ", offset);
+            /*printf("%s:", opts->input_file);*/
+            printf("0x%.8" FILE_OFFSET_PRINTF_FORMAT "x: ", offset);
             printf("%s %s: %s\n", levelstr, code, message);
         }
     }
@@ -116,8 +120,15 @@ int check_flv_file(const flvmeta_opts * opts) {
     int errors, warnings;
     int result;
     char message[256];
-    uint32 prev_tag_size;
+    uint32 prev_tag_size, tag_number;
+    struct stat file_stats;
 
+    /* file stats */
+    if (stat(opts->input_file, &file_stats) != 0) {
+        return ERROR_OPEN_READ;
+    }
+
+    /* open file for reading */
     flv_in = flv_open(opts->input_file);
     if (flv_in == NULL) {
         return ERROR_OPEN_READ;
@@ -143,18 +154,18 @@ int check_flv_file(const flvmeta_opts * opts) {
     /* version */
     if (header.version != FLV_VERSION) {
         sprintf(message, "header version should be 1, %d found instead", header.version);
-        print_error("E11006", 3, message);
+        print_error("E11003", 3, message);
     }
 
     /* video and audio flags */
     if (!flv_header_has_audio(header) && !flv_header_has_video(header)) {
-        print_error("E11003", 4, "header signals the file does not contain video tags or audio tags");
+        print_error("E11004", 4, "header signals the file does not contain video tags or audio tags");
     }
     else if (!flv_header_has_audio(header)) {
-        print_info("I11004", 4, "header signals the file does not contain audio tags");
+        print_info("I11005", 4, "header signals the file does not contain audio tags");
     }
     else if (!flv_header_has_video(header)) {
-        print_warning("W11005", 4, "header signals the file does not contain video tags");
+        print_warning("W11006", 4, "header signals the file does not contain video tags");
     }
 
     /* reserved flags */
@@ -172,14 +183,89 @@ int check_flv_file(const flvmeta_opts * opts) {
 
     result = flv_read_prev_tag_size(flv_in, &prev_tag_size);
     if (result == FLV_ERROR_EOF) {
-        print_fatal("F12003", 9, "unexpected end of file in previous tag size");
+        print_fatal("F12009", 9, "unexpected end of file in previous tag size");
         goto end;
     }
     else if (prev_tag_size != 0) {
         sprintf(message, "first previous tag size should be 0, %d found instead", prev_tag_size);
-        print_error("E12009", 9, message);
+        print_error("E12010", 9, message);
     }
 
+    /* we reached the end of file: no tags in file */
+    if (flv_get_offset(flv_in) == file_stats.st_size) {
+        print_fatal("F10011", 13, "file does not contain tags");
+        goto end;
+    }
+
+    /** read tags **/
+    tag_number = 0;
+    while (flv_get_offset(flv_in) < file_stats.st_size) {
+        flv_tag tag;
+        file_offset_t offset;
+        uint32 body_length, timestamp, stream_id;
+
+        result = flv_read_tag(flv_in, &tag);
+        if (result != FLV_OK) {
+            print_fatal("F20012", flv_get_offset(flv_in), "unexpected end of file in tag");
+            goto end;
+        }
+
+        ++tag_number;
+
+        offset = flv_get_current_tag_offset(flv_in);
+        body_length = flv_tag_get_body_length(tag);
+        timestamp = flv_tag_get_timestamp(tag);
+        stream_id = flv_tag_get_stream_id(tag);
+
+        /* check tag type */
+        if (tag.type != FLV_TAG_TYPE_AUDIO &&
+            tag.type != FLV_TAG_TYPE_VIDEO &&
+            tag.type != FLV_TAG_TYPE_META
+        ) {
+            sprintf(message, "unknown tag type %hhd", tag.type);
+            print_error("E30013", offset, message);
+        }
+
+        /* check body length */
+        if (body_length > (file_stats.st_size - flv_get_offset(flv_in))) {
+            sprintf(message, "tag body length (%d bytes) exceeds file size", body_length);
+            print_fatal("F20014", offset + 1, message);
+            goto end;
+        }
+        if (body_length > MAX_ACCEPTABLE_TAG_BODY_LENGTH) {
+            sprintf(message, "tag body length (%d bytes) is abnormally large", body_length);
+            print_warning("W20015", offset + 1, message);
+        }
+
+        /** check timestamp **/
+
+        /* check whether first timestamp is zero */
+        if (tag_number == 1 && timestamp != 0) {
+            sprintf(message, "first timestamp should be zero, %d found instead", timestamp);
+            print_warning("W40016", offset + 4, message);
+        }
+
+
+
+        /* stream id must be zero */
+        if (stream_id != 0) {
+            sprintf(message, "tag stream id must be zero, %d found instead", stream_id);
+            print_error("E20017", offset + 8, message);
+        }
+
+        /* check body length against previous tag size */
+        result = flv_read_prev_tag_size(flv_in, &prev_tag_size);
+        if (result != FLV_OK) {
+            print_fatal("F12018", flv_get_offset(flv_in), "unexpected end of file after tag");
+            goto end;
+        }
+
+        if (prev_tag_size != FLV_TAG_SIZE + body_length) {
+            sprintf(message, "previous tag size should be %d, %d found instead", FLV_TAG_SIZE + body_length, prev_tag_size);
+            print_error("E12019", flv_get_offset(flv_in), message);
+            goto end;
+        }
+    }
 
 end:
     report_end(opts, errors, warnings);

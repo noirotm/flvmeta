@@ -80,6 +80,7 @@ typedef struct __flv_tag {
 #define flv_tag_get_body_length(tag)    (uint24_be_to_uint32((tag).body_length))
 #define flv_tag_get_timestamp(tag) \
     (uint24_be_to_uint32((tag).timestamp) + ((tag).timestamp_extended << 24))
+#define flv_tag_get_stream_id(tag)      (uint24_be_to_uint32((tag).stream_id))
 
 /* audio tag */
 #define FLV_AUDIO_TAG_SOUND_TYPE_MONO    0
@@ -166,6 +167,7 @@ int flv_read_video_tag(flv_stream * stream, flv_video_tag * tag);
 int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data);
 size_t flv_read_tag_body(flv_stream * stream, void * buffer, size_t buffer_size);
 file_offset_t flv_get_current_tag_offset(flv_stream * stream);
+file_offset_t flv_get_offset(flv_stream * stream);
 void flv_reset(flv_stream * stream);
 void flv_close(flv_stream * stream);
 
