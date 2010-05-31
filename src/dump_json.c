@@ -120,7 +120,7 @@ static int json_on_tag(flv_tag * tag, flv_parser * parser) {
     printf("{\"type\":\"%s\",\"timestamp\":%i,\"dataSize\":%i",
         dump_string_get_tag_type(tag),
         flv_tag_get_timestamp(*tag),
-        uint24_be_to_uint32(tag->body_length));
+        flv_tag_get_body_length(*tag));
     printf(",\"offset\":%" FILE_OFFSET_PRINTF_FORMAT "i,",
         parser->stream->current_tag_offset);
 

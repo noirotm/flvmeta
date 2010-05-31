@@ -216,7 +216,7 @@ int yaml_on_tag(flv_tag * tag, flv_parser * parser) {
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"dataSize", 8, 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
 
-    sprintf(buffer, "%i", uint24_be_to_uint32(tag->body_length));
+    sprintf(buffer, "%i", flv_tag_get_body_length(*tag));
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)buffer, strlen(buffer), 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
 

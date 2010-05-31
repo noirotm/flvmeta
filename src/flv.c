@@ -119,7 +119,7 @@ int flv_read_tag(flv_stream * stream, flv_tag * tag) {
         lfs_fseek(stream->flvin, stream->current_tag_offset + FLV_TAG_SIZE + uint24_be_to_uint32(stream->current_tag.body_length), SEEK_SET);
         stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
     }
-
+ 
     /* skip previous tag size */
     if (stream->state == FLV_STREAM_STATE_PREV_TAG_SIZE) {
         lfs_fseek(stream->flvin, sizeof(uint32_be), SEEK_CUR);
@@ -241,6 +241,10 @@ size_t flv_read_tag_body(flv_stream * stream, void * buffer, size_t buffer_size)
 
 file_offset_t flv_get_current_tag_offset(flv_stream * stream) {
     return (stream != NULL) ? stream->current_tag_offset : 0;
+}
+
+file_offset_t flv_get_offset(flv_stream * stream) {
+    return (stream != NULL) ? lfs_ftell(stream->flvin) : 0;
 }
 
 void flv_reset(flv_stream * stream) {

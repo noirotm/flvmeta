@@ -338,7 +338,7 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
         uint32 timestamp;
 
         offset = flv_get_current_tag_offset(flv_in);
-        body_length = uint24_be_to_uint32(ft.body_length);
+        body_length = flv_tag_get_body_length(ft);
         timestamp = flv_tag_get_timestamp(ft);
 
         /* extended timestamp fixing */
@@ -792,7 +792,7 @@ static int write_flv(flv_stream * flv_in, FILE * flv_out, const flv_info * info,
         uint32 timestamp;
 
         offset = flv_get_current_tag_offset(flv_in);
-        body_length = uint24_be_to_uint32(ft.body_length);
+        body_length = flv_tag_get_body_length(ft);
         timestamp = flv_tag_get_timestamp(ft);
 
         /* extended timestamp fixing */
