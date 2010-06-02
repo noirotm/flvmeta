@@ -38,6 +38,7 @@
 #define FLV_ERROR_NO_FLV        2
 #define FLV_ERROR_EOF           3
 #define FLV_ERROR_MEMORY        4
+#define FLV_ERROR_EMPTY_TAG     5
 
 /* flv file format structure and definitions */
 

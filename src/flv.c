@@ -152,8 +152,15 @@ int flv_read_audio_tag(flv_stream * stream, flv_audio_tag * tag) {
     if (stream == NULL
     || stream->flvin == NULL
     || feof(stream->flvin)
-    || stream->state != FLV_STREAM_STATE_TAG_BODY
-    || fread(tag, sizeof(flv_audio_tag), 1, stream->flvin) == 0) {
+    || stream->state != FLV_STREAM_STATE_TAG_BODY) {
+        return FLV_ERROR_EOF;
+    }
+
+    if (stream->current_tag_body_length == 0) {
+        return FLV_ERROR_EMPTY_TAG;
+    }
+
+    if (fread(tag, sizeof(flv_audio_tag), 1, stream->flvin) == 0) {
         return FLV_ERROR_EOF;
     }
     
@@ -170,8 +177,15 @@ int flv_read_video_tag(flv_stream * stream, flv_video_tag * tag) {
     if (stream == NULL
     || stream->flvin == NULL
     || feof(stream->flvin)
-    || stream->state != FLV_STREAM_STATE_TAG_BODY
-    || fread(tag, sizeof(flv_video_tag), 1, stream->flvin) == 0) {
+    || stream->state != FLV_STREAM_STATE_TAG_BODY) {
+        return FLV_ERROR_EOF;
+    }
+
+    if (stream->current_tag_body_length == 0) {
+        return FLV_ERROR_EMPTY_TAG;
+    }
+
+    if (fread(tag, sizeof(flv_video_tag), 1, stream->flvin) == 0) {
         return FLV_ERROR_EOF;
     }
 
@@ -191,6 +205,10 @@ int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
     || feof(stream->flvin)
     || stream->state != FLV_STREAM_STATE_TAG_BODY) {
         return FLV_ERROR_EOF;
+    }
+
+    if (stream->current_tag_body_length == 0) {
+        return FLV_ERROR_EMPTY_TAG;
     }
     
     /* read metadata name */
