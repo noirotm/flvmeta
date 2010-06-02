@@ -210,8 +210,6 @@ int check_flv_file(const flvmeta_opts * opts) {
     tag_number = 0;
     while (flv_get_offset(flv_in) < file_stats.st_size) {
         flv_tag tag;
-        flv_audio_tag at;
-        flv_video_tag vt;
         file_offset_t offset;
         uint32 body_length, timestamp, stream_id;
 
@@ -248,8 +246,7 @@ int check_flv_file(const flvmeta_opts * opts) {
             print_warning("W20015", offset + 1, message);
         }
         else if (body_length == 0) {
-            sprintf(message, "tag body length is zero", body_length);
-            print_warning("W20016", offset + 1, message);
+            print_warning("W20016", offset + 1, "tag body length is zero");
         }
 
         /** check timestamp **/
@@ -272,6 +269,7 @@ int check_flv_file(const flvmeta_opts * opts) {
 
             /** check audio info **/
             if (tag.type == FLV_TAG_TYPE_AUDIO) {
+                flv_audio_tag at;
                 uint8_bitmask audio_format;
 
                 result = flv_read_audio_tag(flv_in, &at);
@@ -283,7 +281,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                 /* check format */
                 audio_format = flv_audio_tag_sound_format(at);
                 if (audio_format == 12 || audio_format == 13) {
-                    sprintf(message, "unknown audio format %d in tag", audio_format);
+                    sprintf(message, "unknown audio format %d", audio_format);
                     print_warning("W51019", offset + 11, message);
                 }
                 else if (audio_format == FLV_AUDIO_TAG_SOUND_FORMAT_G711_A
@@ -319,6 +317,46 @@ int check_flv_file(const flvmeta_opts * opts) {
             }
             /** check video info **/
             else if (tag.type == FLV_TAG_TYPE_VIDEO) {
+                flv_video_tag vt;
+                uint8_bitmask video_frame_type, video_codec;
+
+                result = flv_read_video_tag(flv_in, &vt);
+                if (result == FLV_ERROR_EOF) {
+                    print_fatal("F20012", offset + 11, "unexpected end of file in tag");
+                    goto end;
+                }
+
+                /* check video frame type */
+                video_frame_type = flv_video_tag_frame_type(vt);
+                if (video_frame_type != FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME
+                    && video_frame_type != FLV_VIDEO_TAG_FRAME_TYPE_INTERFRAME
+                    && video_frame_type != FLV_VIDEO_TAG_FRAME_TYPE_DISPOSABLE_INTERFRAME
+                    && video_frame_type != FLV_VIDEO_TAG_FRAME_TYPE_GENERATED_KEYFRAME
+                    && video_frame_type != FLV_VIDEO_TAG_FRAME_TYPE_COMMAND_FRAME
+                ) {
+                    sprintf(message, "unknown video frame type %d", video_frame_type);
+                    print_error("E60024", offset + 11, message);
+                }
+
+                /* check video codec */
+                video_codec = flv_video_tag_codec_id(vt);
+                if (video_codec != FLV_VIDEO_TAG_CODEC_JPEG
+                    && video_codec != FLV_VIDEO_TAG_CODEC_SORENSEN_H263
+                    && video_codec != FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO
+                    && video_codec != FLV_VIDEO_TAG_CODEC_ON2_VP6
+                    && video_codec != FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA
+                    && video_codec != FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2
+                    && video_codec != FLV_VIDEO_TAG_CODEC_AVC
+                ) {
+                    sprintf(message, "unknown video codec id %d", video_codec);
+                    print_error("E61025", offset + 11, message);
+                }
+
+                /* according to spec, JPEG codec is not currently used */
+                if (video_codec == FLV_VIDEO_TAG_CODEC_JPEG) {
+                    print_warning("W61026", offset + 11, "JPEG codec not currently used");
+                }
+
             }
             /** check script data info **/
             else if (tag.type == FLV_TAG_TYPE_META) {
@@ -329,13 +367,13 @@ int check_flv_file(const flvmeta_opts * opts) {
         /* check body length against previous tag size */
         result = flv_read_prev_tag_size(flv_in, &prev_tag_size);
         if (result != FLV_OK) {
-            print_fatal("F12024", flv_get_offset(flv_in), "unexpected end of file after tag");
+            print_fatal("F12027", flv_get_offset(flv_in), "unexpected end of file after tag");
             goto end;
         }
 
         if (prev_tag_size != FLV_TAG_SIZE + body_length) {
             sprintf(message, "previous tag size should be %d, %d found instead", FLV_TAG_SIZE + body_length, prev_tag_size);
-            print_error("E12025", flv_get_offset(flv_in), message);
+            print_error("E12028", flv_get_offset(flv_in), message);
             goto end;
         }
     }
