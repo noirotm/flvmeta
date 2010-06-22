@@ -47,6 +47,10 @@ check_type_size("long double" SIZEOF_LONG_DOUBLE)
 
 if(WIN32)
   add_definitions(-D_FILE_OFFSET_BITS=64)
+endif(WIN32)
+
+# MSVC before VS 2010 did not have stdint.h
+if(MSVC AND NOT HAVE_STDINT_H)
   set(int16_t  1)
   set(int32_t  1)
   set(int64_t  1)
@@ -55,7 +59,7 @@ if(WIN32)
   set(uint32_t 1)
   set(uint64_t 1)
   set(uint8_t  1)
-endif(WIN32)
+endif(MSVC AND NOT HAVE_STDINT_H)
 
 test_big_endian(IS_BIGENDIAN)
 if(IS_BIGENDIAN)
