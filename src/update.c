@@ -455,7 +455,7 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
                     return result;
                 }
 
-                if (info->video_width > 0 && info->video_width > 0) {
+                if (info->video_width > 0 && info->video_height > 0) {
                     have_video_size = 1;
                 }
                 /* if we cannot fetch that information from the first tag, we'll try
