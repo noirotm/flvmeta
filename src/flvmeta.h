@@ -1,5 +1,5 @@
 /*
-    $Id$
+    $Id: flvmeta.h 205 2010-06-24 14:48:46Z marc.noirot $
 
     FLV Metadata updater
 
@@ -57,6 +57,8 @@
 #define FLVMETA_FULL_DUMP_COMMAND   2
 #define FLVMETA_CHECK_COMMAND       3
 #define FLVMETA_UPDATE_COMMAND      4
+#define FLVMETA_VERSION_COMMAND     5
+#define FLVMETA_HELP_COMMAND        6
 
 /* tags handling */
 #define FLVMETA_EXIT_ON_ERROR       0

@@ -1,5 +1,5 @@
 /*
-    $Id$
+    $Id: flvmeta.c 205 2010-06-24 14:48:46Z marc.noirot $
 
     FLV Metadata updater
 
@@ -82,14 +82,14 @@ static struct option long_options[] = {
 #define VERSION_OPTION              "V"
 #define HELP_OPTION                 "h"
 
-void version(void) {
+static void version(void) {
     printf("%s\n\n", PACKAGE_STRING);
     printf("%s\n", COPYRIGHT_STR);
     printf("This is free software; see the source for copying conditions. There is NO\n"
            "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n");
 }
 
-void usage(const char * name) {
+static void usage(const char * name) {
     fprintf(stderr, "Usage: %s [COMMAND] [OPTIONS] INPUT_FILE [OUTPUT_FILE]\n", name);
     fprintf(stderr, "Try `%s --help' for more information.\n", name);
 }
@@ -136,29 +136,9 @@ static void help(const char * name) {
     printf("\nPlease report bugs to <%s>\n", PACKAGE_BUGREPORT);
 }
 
-int main(int argc, char ** argv) {
-    int option, option_index, errcode;
+static int parse_command_line(int argc, char ** argv, flvmeta_opts * options) {
+    int option, option_index;
 
-    /* flvmeta default options */
-    static flvmeta_opts options;
-    options.command = FLVMETA_DEFAULT_COMMAND;
-    options.input_file = NULL;
-    options.output_file = NULL;
-    options.metadata = NULL;
-    options.check_level = FLVMETA_CHECK_LEVEL_WARNING;
-    options.quiet = 0;
-    options.check_xml_report = 0;
-    options.dump_metadata = 0;
-    options.insert_onlastsecond = 1;
-    options.reset_timestamps = 0;
-    options.preserve_metadata = 0;
-    options.error_handling = FLVMETA_EXIT_ON_ERROR;
-    options.dump_format = FLVMETA_FORMAT_XML;
-    options.verbose = 0;
-
-    /*
-        Command-line parsing
-    */
     option_index = 0;
     do {
         option = getopt_long(argc, argv, 
@@ -189,32 +169,32 @@ int main(int argc, char ** argv) {
                 commands
             */
             case 'D':
-                if (options.command != FLVMETA_DEFAULT_COMMAND) {
+                if (options->command != FLVMETA_DEFAULT_COMMAND) {
                     fprintf(stderr, "%s: only one command can be specified -- %s\n", argv[0], argv[optind]);
-                    exit(EXIT_FAILURE);
+                    return EXIT_FAILURE;
                 }
-                options.command = FLVMETA_DUMP_COMMAND;
+                options->command = FLVMETA_DUMP_COMMAND;
                 break;
             case 'F':
-                if (options.command != FLVMETA_DEFAULT_COMMAND) {
+                if (options->command != FLVMETA_DEFAULT_COMMAND) {
                     fprintf(stderr, "%s: only one command can be specified -- %s\n", argv[0], argv[optind]);
-                    exit(EXIT_FAILURE);
+                    return EXIT_FAILURE;
                 }
-                options.command = FLVMETA_FULL_DUMP_COMMAND;
+                options->command = FLVMETA_FULL_DUMP_COMMAND;
                 break;
             case 'C':
-                if (options.command != FLVMETA_DEFAULT_COMMAND) {
+                if (options->command != FLVMETA_DEFAULT_COMMAND) {
                     fprintf(stderr, "%s: only one command can be specified -- %s\n", argv[0], argv[optind]);
-                    exit(EXIT_FAILURE);
+                    return EXIT_FAILURE;
                 }
-                options.command = FLVMETA_CHECK_COMMAND;
+                options->command = FLVMETA_CHECK_COMMAND;
                 break;
             case 'U':
-                if (options.command != FLVMETA_DEFAULT_COMMAND) {
+                if (options->command != FLVMETA_DEFAULT_COMMAND) {
                     fprintf(stderr, "%s: only one command can be specified -- %s\n", argv[0], argv[optind]);
-                    exit(EXIT_FAILURE);
+                    return EXIT_FAILURE;
                 }
-                options.command = FLVMETA_UPDATE_COMMAND;
+                options->command = FLVMETA_UPDATE_COMMAND;
                 break;
             /*
                 options
@@ -222,91 +202,91 @@ int main(int argc, char ** argv) {
             /* check options */
             case 'l':
                 if (!strcmp(optarg, "info")) {
-                    options.check_level = FLVMETA_CHECK_LEVEL_INFO;
+                    options->check_level = FLVMETA_CHECK_LEVEL_INFO;
                 }
                 else if (!strcmp(optarg, "warning")) {
-                    options.check_level = FLVMETA_CHECK_LEVEL_WARNING;
+                    options->check_level = FLVMETA_CHECK_LEVEL_WARNING;
                 }
                 else if (!strcmp(optarg, "error")) {
-                    options.check_level = FLVMETA_CHECK_LEVEL_ERROR;
+                    options->check_level = FLVMETA_CHECK_LEVEL_ERROR;
                 }
                 else if (!strcmp(optarg, "fatal")) {
-                    options.check_level = FLVMETA_CHECK_LEVEL_FATAL;
+                    options->check_level = FLVMETA_CHECK_LEVEL_FATAL;
                 }
                 else {
                     fprintf(stderr, "%s: invalid message level -- %s\n", argv[0], optarg);
                     usage(argv[0]);
-                    exit(EXIT_FAILURE);
+                    return EXIT_FAILURE;
                 }
                 break;
-            case 'q': options.quiet = 1; break;
+            case 'q': options->quiet = 1; break;
             /* dump options */
             case 'd':
                 if (!strcmp(optarg, "xml")) {
-                    options.dump_format = FLVMETA_FORMAT_XML;
+                    options->dump_format = FLVMETA_FORMAT_XML;
                 }
                 if (!strcmp(optarg, "raw")) {
-                    options.dump_format = FLVMETA_FORMAT_RAW;
+                    options->dump_format = FLVMETA_FORMAT_RAW;
                 }
                 else if (!strcmp(optarg, "json")) {
-                    options.dump_format = FLVMETA_FORMAT_JSON;
+                    options->dump_format = FLVMETA_FORMAT_JSON;
                 }
                 else if (!strcmp(optarg, "yaml")) {
-                    options.dump_format = FLVMETA_FORMAT_YAML;
+                    options->dump_format = FLVMETA_FORMAT_YAML;
                 }
                 else {
                     fprintf(stderr, "%s: invalid output format -- %s\n", argv[0], optarg);
                     usage(argv[0]);
-                    exit(EXIT_FAILURE);
+                    return EXIT_FAILURE;
                 }
                 break;
-            case 'j': options.dump_format = FLVMETA_FORMAT_JSON;    break;
-            case 'r': options.dump_format = FLVMETA_FORMAT_RAW;     break;
+            case 'j': options->dump_format = FLVMETA_FORMAT_JSON;    break;
+            case 'r': options->dump_format = FLVMETA_FORMAT_RAW;     break;
             case 'x':
                 /* xml dump format, or generation of xml report */
-                options.dump_format = FLVMETA_FORMAT_XML;
-                options.check_xml_report = 1;
+                options->dump_format = FLVMETA_FORMAT_XML;
+                options->check_xml_report = 1;
                 break;
-            case 'y': options.dump_format = FLVMETA_FORMAT_YAML;    break;
+            case 'y': options->dump_format = FLVMETA_FORMAT_YAML;    break;
             /* update options */
-            case 'm': options.dump_metadata = 1;                    break;
+            case 'm': options->dump_metadata = 1;                    break;
             case 'a':
                 {
                     char * eq_pos;
                     eq_pos = strchr(optarg, '=');
                     if (eq_pos != NULL) {
                         *eq_pos = 0;
-                        if (options.metadata == NULL) {
-                            options.metadata = amf_associative_array_new();
+                        if (options->metadata == NULL) {
+                            options->metadata = amf_associative_array_new();
                         }
-                        amf_associative_array_add(options.metadata, optarg, amf_str(eq_pos + 1));
+                        amf_associative_array_add(options->metadata, optarg, amf_str(eq_pos + 1));
                     }
                     else {
                         fprintf(stderr, "%s: invalid metadata format -- %s\n", argv[0], optarg);
                         usage(argv[0]);
-                        exit(EXIT_FAILURE);
+                        return EXIT_FAILURE;
                     }
                 } break;
-            case 's': options.insert_onlastsecond = 0;                  break;
-            case 'p': options.preserve_metadata = 1;                    break;
-            case 'f': options.error_handling = FLVMETA_FIX_ERRORS;      break;
-            case 'i': options.error_handling = FLVMETA_IGNORE_ERRORS;   break;
-            case 't': options.reset_timestamps = 1;                     break;
+            case 's': options->insert_onlastsecond = 0;                  break;
+            case 'p': options->preserve_metadata = 1;                    break;
+            case 'f': options->error_handling = FLVMETA_FIX_ERRORS;      break;
+            case 'i': options->error_handling = FLVMETA_IGNORE_ERRORS;   break;
+            case 't': options->reset_timestamps = 1;                     break;
             
             /*
                 common options
             */
-            case 'v': options.verbose = 1;  break;
+            case 'v': options->verbose = 1;  break;
             /*
                 Miscellaneous
             */
             case 'V':
-                version();
-                exit(EXIT_SUCCESS);
+                options->command = FLVMETA_VERSION_COMMAND;
+                return OK;
                 break;
             case 'h':
-                help(argv[0]);
-                exit(EXIT_SUCCESS);
+                options->command = FLVMETA_HELP_COMMAND;
+                return OK;
                 break;
             /* last option */
             case EOF: break;
@@ -320,56 +300,91 @@ int main(int argc, char ** argv) {
             /* we should not be here */
             default:
                 usage(argv[0]);
-                exit(EXIT_FAILURE);
+                return EXIT_FAILURE;
         }
     } while (option != EOF);
 
     /* input filename */
     if (optind > 0 && optind < argc) {
-        options.input_file = argv[optind];
+        options->input_file = argv[optind];
     }
     else {
         fprintf(stderr, "%s: no input file\n", argv[0]);
         usage(argv[0]);
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     /* output filename */
     if (++optind < argc) {
-        options.output_file = argv[optind];
+        options->output_file = argv[optind];
     }
 
     /* determine command if default */
-    if (options.command == FLVMETA_DEFAULT_COMMAND && options.output_file != NULL) {
-        options.command = FLVMETA_UPDATE_COMMAND;
+    if (options->command == FLVMETA_DEFAULT_COMMAND && options->output_file != NULL) {
+        options->command = FLVMETA_UPDATE_COMMAND;
     }
-    else if (options.command == FLVMETA_DEFAULT_COMMAND && options.output_file == NULL) {
-        options.command = FLVMETA_DUMP_COMMAND;
+    else if (options->command == FLVMETA_DEFAULT_COMMAND && options->output_file == NULL) {
+        options->command = FLVMETA_DUMP_COMMAND;
     }
 
     /* output file is input file if not specified */
-    if (options.output_file == NULL) {
-        options.output_file = options.input_file;
+    if (options->output_file == NULL) {
+        options->output_file = options->input_file;
     }
 
-    /* execute command */
-    errcode = OK;
-    switch (options.command) {
-        case FLVMETA_DUMP_COMMAND: errcode = dump_metadata(&options); break;
-        case FLVMETA_FULL_DUMP_COMMAND: errcode = dump_flv_file(&options); break;
-        case FLVMETA_CHECK_COMMAND: errcode = check_flv_file(&options); break;
-        case FLVMETA_UPDATE_COMMAND: errcode = update_metadata(&options); break;
+    return OK;
+}
+
+int main(int argc, char ** argv) {
+    int errcode;
+
+    /* flvmeta default options */
+    static flvmeta_opts options;
+    options.command = FLVMETA_DEFAULT_COMMAND;
+    options.input_file = NULL;
+    options.output_file = NULL;
+    options.metadata = NULL;
+    options.check_level = FLVMETA_CHECK_LEVEL_WARNING;
+    options.quiet = 0;
+    options.check_xml_report = 0;
+    options.dump_metadata = 0;
+    options.insert_onlastsecond = 1;
+    options.reset_timestamps = 0;
+    options.preserve_metadata = 0;
+    options.error_handling = FLVMETA_EXIT_ON_ERROR;
+    options.dump_format = FLVMETA_FORMAT_XML;
+    options.verbose = 0;
+
+
+    /* Command-line parsing */
+    errcode = parse_command_line(argc, argv, &options);
+
+    /* free metadata if necessary */
+    if ((errcode != OK || options.command != FLVMETA_UPDATE_COMMAND) && options.metadata != NULL) {
+        amf_data_free(options.metadata);
     }
 
-    /* error report */
-    switch (errcode) {
-        case ERROR_SAME_FILE: fprintf(stderr, "%s: input file and output file must be different\n", argv[0]); break;
-        case ERROR_OPEN_READ: fprintf(stderr, "%s: cannot open %s for reading\n", argv[0], options.input_file); break;
-        case ERROR_OPEN_WRITE: fprintf(stderr, "%s: cannot open %s for writing\n", argv[0], options.output_file); break;
-        case ERROR_NO_FLV: fprintf(stderr, "%s: %s is not a valid FLV file\n", argv[0], options.input_file); break;
-        case ERROR_EOF: fprintf(stderr, "%s: unexpected end of file\n", argv[0]); break;
-        case ERROR_INVALID_TAG: fprintf(stderr, "%s: invalid FLV tag\n", argv[0]); break;
-        case ERROR_WRITE: fprintf(stderr, "%s: unable to write to %s\n", argv[0], options.output_file); break;
+    if (errcode == OK) {
+        /* execute command */
+        switch (options.command) {
+            case FLVMETA_DUMP_COMMAND: errcode = dump_metadata(&options); break;
+            case FLVMETA_FULL_DUMP_COMMAND: errcode = dump_flv_file(&options); break;
+            case FLVMETA_CHECK_COMMAND: errcode = check_flv_file(&options); break;
+            case FLVMETA_UPDATE_COMMAND: errcode = update_metadata(&options); break;
+            case FLVMETA_VERSION_COMMAND: version(); break;
+            case FLVMETA_HELP_COMMAND: help(argv[0]); break;
+        }
+
+        /* error report */
+        switch (errcode) {
+            case ERROR_SAME_FILE: fprintf(stderr, "%s: input file and output file must be different\n", argv[0]); break;
+            case ERROR_OPEN_READ: fprintf(stderr, "%s: cannot open %s for reading\n", argv[0], options.input_file); break;
+            case ERROR_OPEN_WRITE: fprintf(stderr, "%s: cannot open %s for writing\n", argv[0], options.output_file); break;
+            case ERROR_NO_FLV: fprintf(stderr, "%s: %s is not a valid FLV file\n", argv[0], options.input_file); break;
+            case ERROR_EOF: fprintf(stderr, "%s: unexpected end of file\n", argv[0]); break;
+            case ERROR_INVALID_TAG: fprintf(stderr, "%s: invalid FLV tag\n", argv[0]); break;
+            case ERROR_WRITE: fprintf(stderr, "%s: unable to write to %s\n", argv[0], options.output_file); break;
+        }
     }
 
     return errcode;
