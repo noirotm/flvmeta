@@ -464,13 +464,15 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
 
             /* add keyframe to list */
             if (flv_video_tag_frame_type(vt) == FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
-                if (!info->have_keyframes) {
+                /* do not add keyframe if the previous one has the same timestamp */
+                if (!info->have_keyframes
+                || (info->have_keyframes && info->last_keyframe_timestamp != timestamp)
+                || opts->all_keyframes) {
                     info->have_keyframes = 1;
+                    info->last_keyframe_timestamp = timestamp;
+                    amf_array_push(info->times, amf_number_new(timestamp / 1000.0));
+                    amf_array_push(info->filepositions, amf_number_new((number64)offset));
                 }
-                info->last_keyframe_timestamp = timestamp;
-                amf_array_push(info->times, amf_number_new(timestamp / 1000.0));
-                amf_array_push(info->filepositions, amf_number_new((number64)offset));
-
                 /* is last frame a key frame ? if so, we can seek to end */
                 info->can_seek_to_end = 1;
             }

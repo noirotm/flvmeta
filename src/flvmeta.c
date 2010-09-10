@@ -1,5 +1,5 @@
 /*
-    $Id: flvmeta.c 205 2010-06-24 14:48:46Z marc.noirot $
+    $Id: flvmeta.c 206 2010-09-10 10:22:22Z marc.noirot $
 
     FLV Metadata updater
 
@@ -53,6 +53,7 @@ static struct option long_options[] = {
     { "fix",           no_argument,         NULL, 'f'},
     { "ignore",        no_argument,         NULL, 'i'},
     { "reset-timestamps", no_argument,      NULL, 't'},
+    { "all-keyframes", no_argument,         NULL, 'k'},
     { "verbose",       no_argument,         NULL, 'v'},
     { "version",       no_argument,         NULL, 'V'},
     { "help",          no_argument,         NULL, 'h'},
@@ -77,7 +78,8 @@ static struct option long_options[] = {
 #define PRESERVE_OPTION             "p"
 #define FIX_OPTION                  "f"
 #define IGNORE_OPTION               "i"
-#define RESET_TIMESTAMPS_OPTIONS    "t"
+#define RESET_TIMESTAMPS_OPTION     "t"
+#define ALL_KEYFRAMES_OPTION        "k"
 #define VERBOSE_OPTION              "v"
 #define VERSION_OPTION              "V"
 #define HELP_OPTION                 "h"
@@ -128,6 +130,8 @@ static void help(const char * name) {
            "  -i, --ignore              ignore invalid tags from the input file\n"
            "                            (the default is to stop with an error)\n"
            "  -t, --reset-timestamps    reset timestamps so OUTPUT_FILE starts at zero\n"
+           "  -k, --all-keyframes       index all keyframe tags, including duplicate\n"
+           "                            timestamps\n"
            "\nCommon options:\n"
            "  -v, --verbose             display informative messages\n"
            "\nMiscellaneous:\n"
@@ -159,7 +163,8 @@ static int parse_command_line(int argc, char ** argv, flvmeta_opts * options) {
             PRESERVE_OPTION
             FIX_OPTION
             IGNORE_OPTION
-            RESET_TIMESTAMPS_OPTIONS
+            RESET_TIMESTAMPS_OPTION
+            ALL_KEYFRAMES_OPTION
             VERBOSE_OPTION
             VERSION_OPTION
             HELP_OPTION,
@@ -272,6 +277,7 @@ static int parse_command_line(int argc, char ** argv, flvmeta_opts * options) {
             case 'f': options->error_handling = FLVMETA_FIX_ERRORS;      break;
             case 'i': options->error_handling = FLVMETA_IGNORE_ERRORS;   break;
             case 't': options->reset_timestamps = 1;                     break;
+            case 'k': options->all_keyframes = 1;                        break;
             
             /*
                 common options
@@ -350,6 +356,7 @@ int main(int argc, char ** argv) {
     options.dump_metadata = 0;
     options.insert_onlastsecond = 1;
     options.reset_timestamps = 0;
+    options.all_keyframes = 0;
     options.preserve_metadata = 0;
     options.error_handling = FLVMETA_EXIT_ON_ERROR;
     options.dump_format = FLVMETA_FORMAT_XML;
