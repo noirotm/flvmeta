@@ -1,5 +1,5 @@
 /*
-    $Id: flvmeta.c 206 2010-09-10 10:22:22Z marc.noirot $
+    $Id: flvmeta.c 207 2010-09-16 12:27:24Z marc.noirot $
 
     FLV Metadata updater
 
@@ -130,8 +130,7 @@ static void help(const char * name) {
            "  -i, --ignore              ignore invalid tags from the input file\n"
            "                            (the default is to stop with an error)\n"
            "  -t, --reset-timestamps    reset timestamps so OUTPUT_FILE starts at zero\n"
-           "  -k, --all-keyframes       index all keyframe tags, including duplicate\n"
-           "                            timestamps\n"
+           "  -k, --all-keyframes       index all keyframe tags, including duplicate timestamps\n"
            "\nCommon options:\n"
            "  -v, --verbose             display informative messages\n"
            "\nMiscellaneous:\n"

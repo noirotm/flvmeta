@@ -26,6 +26,9 @@ Version 1.1 (2010-??-??)
     incorrectly split by buggy tools
   - Added an option to display informative messages while processing
     (not quite exhaustive for the moment)
+  - Changed keyframe index generation so only the first keyframe
+    for a given timestamp will be indexed. This behaviour can be
+    overriden with the --all-keyframes/-k option.
 
 Version 1.0.11 (2010-01-25)
   - Bug fix release.
