@@ -1,5 +1,5 @@
 /*
-    $Id: flvmeta.h 206 2010-09-10 10:22:22Z marc.noirot $
+    $Id: flvmeta.h 208 2010-09-20 14:45:51Z marc.noirot $
 
     FLV Metadata updater
 
@@ -40,16 +40,17 @@
 #define ERROR_NO_FLV        FLV_ERROR_NO_FLV
 #define ERROR_EOF           FLV_ERROR_EOF
 #define ERROR_MEMORY        FLV_ERROR_MEMORY
-#define ERROR_OPEN_WRITE    5
-#define ERROR_INVALID_TAG   6
-#define ERROR_WRITE         7
-#define ERROR_SAME_FILE     8
+#define ERROR_EMPTY_TAG     FLV_ERROR_EMPTY_TAG
+#define ERROR_OPEN_WRITE    6
+#define ERROR_INVALID_TAG   7
+#define ERROR_WRITE         8
+#define ERROR_SAME_FILE     9
 
 /* invalid flv file reported by the check command (one or more errors) */
-#define ERROR_INVALID_FLV_FILE 9
+#define ERROR_INVALID_FLV_FILE 10
 
 /* stop file parsing without error */
-#define FLVMETA_DUMP_STOP_OK 10
+#define FLVMETA_DUMP_STOP_OK 11
 
 /* commands */
 #define FLVMETA_DEFAULT_COMMAND     0

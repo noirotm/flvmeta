@@ -1,5 +1,5 @@
 /*
-    $Id: flvmeta.c 207 2010-09-16 12:27:24Z marc.noirot $
+    $Id: flvmeta.c 208 2010-09-20 14:45:51Z marc.noirot $
 
     FLV Metadata updater
 
@@ -103,7 +103,7 @@ static void help(const char * name) {
            "  -D, --dump                dump onMetaData tag (default without output file)\n"
            "  -F, --full-dump           dump all tags\n"
            "  -C, --check               check the validity of INPUT_FILE, returning 0 if\n"
-           "                            the file is valid, or 9 if it contains errors\n"
+           "                            the file is valid, or 10 if it contains errors\n"
            "  -U, --update              update computed onMetaData tag from INPUT_FILE\n"
            "                            into OUTPUT_FILE (default with output file)\n"
            /*    "  -A, --extract-audio       extract raw audio data into OUTPUT_FILE\n"*/
@@ -383,13 +383,15 @@ int main(int argc, char ** argv) {
 
         /* error report */
         switch (errcode) {
-            case ERROR_SAME_FILE: fprintf(stderr, "%s: input file and output file must be different\n", argv[0]); break;
             case ERROR_OPEN_READ: fprintf(stderr, "%s: cannot open %s for reading\n", argv[0], options.input_file); break;
-            case ERROR_OPEN_WRITE: fprintf(stderr, "%s: cannot open %s for writing\n", argv[0], options.output_file); break;
             case ERROR_NO_FLV: fprintf(stderr, "%s: %s is not a valid FLV file\n", argv[0], options.input_file); break;
             case ERROR_EOF: fprintf(stderr, "%s: unexpected end of file\n", argv[0]); break;
+            case ERROR_MEMORY: fprintf(stderr, "%s: memory allocation error\n", argv[0]); break;
+            case ERROR_EMPTY_TAG: fprintf(stderr, "%s: empty FLV tag\n", argv[0]); break;
+            case ERROR_OPEN_WRITE: fprintf(stderr, "%s: cannot open %s for writing\n", argv[0], options.output_file); break;
             case ERROR_INVALID_TAG: fprintf(stderr, "%s: invalid FLV tag\n", argv[0]); break;
             case ERROR_WRITE: fprintf(stderr, "%s: unable to write to %s\n", argv[0], options.output_file); break;
+            case ERROR_SAME_FILE: fprintf(stderr, "%s: input file and output file must be different\n", argv[0]); break;
         }
     }
 
