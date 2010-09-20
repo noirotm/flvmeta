@@ -3,7 +3,7 @@ Full AMF0 support.
 Metadata injection from xml file spec.
 
 i18n support.
-The programs don't have much output, mainly errors, so it should be easy
+The program does not have much output, mainly errors, so it should be easy
 to translate it in several languages.
 If you want to contribute, send an email to flvmeta-discussion@googlegroups.com.
 
@@ -16,3 +16,7 @@ Fix onLastSecond insertion, which should be before the last second.
 Stream extraction.
 
 Complete test suites.
+
+Batch mode to handle multiple input files in one invocation.
+
+Scripting environment for custom manipulation of FLV files and metadata.
