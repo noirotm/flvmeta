@@ -396,7 +396,7 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
             amf_data *tag_name, *data;
             data = NULL;
 
-            if (opts->error_handling == FLVMETA_IGNORE_ERRORS && body_length == 0) {
+            if (body_length == 0) {
                 if (opts->verbose) {
                     fprintf(stdout, "Warning: empty metadata tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
                 }
@@ -449,7 +449,7 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
             flv_video_tag vt;
 
             /* do not take video frame into account if body length is zero and we ignore errors */
-            if (opts->error_handling == FLVMETA_IGNORE_ERRORS && body_length == 0) {
+            if (body_length == 0) {
                 if (opts->verbose) {
                     fprintf(stdout, "Warning: empty video tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
                 }
@@ -518,7 +518,7 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
             flv_audio_tag at;
 
             /* do not take audio frame into account if body length is zero and we ignore errors */
-            if (opts->error_handling == FLVMETA_IGNORE_ERRORS && body_length == 0) {
+            if (body_length == 0) {
                 if (opts->verbose) {
                     fprintf(stdout, "Warning: empty audio tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
                 }
