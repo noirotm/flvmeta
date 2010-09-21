@@ -394,12 +394,21 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
 
         if (ft.type == FLV_TAG_TYPE_META) {
             amf_data *tag_name, *data;
-            if (flv_read_metadata(flv_in, &tag_name, &data) != FLV_OK) {
-                return ERROR_EOF;
+            data = NULL;
+
+            if (opts->error_handling == FLVMETA_IGNORE_ERRORS && body_length == 0) {
+                if (opts->verbose) {
+                    fprintf(stdout, "Warning: empty metadata tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
+                }
+            }
+            else {
+                if (flv_read_metadata(flv_in, &tag_name, &data) != FLV_OK) {
+                    return ERROR_EOF;
+                }
             }
 
             /* just ignore metadata that don't have a proper name */
-            if (amf_data_get_type(tag_name) == AMF_TYPE_STRING) {
+            if (body_length > 0 && amf_data_get_type(tag_name) == AMF_TYPE_STRING) {
                 char * name = (char *)amf_string_get_bytes(tag_name);
                 size_t len = (size_t)amf_string_get_size(tag_name);
 
@@ -423,7 +432,9 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
                     info->meta_data_only_size += body_length;
                     info->meta_data_size += (body_length + FLV_TAG_SIZE);
                     info->total_prev_tags_size += sizeof(uint32_be);
-                    amf_data_free(data);
+                    if (data != NULL) {
+                        amf_data_free(data);
+                    }
                 }
             }
             else {
@@ -437,47 +448,57 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
         else if (ft.type == FLV_TAG_TYPE_VIDEO) {
             flv_video_tag vt;
 
-            if (flv_read_video_tag(flv_in, &vt) != FLV_OK) {
-                return ERROR_EOF;
-            }
-
-            if (info->have_video != 1) {
-                info->have_video = 1;
-                info->video_codec = flv_video_tag_codec_id(vt);
-                info->video_first_timestamp = timestamp;
-            }
-
-            if (have_video_size != 1
-            && flv_video_tag_frame_type(vt) == FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
-                /* read first video frame to get critical info */
-                result = compute_video_size(flv_in, info, body_length - sizeof(flv_video_tag));
-                if (result != FLV_OK) {
-                    return result;
+            /* do not take video frame into account if body length is zero and we ignore errors */
+            if (opts->error_handling == FLVMETA_IGNORE_ERRORS && body_length == 0) {
+                if (opts->verbose) {
+                    fprintf(stdout, "Warning: empty video tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
                 }
-
-                if (info->video_width > 0 && info->video_height > 0) {
-                    have_video_size = 1;
-                }
-                /* if we cannot fetch that information from the first tag, we'll try
-                   for each following video key frame */
-            }
-
-            /* add keyframe to list */
-            if (flv_video_tag_frame_type(vt) == FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
-                /* do not add keyframe if the previous one has the same timestamp */
-                if (!info->have_keyframes
-                || (info->have_keyframes && info->last_keyframe_timestamp != timestamp)
-                || opts->all_keyframes) {
-                    info->have_keyframes = 1;
-                    info->last_keyframe_timestamp = timestamp;
-                    amf_array_push(info->times, amf_number_new(timestamp / 1000.0));
-                    amf_array_push(info->filepositions, amf_number_new((number64)offset));
-                }
-                /* is last frame a key frame ? if so, we can seek to end */
-                info->can_seek_to_end = 1;
             }
             else {
-                info->can_seek_to_end = 0;
+                if (flv_read_video_tag(flv_in, &vt) != FLV_OK) {
+                    return ERROR_EOF;
+                }
+
+                if (info->have_video != 1) {
+                    info->have_video = 1;
+                    info->video_codec = flv_video_tag_codec_id(vt);
+                    info->video_first_timestamp = timestamp;
+                }
+
+                if (have_video_size != 1
+                && flv_video_tag_frame_type(vt) == FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
+                    /* read first video frame to get critical info */
+                    result = compute_video_size(flv_in, info, body_length - sizeof(flv_video_tag));
+                    if (result != FLV_OK) {
+                        return result;
+                    }
+
+                    if (info->video_width > 0 && info->video_height > 0) {
+                        have_video_size = 1;
+                    }
+                    /* if we cannot fetch that information from the first tag, we'll try
+                       for each following video key frame */
+                }
+
+                /* add keyframe to list */
+                if (flv_video_tag_frame_type(vt) == FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
+                    /* do not add keyframe if the previous one has the same timestamp */
+                    if (!info->have_keyframes
+                    || (info->have_keyframes && info->last_keyframe_timestamp != timestamp)
+                    || opts->all_keyframes) {
+                        info->have_keyframes = 1;
+                        info->last_keyframe_timestamp = timestamp;
+                        amf_array_push(info->times, amf_number_new(timestamp / 1000.0));
+                        amf_array_push(info->filepositions, amf_number_new((number64)offset));
+                    }
+                    /* is last frame a key frame ? if so, we can seek to end */
+                    info->can_seek_to_end = 1;
+                }
+                else {
+                    info->can_seek_to_end = 0;
+                }
+
+                info->real_video_data_size += (body_length - 1);    
             }
 
             info->video_frames_number++;
@@ -491,31 +512,39 @@ static int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts
             }
 
             info->video_data_size += (body_length + FLV_TAG_SIZE);
-            info->real_video_data_size += (body_length - 1);
             info->total_prev_tags_size += sizeof(uint32_be);
         }
         else if (ft.type == FLV_TAG_TYPE_AUDIO) {
             flv_audio_tag at;
-            
-            if (flv_read_audio_tag(flv_in, &at) != FLV_OK) {
-                return ERROR_EOF;
-            }
-            
-            if (info->have_audio != 1) {
-                info->have_audio = 1;
-                info->audio_codec = flv_audio_tag_sound_format(at);
-                info->audio_rate = flv_audio_tag_sound_rate(at);
-                info->audio_size = flv_audio_tag_sound_size(at);
-                info->audio_stereo = flv_audio_tag_sound_type(at);
-                info->audio_first_timestamp = timestamp;
-            }
-            /* we assume all audio frames have the same size as the first one */
-            if (info->audio_frame_duration == 0) {
-                info->audio_frame_duration = timestamp - info->audio_first_timestamp;
-            }
 
+            /* do not take audio frame into account if body length is zero and we ignore errors */
+            if (opts->error_handling == FLVMETA_IGNORE_ERRORS && body_length == 0) {
+                if (opts->verbose) {
+                    fprintf(stdout, "Warning: empty audio tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
+                }
+            }
+            else {
+                if (flv_read_audio_tag(flv_in, &at) != FLV_OK) {
+                    return ERROR_EOF;
+                }
+            
+                if (info->have_audio != 1) {
+                    info->have_audio = 1;
+                    info->audio_codec = flv_audio_tag_sound_format(at);
+                    info->audio_rate = flv_audio_tag_sound_rate(at);
+                    info->audio_size = flv_audio_tag_sound_size(at);
+                    info->audio_stereo = flv_audio_tag_sound_type(at);
+                    info->audio_first_timestamp = timestamp;
+                }
+                /* we assume all audio frames have the same size as the first one */
+                if (info->audio_frame_duration == 0) {
+                    info->audio_frame_duration = timestamp - info->audio_first_timestamp;
+                }
+
+                info->real_audio_data_size += (body_length - 1);
+            }
+            
             info->audio_data_size += (body_length + FLV_TAG_SIZE);
-            info->real_audio_data_size += (body_length - 1);
             info->total_prev_tags_size += sizeof(uint32_be);
         }
         else {
