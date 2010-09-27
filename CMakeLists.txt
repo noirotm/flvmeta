@@ -8,18 +8,16 @@ string(REGEX MATCH "^[0-9]+\\.([0-9]+)" MATCHES "${FLVMETA_VERSION}")
 if(MATCHES)
   math(EXPR FLVMETA_MINOR_ODD "${CMAKE_MATCH_1} % 2")
   if(FLVMETA_MINOR_ODD)
-  # if so, check for svnversion, and retrieve current revision
-    find_program(SVNVERSION_FOUND "svnversion")
-    if(SVNVERSION_FOUND)
-      execute_process(COMMAND           svnversion -n
-                      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-                      OUTPUT_VARIABLE   SVNVERSION)
-      string(REGEX MATCH "[0-9]+" SVNVERSION_IS_NUMERIC "${SVNVERSION}")
+    # if so, check for svnversion, and retrieve current revision
+    find_package(Subversion)
+    if(Subversion_FOUND)
+      Subversion_WC_INFO(${PROJECT_SOURCE_DIR} FLVMETA)
+      string(REGEX MATCH "[0-9]+" SVNVERSION_IS_NUMERIC "${FLVMETA_WC_REVISION}")
       if(SVNVERSION_IS_NUMERIC)
         # if we have a numeric revision, use it as release number
-        set(FLVMETA_VERSION "${FLVMETA_VERSION}-r${SVNVERSION}")
+        set(FLVMETA_VERSION "${FLVMETA_VERSION}-r${FLVMETA_WC_REVISION}")
       endif(SVNVERSION_IS_NUMERIC)
-    endif(SVNVERSION_FOUND)
+    endif(Subversion_FOUND)
   endif(FLVMETA_MINOR_ODD)
 endif(MATCHES)
 
