@@ -1,9 +1,9 @@
 /*
-    $Id$
+    $Id: dump_yaml.h 214 2011-02-02 16:51:31Z marc.noirot $
 
     FLV Metadata updater
 
-    Copyright (C) 2007-2010 Marc Noirot <marc.noirot AT gmail.com>
+    Copyright (C) 2007-2011 Marc Noirot <marc.noirot AT gmail.com>
 
     This file is part of FLVMeta.
 

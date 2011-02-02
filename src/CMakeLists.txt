@@ -19,6 +19,8 @@ set(flvmeta_src
   flv.h
   flvmeta.c
   flvmeta.h
+  info.c
+  info.h
   json.c
   json.h
   types.c

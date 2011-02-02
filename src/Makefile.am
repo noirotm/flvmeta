@@ -26,6 +26,8 @@ flvmeta_SOURCES = amf.c \
                   flv.h \
                   flvmeta.c \
                   flvmeta.h \
+                  info.c \
+                  info.h \
                   json.c \
                   json.h \
                   types.c \

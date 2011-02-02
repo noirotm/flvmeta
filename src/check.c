@@ -3,7 +3,7 @@
 
     FLV Metadata updater
 
-    Copyright (C) 2007-2010 Marc Noirot <marc.noirot AT gmail.com>
+    Copyright (C) 2007-2011 Marc Noirot <marc.noirot AT gmail.com>
 
     This file is part of FLVMeta.
 
@@ -254,7 +254,7 @@ int check_flv_file(const flvmeta_opts * opts) {
         /* check whether first timestamp is zero */
         if (tag_number == 1 && timestamp != 0) {
             sprintf(message, "first timestamp should be zero, %d found instead", timestamp);
-            print_warning("W40017", offset + 4, message);
+            print_warning("E40017", offset + 4, message);
         }
 
 
@@ -377,6 +377,9 @@ int check_flv_file(const flvmeta_opts * opts) {
             goto end;
         }
     }
+
+    /** final checks */
+
 
 end:
     report_end(opts, errors, warnings);

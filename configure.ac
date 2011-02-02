@@ -18,9 +18,11 @@ AM_PROG_CC_C_O
 AC_PROG_RANLIB
 
 dnl Checks for check.
-PKG_CHECK_MODULES([CHECK], [check >= 0.9.4],
-  [have_check=yes],
-  [have_check=no]
+ifdef([PKG_CHECK_MODULES],
+    [PKG_CHECK_MODULES([CHECK], [check >= 0.9.4],
+      [have_check=yes],
+      [have_check=no]
+    )]
 )
 AM_CONDITIONAL([MAKE_TESTS], [test "$have_check" = yes])
 

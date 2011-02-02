@@ -1,9 +1,9 @@
 /*
-    $Id: flvmeta.h 208 2010-09-20 14:45:51Z marc.noirot $
+    $Id: flvmeta.h 214 2011-02-02 16:51:31Z marc.noirot $
 
     FLV Metadata updater
 
-    Copyright (C) 2007-2010 Marc Noirot <marc.noirot AT gmail.com>
+    Copyright (C) 2007-2011 Marc Noirot <marc.noirot AT gmail.com>
 
     This file is part of FLVMeta.
 
@@ -32,7 +32,7 @@
 #include "flv.h"
 
 /* copyright string */
-#define COPYRIGHT_STR "Copyright (C) 2007-2010 Marc Noirot <marc.noirot AT gmail.com>"
+#define COPYRIGHT_STR "Copyright (C) 2007-2011 Marc Noirot <marc.noirot AT gmail.com>"
 
 /* error statuses */
 #define OK                  FLV_OK
