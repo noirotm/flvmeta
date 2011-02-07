@@ -61,7 +61,7 @@
 #define FLVMETA_VERSION_COMMAND     5
 #define FLVMETA_HELP_COMMAND        6
 
-/* tags handling */
+/* error handling */
 #define FLVMETA_EXIT_ON_ERROR       0
 #define FLVMETA_FIX_ERRORS          1
 #define FLVMETA_IGNORE_ERRORS       2
