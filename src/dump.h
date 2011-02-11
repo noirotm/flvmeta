@@ -26,6 +26,10 @@
 
 #include "flvmeta.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /* common FLV strings */
 const char * dump_string_get_tag_type(flv_tag * tag);
 const char * dump_string_get_video_codec(flv_video_tag tag);
@@ -36,12 +40,16 @@ const char * dump_string_get_sound_rate(flv_audio_tag tag);
 const char * dump_string_get_sound_format(flv_audio_tag tag);
 
 /* dump metadata from a FLV file */
-extern int dump_metadata(const flvmeta_opts * options);
+int dump_metadata(const flvmeta_opts * options);
 
 /* dump the full contents of an FLV file */
-extern int dump_flv_file(const flvmeta_opts * options);
+int dump_flv_file(const flvmeta_opts * options);
 
 /* dump AMF data directly */
-extern int dump_amf_data(const amf_data * data, const flvmeta_opts * options);
+int dump_amf_data(const amf_data * data, const flvmeta_opts * options);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __DUMP_H__ */

@@ -26,9 +26,17 @@
 
 #include "flvmeta.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /* JSON dumping functions */
-extern void dump_json_setup_metadata_dump(flv_parser * parser);
-extern void dump_json_setup_file_dump(flv_parser * parser);
-extern int dump_json_amf_data(const amf_data * data);
+void dump_json_setup_metadata_dump(flv_parser * parser);
+void dump_json_setup_file_dump(flv_parser * parser);
+int dump_json_amf_data(const amf_data * data);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __DUMP_JSON_H__ */

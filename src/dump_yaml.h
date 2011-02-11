@@ -26,9 +26,17 @@
 
 #include "flvmeta.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /* YAML dumping functions */
 extern void dump_yaml_setup_metadata_dump(flv_parser * parser);
 extern void dump_yaml_setup_file_dump(flv_parser * parser);
 extern int dump_yaml_amf_data(const amf_data * data);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __DUMP_YAML_H__ */

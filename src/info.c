@@ -1,5 +1,5 @@
 /*
-    $Id$
+    $Id: info.c 215 2011-02-07 18:32:08Z marc.noirot $
 
     FLV Metadata updater
 
@@ -21,8 +21,8 @@
     along with FLVMeta; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include "avc.h"
 #include "info.h"
+#include "avc.h"
 
 #include <string.h>
 

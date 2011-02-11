@@ -1,5 +1,5 @@
 /*
-    $Id$
+    $Id: info.h 215 2011-02-07 18:32:08Z marc.noirot $
 
     FLV Metadata updater
 
@@ -71,8 +71,18 @@ typedef struct __flv_metadata {
     amf_data * on_metadata;
 } flv_metadata;
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts);
 
 void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts * opts);
+
+void compute_current_metadata(flv_info * info, flv_metadata * meta);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __INFO_H__ */

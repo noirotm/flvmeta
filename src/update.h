@@ -26,7 +26,15 @@
 
 #include "flvmeta.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /* inject metadata from a FLV file into a new one */
 extern int update_metadata(const flvmeta_opts * options);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __UPDATE_H__ */

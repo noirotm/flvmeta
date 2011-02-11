@@ -26,7 +26,15 @@
 
 #include "flvmeta.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /* check FLV file validity */
 int check_flv_file(const flvmeta_opts * opts);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __CHECK_H__ */
