@@ -1,5 +1,5 @@
 /*
-    $Id: info.c 215 2011-02-07 18:32:08Z marc.noirot $
+    $Id: info.c 216 2011-02-11 16:38:59Z marc.noirot $
 
     FLV Metadata updater
 

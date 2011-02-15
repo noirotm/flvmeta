@@ -24,6 +24,8 @@
 #include "check.h"
 #include "info.h"
 
+#include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -131,11 +133,16 @@ int check_flv_file(const flvmeta_opts * opts) {
     int result;
     char message[256];
     uint32 prev_tag_size, tag_number;
+    uint32 last_timestamp, last_video_timestamp, last_audio_timestamp;
     struct stat file_stats;
     int have_audio, have_video;
     flvmeta_opts opts_loc;
     flv_info info;
     flv_metadata meta;
+    int have_desync;
+
+    int have_prev_audio_tag;
+    flv_audio_tag prev_audio_tag;
 
 
     /* file stats */
@@ -215,10 +222,15 @@ int check_flv_file(const flvmeta_opts * opts) {
     /** read tags **/
     have_audio = have_video = 0;
     tag_number = 0;
+    last_timestamp = last_video_timestamp = last_audio_timestamp = 0;
+    have_desync = 0;
+    have_prev_audio_tag = 0;
+
     while (flv_get_offset(flv_in) < file_stats.st_size) {
         flv_tag tag;
         file_offset_t offset;
         uint32 body_length, timestamp, stream_id;
+        int decr_timestamp_signaled;
 
         result = flv_read_tag(flv_in, &tag);
         if (result != FLV_OK) {
@@ -271,18 +283,57 @@ int check_flv_file(const flvmeta_opts * opts) {
         }
 
         /** check timestamp **/
+        decr_timestamp_signaled = 0;
 
         /* check whether first timestamp is zero */
         if (tag_number == 1 && timestamp != 0) {
             sprintf(message, "first timestamp should be zero, %d found instead", timestamp);
-            print_warning("E40019", offset + 4, message);
+            print_error("E40019", offset + 4, message);
         }
 
+        /* check whether timestamps decrease in a given stream */
+        if (tag.type == FLV_TAG_TYPE_AUDIO) {
+            if (last_audio_timestamp > timestamp) {
+                sprintf(message, "audio tag timestamps are decreasing from %d to %d", last_audio_timestamp, timestamp);
+                print_error("E40020", offset + 4, message);
+            }
+            last_audio_timestamp = timestamp;
+            decr_timestamp_signaled = 1;
+        }
+        if (tag.type == FLV_TAG_TYPE_VIDEO) {
+            if (last_video_timestamp > timestamp) {
+                sprintf(message, "video tag timestamps are decreasing from %d to %d", last_video_timestamp, timestamp);
+                print_error("E40021", offset + 4, message);
+            }
+            last_video_timestamp = timestamp;
+            decr_timestamp_signaled = 1;
+        }
 
-        /* stream id must be zero */
+        /* check for overflow error */
+        if (last_timestamp > timestamp && last_timestamp - timestamp > 0xF00000) {
+            print_error("E40022", offset + 4, "extended bits not used after timestamp overflow");
+        }
+
+        /* check whether timestamps decrease globally */
+        else if (!decr_timestamp_signaled && last_timestamp > timestamp && last_timestamp - timestamp >= 1000) {
+            sprintf(message, "timestamps are decreasing from %d to %d", last_timestamp, timestamp);
+            print_error("E40023", offset + 4, message);
+        }
+
+        last_timestamp = timestamp;
+
+        /* check for desyncs between audio and video: one second or more is suspicious */
+        if (have_video && have_audio && !have_desync && labs(last_video_timestamp - last_audio_timestamp) >= 1000) {
+            sprintf(message, "audio and video streams are desynchronized by %ld ms",
+                labs(last_video_timestamp - last_audio_timestamp));
+            print_warning("W40024", offset + 4, message);
+            have_desync = 1; /* do not repeat */
+        }
+
+        /** stream id must be zero **/
         if (stream_id != 0) {
             sprintf(message, "tag stream id must be zero, %d found instead", stream_id);
-            print_error("E20020", offset + 8, message);
+            print_error("E20025", offset + 8, message);
         }
 
         /* check tag body contents only if not empty */
@@ -299,11 +350,17 @@ int check_flv_file(const flvmeta_opts * opts) {
                     goto end;
                 }
 
+                /* check whether the format varies between tags */
+                if (have_prev_audio_tag && prev_audio_tag != at) {
+                    print_warning("W51026", offset + 11, "audio format changed since last tag");
+                }
+                prev_audio_tag = at;
+
                 /* check format */
                 audio_format = flv_audio_tag_sound_format(at);
                 if (audio_format == 12 || audio_format == 13) {
                     sprintf(message, "unknown audio format %d", audio_format);
-                    print_warning("W51021", offset + 11, message);
+                    print_warning("W51027", offset + 11, message);
                 }
                 else if (audio_format == FLV_AUDIO_TAG_SOUND_FORMAT_G711_A
                     || audio_format == FLV_AUDIO_TAG_SOUND_FORMAT_G711_MU
@@ -312,14 +369,14 @@ int check_flv_file(const flvmeta_opts * opts) {
                     || audio_format == FLV_AUDIO_TAG_SOUND_FORMAT_DEVICE_SPECIFIC
                 ) {
                     sprintf(message, "audio format %d is reserved for internal use", audio_format);
-                    print_warning("W51022", offset + 11, message);
+                    print_warning("W51028", offset + 11, message);
                 }
 
                 /* check consistency, see flash video spec */
                 if (flv_audio_tag_sound_rate(at) != FLV_AUDIO_TAG_SOUND_RATE_44
                     && audio_format == FLV_AUDIO_TAG_SOUND_FORMAT_AAC
                 ) {
-                    print_warning("W51023", offset + 11, "audio data in AAC format should have a 44KHz rate, field will be ignored");
+                    print_warning("W51029", offset + 11, "audio data in AAC format should have a 44KHz rate, field will be ignored");
                 }
 
                 if (flv_audio_tag_sound_type(at) == FLV_AUDIO_TAG_SOUND_TYPE_STEREO
@@ -327,17 +384,17 @@ int check_flv_file(const flvmeta_opts * opts) {
                         || audio_format == FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER_16_MONO
                         || audio_format == FLV_AUDIO_TAG_SOUND_FORMAT_NELLYMOSER_8_MONO)
                 ) {
-                    print_warning("W51024", offset + 11, "audio data in Nellymoser format cannot be stereo, field will be ignored");
+                    print_warning("W51030", offset + 11, "audio data in Nellymoser format cannot be stereo, field will be ignored");
                 }
 
                 else if (flv_audio_tag_sound_type(at) == FLV_AUDIO_TAG_SOUND_TYPE_MONO
                     && audio_format == FLV_AUDIO_TAG_SOUND_FORMAT_AAC
                 ) {
-                    print_warning("W51025", offset + 11, "audio data in AAC format should be stereo, field will be ignored");
+                    print_warning("W51031", offset + 11, "audio data in AAC format should be stereo, field will be ignored");
                 }
 
                 else if (audio_format == FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM) {
-                    print_warning("W51026", offset + 11, "audio data in Linear PCM, platform endian format should not be used because of non-portability");
+                    print_warning("W51032", offset + 11, "audio data in Linear PCM, platform endian format should not be used because of non-portability");
                 }
             }
             /** check video info **/
@@ -360,7 +417,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     && video_frame_type != FLV_VIDEO_TAG_FRAME_TYPE_COMMAND_FRAME
                 ) {
                     sprintf(message, "unknown video frame type %d", video_frame_type);
-                    print_error("E60027", offset + 11, message);
+                    print_error("E60033", offset + 11, message);
                 }
 
                 /* check video codec */
@@ -374,12 +431,12 @@ int check_flv_file(const flvmeta_opts * opts) {
                     && video_codec != FLV_VIDEO_TAG_CODEC_AVC
                 ) {
                     sprintf(message, "unknown video codec id %d", video_codec);
-                    print_error("E61028", offset + 11, message);
+                    print_error("E61034", offset + 11, message);
                 }
 
                 /* according to spec, JPEG codec is not currently used */
                 if (video_codec == FLV_VIDEO_TAG_CODEC_JPEG) {
-                    print_warning("W61029", offset + 11, "JPEG codec not currently used");
+                    print_warning("W61035", offset + 11, "JPEG codec not currently used");
                 }
 
             }
@@ -392,13 +449,13 @@ int check_flv_file(const flvmeta_opts * opts) {
         /* check body length against previous tag size */
         result = flv_read_prev_tag_size(flv_in, &prev_tag_size);
         if (result != FLV_OK) {
-            print_fatal("F12030", flv_get_offset(flv_in), "unexpected end of file after tag");
+            print_fatal("F12036", flv_get_offset(flv_in), "unexpected end of file after tag");
             goto end;
         }
 
         if (prev_tag_size != FLV_TAG_SIZE + body_length) {
             sprintf(message, "previous tag size should be %d, %d found instead", FLV_TAG_SIZE + body_length, prev_tag_size);
-            print_error("E12031", flv_get_offset(flv_in), message);
+            print_error("E12037", flv_get_offset(flv_in), message);
             goto end;
         }
     }
@@ -407,12 +464,25 @@ int check_flv_file(const flvmeta_opts * opts) {
 
     /* check consistency with global header */
     if (!have_video && flv_header_has_video(header)) {
-        print_warning("W11032", 4, "no video tag found despite header signaling the file contains video");
+        print_warning("W11038", 4, "no video tag found despite header signaling the file contains video");
     }
     if (!have_audio && flv_header_has_audio(header)) {
-        print_warning("W11033", 4, "no audio tag found despite header signaling the file contains audio");
+        print_warning("W11039", 4, "no audio tag found despite header signaling the file contains audio");
     }
 
+    /* check last timestamps */
+    if (have_video && have_audio && labs(last_audio_timestamp - last_video_timestamp) >= 1000) {
+        if (last_audio_timestamp > last_video_timestamp) {
+            sprintf(message, "video stops %d ms before audio", last_audio_timestamp - last_video_timestamp);
+            print_warning("W40040", file_stats.st_size, message);
+        }
+        else {
+            sprintf(message, "audio stops %d ms before video", last_video_timestamp - last_audio_timestamp);
+            print_warning("W40041", file_stats.st_size, message);
+        }
+    }
+    
+    /* compute metadata */
     opts_loc.verbose = 0;
     opts_loc.reset_timestamps = 0;
     opts_loc.preserve_metadata = 0;
@@ -421,14 +491,14 @@ int check_flv_file(const flvmeta_opts * opts) {
 
     flv_reset(flv_in);
     if (get_flv_info(flv_in, &info, &opts_loc) != OK) {
-        print_fatal("F10034", 0, "unable to compute metadata");
+        print_fatal("F10042", 0, "unable to compute metadata");
         goto end;
     }
     meta.on_last_second = NULL;
     meta.on_last_second_name = NULL;
     meta.on_metadata = NULL;
     meta.on_metadata_name = NULL;
-    compute_metadata(&info, &meta, &opts_loc);
+    compute_current_metadata(&info, &meta);
 
 end:
     report_end(opts, errors, warnings);
