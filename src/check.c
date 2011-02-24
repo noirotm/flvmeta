@@ -30,7 +30,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#define MAX_ACCEPTABLE_TAG_BODY_LENGTH 50000
+#define MAX_ACCEPTABLE_TAG_BODY_LENGTH 100000
 
 /* start the report */
 static void report_start(const flvmeta_opts * opts) {
@@ -143,7 +143,10 @@ int check_flv_file(const flvmeta_opts * opts) {
 
     int have_prev_audio_tag;
     flv_audio_tag prev_audio_tag;
+    int have_prev_video_tag;
+    flv_video_tag prev_video_tag;
 
+    int video_frames_number, keyframes_number;
 
     /* file stats */
     if (stat(opts->input_file, &file_stats) != 0) {
@@ -224,7 +227,8 @@ int check_flv_file(const flvmeta_opts * opts) {
     tag_number = 0;
     last_timestamp = last_video_timestamp = last_audio_timestamp = 0;
     have_desync = 0;
-    have_prev_audio_tag = 0;
+    have_prev_audio_tag = have_prev_video_tag = 0;
+    video_frames_number = keyframes_number = 0;
 
     while (flv_get_offset(flv_in) < file_stats.st_size) {
         flv_tag tag;
@@ -354,7 +358,6 @@ int check_flv_file(const flvmeta_opts * opts) {
                 if (have_prev_audio_tag && prev_audio_tag != at) {
                     print_warning("W51026", offset + 11, "audio format changed since last tag");
                 }
-                prev_audio_tag = at;
 
                 /* check format */
                 audio_format = flv_audio_tag_sound_format(at);
@@ -396,16 +399,26 @@ int check_flv_file(const flvmeta_opts * opts) {
                 else if (audio_format == FLV_AUDIO_TAG_SOUND_FORMAT_LINEAR_PCM) {
                     print_warning("W51032", offset + 11, "audio data in Linear PCM, platform endian format should not be used because of non-portability");
                 }
+
+                prev_audio_tag = at;
+                have_prev_audio_tag = 1;
             }
             /** check video info **/
             else if (tag.type == FLV_TAG_TYPE_VIDEO) {
                 flv_video_tag vt;
                 uint8_bitmask video_frame_type, video_codec;
 
+                video_frames_number++;
+
                 result = flv_read_video_tag(flv_in, &vt);
                 if (result == FLV_ERROR_EOF) {
                     print_fatal("F20012", offset + 11, "unexpected end of file in tag");
                     goto end;
+                }
+
+                /* check whether the format varies between tags */
+                if (have_prev_video_tag && prev_video_tag != vt) {
+                    print_warning("W60033", offset + 11, "video format changed since last tag");
                 }
 
                 /* check video frame type */
@@ -417,7 +430,16 @@ int check_flv_file(const flvmeta_opts * opts) {
                     && video_frame_type != FLV_VIDEO_TAG_FRAME_TYPE_COMMAND_FRAME
                 ) {
                     sprintf(message, "unknown video frame type %d", video_frame_type);
-                    print_error("E60033", offset + 11, message);
+                    print_error("E60034", offset + 11, message);
+                }
+
+                if (video_frame_type == FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
+                    keyframes_number++;
+                }
+
+                /* check whether first frame is a keyframe */
+                if (!have_prev_video_tag && video_frame_type != FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
+                    print_warning("W60035", offset + 11, "first video frame is not a keyframe, playback will suffer");
                 }
 
                 /* check video codec */
@@ -439,9 +461,21 @@ int check_flv_file(const flvmeta_opts * opts) {
                     print_warning("W61035", offset + 11, "JPEG codec not currently used");
                 }
 
+                prev_video_tag = vt;
+                have_prev_video_tag = 1;
             }
             /** check script data info **/
             else if (tag.type == FLV_TAG_TYPE_META) {
+                amf_data * name;
+                amf_data * data;
+
+                result = flv_read_metadata(flv_in, &name, &data);
+
+                if (result == FLV_ERROR_EOF) {
+                    print_fatal("F20012", offset + 11, "unexpected end of file in tag");
+                    goto end;
+                }
+
 
             }
         }
@@ -481,6 +515,14 @@ int check_flv_file(const flvmeta_opts * opts) {
             print_warning("W40041", file_stats.st_size, message);
         }
     }
+
+    /* check video keyframes */
+    if (have_video && keyframes_number == 0) {
+        print_warning("W60042", file_stats.st_size, "no keyframe detected, file is probably broken or incomplete");
+    }
+    if (have_video && keyframes_number == video_frames_number) {
+        print_warning("W60043", file_stats.st_size, "only keyframes detected, probably inefficient compression scheme used");
+    }
     
     /* compute metadata */
     opts_loc.verbose = 0;
@@ -499,6 +541,11 @@ int check_flv_file(const flvmeta_opts * opts) {
     meta.on_metadata = NULL;
     meta.on_metadata_name = NULL;
     compute_current_metadata(&info, &meta);
+
+    /* could we compute video resolution ? */
+    if (info.video_width == 0 && info.video_height == 0) {
+        print_warning("W60044", file_stats.st_size, "unable to determine video resolution");
+    }
 
 end:
     report_end(opts, errors, warnings);
