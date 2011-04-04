@@ -1,5 +1,5 @@
 /*
-    $Id: flv.c 214 2011-02-02 16:51:31Z marc.noirot $
+    $Id: flv.c 219 2011-04-04 16:44:10Z marc.noirot $
 
     FLV Metadata updater
 
@@ -32,7 +32,7 @@ void flv_tag_set_timestamp(flv_tag * tag, uint32 timestamp) {
 
 /* FLV stream functions */
 flv_stream * flv_open(const char * file) {
-    flv_stream * stream = malloc(sizeof(flv_stream));
+    flv_stream * stream = (flv_stream *) malloc(sizeof(flv_stream));
     if (stream == NULL) {
         return NULL;
     }
@@ -200,6 +200,8 @@ int flv_read_video_tag(flv_stream * stream, flv_video_tag * tag) {
 
 int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
     amf_data * d;
+    byte error_code;
+
     if (stream == NULL
     || stream->flvin == NULL
     || feof(stream->flvin)
@@ -213,19 +215,28 @@ int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
     
     /* read metadata name */
     d = amf_data_file_read(stream->flvin);
-    if (d == NULL) {
+    *name = d;
+    error_code = amf_data_get_error_code(d);
+    if (error_code == AMF_ERROR_EOF) {
         return FLV_ERROR_EOF;
     }
-    *name = d;
+    else if (error_code != AMF_ERROR_OK) {
+        return FLV_ERROR_INVALID_METADATA_NAME;
+    }
+    
     stream->current_tag_body_length -= amf_data_size(d);
     
     /* read metadata contents */
     d = amf_data_file_read(stream->flvin);
-    if (d == NULL) {
-        amf_data_free(*name);
+    *data = d;
+    error_code = amf_data_get_error_code(d);
+    if (error_code == AMF_ERROR_EOF) {
         return FLV_ERROR_EOF;
     }
-    *data = d;
+    if (error_code != AMF_ERROR_OK) {
+        return FLV_ERROR_INVALID_METADATA;
+    }
+    
     stream->current_tag_body_length -= amf_data_size(d);
 
     if (stream->current_tag_body_length <= 0) {
@@ -287,28 +298,29 @@ void flv_close(flv_stream * stream) {
 
 /* FLV stdio writing helper functions */
 size_t flv_write_header(FILE * out, const flv_header * header) {
-    if (fwrite(&header->signature, sizeof(header->signature), 1, out) != 0
-    && fwrite(&header->version, sizeof(header->version), 1, out) != 0
-    && fwrite(&header->flags, sizeof(header->flags), 1, out) != 0
-    && fwrite(&header->offset, sizeof(header->offset), 1, out) != 0) {
-        return 1;
-    }
-    else {
+    if (fwrite(&header->signature, sizeof(header->signature), 1, out) == 0)
         return 0;
-    }
+    if (fwrite(&header->version, sizeof(header->version), 1, out) == 0)
+        return 0;
+    if (fwrite(&header->flags, sizeof(header->flags), 1, out) == 0)
+        return 0;
+    if (fwrite(&header->offset, sizeof(header->offset), 1, out) == 0)
+        return 0;
+    return 1;
 }
 
 size_t flv_write_tag(FILE * out, const flv_tag * tag) {
-    if (fwrite(&tag->type, sizeof(tag->type), 1, out) != 0
-    && fwrite(&tag->body_length, sizeof(tag->body_length), 1, out) != 0
-    && fwrite(&tag->timestamp, sizeof(tag->timestamp), 1, out) != 0
-    && fwrite(&tag->timestamp_extended, sizeof(tag->timestamp_extended), 1, out) != 0
-    && fwrite(&tag->stream_id, sizeof(tag->stream_id), 1, out) != 0) {
-        return 1;
-    }
-    else {
+    if (fwrite(&tag->type, sizeof(tag->type), 1, out) == 0)
         return 0;
-    }
+    if (fwrite(&tag->body_length, sizeof(tag->body_length), 1, out) == 0)
+        return 0;
+    if (fwrite(&tag->timestamp, sizeof(tag->timestamp), 1, out) == 0)
+        return 0;
+    if (fwrite(&tag->timestamp_extended, sizeof(tag->timestamp_extended), 1, out) == 0)
+        return 0;
+    if (fwrite(&tag->stream_id, sizeof(tag->stream_id), 1, out) == 0)
+        return 0;
+    return 1;
 }
 
 /* FLV event based parser */
@@ -382,12 +394,15 @@ int flv_parse(const char * file, flv_parser * parser) {
             }
         }
         else if (tag.type == FLV_TAG_TYPE_META) {
+            name = data = NULL;
             retval = flv_read_metadata(parser->stream, &name, &data);
-            if (retval != FLV_OK) {
+            if (retval == FLV_ERROR_EOF) {
+                amf_data_free(name);
+                amf_data_free(data);
                 flv_close(parser->stream);
                 return retval;
             }
-            if (parser->on_metadata_tag != NULL) {
+            else if (retval == FLV_OK && parser->on_metadata_tag != NULL) {
                 retval = parser->on_metadata_tag(&tag, name, data, parser);
                 if (retval != FLV_OK) {
                     amf_data_free(name);

@@ -1,5 +1,5 @@
 /*
-    $Id: info.c 216 2011-02-11 16:38:59Z marc.noirot $
+    $Id: info.c 219 2011-04-04 16:44:10Z marc.noirot $
 
     FLV Metadata updater
 
@@ -332,7 +332,8 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
 
         if (ft.type == FLV_TAG_TYPE_META) {
             amf_data *tag_name, *data;
-            data = NULL;
+            int retval;
+            tag_name = data = NULL;
 
             if (body_length == 0) {
                 if (opts->verbose) {
@@ -340,8 +341,26 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
                 }
             }
             else {
-                if (flv_read_metadata(flv_in, &tag_name, &data) != FLV_OK) {
+                retval = flv_read_metadata(flv_in, &tag_name, &data);
+                if (retval == FLV_ERROR_EOF) {
+                    amf_data_free(tag_name);
+                    amf_data_free(data);
                     return ERROR_EOF;
+                }
+                else if (retval == FLV_ERROR_INVALID_METADATA_NAME) {
+                    if (opts->verbose) {
+                        fprintf(stdout, "Warning: invalid metadata name at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
+                    }
+                }
+                else if (retval == FLV_ERROR_INVALID_METADATA) {
+                    if (opts->verbose) {
+                        fprintf(stdout, "Warning: invalid metadata at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
+                    }
+                    if (opts->error_handling == FLVMETA_EXIT_ON_ERROR) {
+                        amf_data_free(tag_name);
+                        amf_data_free(data);
+                        return ERROR_INVALID_TAG;
+                    }
                 }
             }
 
@@ -357,6 +376,14 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
 
                     /* if we want to preserve existing metadata, then extract them */
                     if (opts->preserve_metadata == 1) {
+                        /* we need an AMF associative array here, so we must
+                           discard errors and mis-typed data */
+                        if (amf_data_get_error_code(data) != AMF_ERROR_OK
+                        || amf_data_get_type(data) != AMF_TYPE_ASSOCIATIVE_ARRAY) {
+                            amf_data_free(data);
+                            data = amf_associative_array_new();
+                        }
+
                         info->original_on_metadata = data;
                     }
                     else {

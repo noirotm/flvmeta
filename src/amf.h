@@ -1,5 +1,5 @@
 /*
-    $Id: amf.h 214 2011-02-02 16:51:31Z marc.noirot $
+    $Id: amf.h 219 2011-04-04 16:44:10Z marc.noirot $
 
     FLV Metadata updater
 
@@ -46,6 +46,15 @@
 #define AMF_TYPE_XML	            ((byte)0x0F)
 #define AMF_TYPE_CLASS	            ((byte)0x10)
 
+/* AMF error codes */
+#define AMF_ERROR_OK                ((byte)0x00)
+#define AMF_ERROR_EOF               ((byte)0x01)
+#define AMF_ERROR_UNKNOWN_TYPE      ((byte)0x02)
+#define AMF_ERROR_END_TAG           ((byte)0x03)
+#define AMF_ERROR_NULL_POINTER      ((byte)0x04)
+#define AMF_ERROR_MEMORY            ((byte)0x05)
+#define AMF_ERROR_UNSUPPORTED_TYPE  ((byte)0x06)
+
 typedef struct __amf_node * p_amf_node;
 
 /* string type */
@@ -82,6 +91,7 @@ typedef struct __amf_class {
 /* structure encapsulating the various AMF objects */
 typedef struct __amf_data {
     byte type;
+    byte error_code;
     union {
         number64 number_data;
         uint8 boolean_data;
@@ -130,12 +140,17 @@ size_t     amf_data_buffer_write(amf_data * data, byte * buffer, size_t maxbytes
 size_t     amf_data_file_write(const amf_data * data, FILE * stream);
 /* get the type of AMF data */
 byte       amf_data_get_type(const amf_data * data);
+/* get the error code of AMF data */
+byte       amf_data_get_error_code(const amf_data * data);
 /* return a new copy of AMF data */
 amf_data * amf_data_clone(const amf_data * data);
 /* release the memory of AMF data */
 void       amf_data_free(amf_data * data);
 /* dump AMF data into a stream as text */
 void       amf_data_dump(FILE * stream, const amf_data * data, int indent_level);
+
+/* return a null AMF object with the specified error code attached to it */
+amf_data * amf_data_error(byte error_code);
 
 /* number functions */
 amf_data * amf_number_new(number64 value);

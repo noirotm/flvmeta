@@ -417,7 +417,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                 }
 
                 /* check whether the format varies between tags */
-                if (have_prev_video_tag && prev_video_tag != vt) {
+                if (have_prev_video_tag && flv_video_tag_codec_id(prev_video_tag) != flv_video_tag_codec_id(vt)) {
                     print_warning("W60033", offset + 11, "video format changed since last tag");
                 }
 

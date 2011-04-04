@@ -1,5 +1,5 @@
 /*
-    $Id: amf.c 214 2011-02-02 16:51:31Z marc.noirot $
+    $Id: amf.c 219 2011-04-04 16:44:10Z marc.noirot $
 
     FLV Metadata updater
 
@@ -209,6 +209,7 @@ amf_data * amf_data_new(byte type) {
     amf_data * data = (amf_data*)malloc(sizeof(amf_data));
     if (data != NULL) {
         data->type = type;
+        data->error_code = AMF_ERROR_OK;
     }
     return data;
 }
@@ -255,7 +256,9 @@ static amf_data * amf_number_read(amf_read_proc read_proc, void * user_data) {
     if (read_proc(&val, sizeof(number64_be), user_data) == sizeof(number64_be)) {
         return amf_number_new(swap_number64(val));
     }
-    return NULL;
+    else {
+        return amf_data_error(AMF_ERROR_EOF);
+    }
 }
 
 /* read a boolean */
@@ -264,107 +267,141 @@ static amf_data * amf_boolean_read(amf_read_proc read_proc, void * user_data) {
     if (read_proc(&val, sizeof(uint8), user_data) == sizeof(uint8)) {
         return amf_boolean_new(val);
     }
-    return NULL;
+    else {
+        return amf_data_error(AMF_ERROR_EOF);
+    }
 }
 
 /* read a string */
 static amf_data * amf_string_read(amf_read_proc read_proc, void * user_data) {
     uint16_be strsize;
     byte * buffer;
-    if (read_proc(&strsize, sizeof(uint16_be), user_data) == sizeof(uint16_be)) {
-        strsize = swap_uint16(strsize);
-        if (strsize > 0) {
-            buffer = (byte*)calloc(strsize, sizeof(byte));
-            if (buffer != NULL && read_proc(buffer, strsize, user_data) == strsize) {
-                amf_data * data = amf_string_new(buffer, strsize);
-                free(buffer);
-                return data;
-            }
-        }
-        else {
-            return amf_string_new(NULL, 0);
-        }
+    
+    if (read_proc(&strsize, sizeof(uint16_be), user_data) < sizeof(uint16_be)) {
+        return amf_data_error(AMF_ERROR_EOF);
     }
-    return NULL;
+        
+    strsize = swap_uint16(strsize);
+    if (strsize == 0) {
+        return amf_string_new(NULL, 0);
+    }
+
+    buffer = (byte*)calloc(strsize, sizeof(byte));
+    if (buffer == NULL) {
+        return NULL;
+    }
+
+    if (read_proc(buffer, strsize, user_data) == strsize) {
+        amf_data * data = amf_string_new(buffer, strsize);
+        free(buffer);
+        return data;
+    }
+    else {
+        free(buffer);
+        return amf_data_error(AMF_ERROR_EOF);
+    }
 }
 
 /* read an object */
 static amf_data * amf_object_read(amf_read_proc read_proc, void * user_data) {
-    amf_data * data = amf_object_new();
-    if (data != NULL) {
-        amf_data * name;
-        amf_data * element;
-        while (1) {
-            name = amf_string_read(read_proc, user_data);
-            if (name != NULL) {
-                element = amf_data_read(read_proc, user_data);
-                if (element != NULL) {
-                    if (amf_object_add(data, (char *)amf_string_get_bytes(name), element) == NULL) {
-                        amf_data_free(name);
-                        amf_data_free(element);
-                        amf_data_free(data);
-                        return NULL;
-                    }
-                    else {
-                        amf_data_free(name);
-                    }
-                }
-                else {
-                    amf_data_free(name);
-                    break;
-                }
-            }
-            else {
-                /* invalid name: error */
-                amf_data_free(data);
-                return NULL;
-            }
+    amf_data * name;
+    amf_data * element;
+    byte error_code;
+    amf_data * data;
+    
+    data = amf_object_new();
+    if (data == NULL) {
+        return NULL;
+    }
+
+    while (1) {
+        name = amf_string_read(read_proc, user_data);
+        error_code = amf_data_get_error_code(name);
+        if (error_code != AMF_ERROR_OK) {
+            /* invalid name: error */
+            amf_data_free(name);
+            amf_data_free(data);
+            return amf_data_error(error_code);
+        }
+
+        element = amf_data_read(read_proc, user_data);
+        error_code = amf_data_get_error_code(element);
+        if (error_code == AMF_ERROR_END_TAG) {
+            break;
+        }
+        else if (error_code != AMF_ERROR_OK) {
+            amf_data_free(name);
+            amf_data_free(data);
+            amf_data_free(element);
+            return amf_data_error(error_code);
+        }
+
+        if (amf_object_add(data, (char *)amf_string_get_bytes(name), element) == NULL) {
+            amf_data_free(name);
+            amf_data_free(element);
+            amf_data_free(data);
+            return NULL;
+        }
+        else {
+            amf_data_free(name);
         }
     }
+
     return data;
 }
 
 /* read an associative array */
 static amf_data * amf_associative_array_read(amf_read_proc read_proc, void * user_data) {
-    amf_data * data = amf_associative_array_new();
-    if (data != NULL) {
-        amf_data * name;
-        amf_data * element;
-        uint32_be size;
-        if (read_proc(&size, sizeof(uint32_be), user_data) == sizeof(uint32_be)) {
-            /* we ignore the 32 bits array size marker */
-            while(1) {
-                name = amf_string_read(read_proc, user_data);
-                if (name != NULL) {
-                    element = amf_data_read(read_proc, user_data);
-                    if (element != NULL) {
-                        if (amf_associative_array_add(data, (char *)amf_string_get_bytes(name), element) == NULL) {
-                            amf_data_free(name);
-                            amf_data_free(element);
-                            amf_data_free(data);
-                            return NULL;
-                        }
-                        else {
-                            amf_data_free(name);
-                        }
-                    }
-                    else {
-                        amf_data_free(name);
-                        break;
-                    }
-                }
-                else {
-                    /* invalid name: error */
-                    amf_data_free(data);
-                    return NULL;
-                }
-            }
+    amf_data * name;
+    amf_data * element;
+    uint32_be size;
+    byte error_code;
+    amf_data * data;
+    
+    data = amf_associative_array_new();
+    if (data == NULL) {
+        return NULL;
+    }
+
+    /* we ignore the 32 bits array size marker */
+    if (read_proc(&size, sizeof(uint32_be), user_data) < sizeof(uint32_be)) {
+        amf_data_free(data);
+        return amf_data_error(AMF_ERROR_EOF);
+    }
+
+    while(1) {
+        name = amf_string_read(read_proc, user_data);
+        error_code = amf_data_get_error_code(name);
+        if (error_code != AMF_ERROR_OK) {
+            /* invalid name: error */
+            amf_data_free(name);
+            amf_data_free(data);
+            return amf_data_error(error_code);
         }
-        else {
+
+        element = amf_data_read(read_proc, user_data);
+        error_code = amf_data_get_error_code(element);
+        if (error_code == AMF_ERROR_END_TAG || error_code == AMF_ERROR_UNKNOWN_TYPE) {
+            break;
+        }
+        else if (error_code != AMF_ERROR_OK) {
+            amf_data_free(name);
+            amf_data_free(data);
+            amf_data_free(element);
+            return amf_data_error(error_code);
+        }
+        
+        if (amf_associative_array_add(data, (char *)amf_string_get_bytes(name), element) == NULL) {
+            amf_data_free(name);
+            amf_data_free(element);
             amf_data_free(data);
             return NULL;
         }
+        else {
+            amf_data_free(name);
+        }
     }
+
     return data;
 }
 
@@ -372,33 +409,38 @@ static amf_data * amf_associative_array_read(amf_read_proc read_proc, void * use
 static amf_data * amf_array_read(amf_read_proc read_proc, void * user_data) {
     size_t i;
     amf_data * element;
-    amf_data * data = amf_array_new();
-    if (data != NULL) {
-        uint32 array_size;
-        if (read_proc(&array_size, sizeof(uint32), user_data) == sizeof(uint32)) {
-            array_size = swap_uint32(array_size);
-            
-            for (i = 0; i < array_size; ++i) {
-                element = amf_data_read(read_proc, user_data);
+    byte error_code;
+    amf_data * data;
+    uint32 array_size;
 
-                if (element != NULL) {
-                    if (amf_array_push(data, element) == NULL) {
-                        amf_data_free(element);
-                        amf_data_free(data);
-                        return NULL;
-                    }
-                }
-                else {
-                    amf_data_free(data);
-                    return NULL;
-                }
-            }
+    data = amf_array_new();
+    if (data == NULL) {
+        return NULL;
+    }
+    
+    if (read_proc(&array_size, sizeof(uint32), user_data) < sizeof(uint32)) {
+        amf_data_free(data);
+        return amf_data_error(AMF_ERROR_EOF);
+    }
+
+    array_size = swap_uint32(array_size);
+            
+    for (i = 0; i < array_size; ++i) {
+        element = amf_data_read(read_proc, user_data);
+        error_code = amf_data_get_error_code(element);
+        if (error_code != AMF_ERROR_OK) {
+            amf_data_free(element);
+            amf_data_free(data);
+            return amf_data_error(error_code);
         }
-        else {
+            
+        if (amf_array_push(data, element) == NULL) {
+            amf_data_free(element);
             amf_data_free(data);
             return NULL;
         }
     }
+
     return data;
 }
 
@@ -411,44 +453,46 @@ static amf_data * amf_date_read(amf_read_proc read_proc, void * user_data) {
         return amf_date_new(swap_number64(milliseconds), swap_sint16(timezone));
     }
     else {
-        return NULL;
+        return amf_data_error(AMF_ERROR_EOF);
     }
 }
 
 /* load AMF data from stream */
 amf_data * amf_data_read(amf_read_proc read_proc, void * user_data) {
     byte type;
-    if (read_proc(&type, sizeof(byte), user_data) == sizeof(byte)) {
-        switch (type) {
-            case AMF_TYPE_NUMBER:
-                return amf_number_read(read_proc, user_data);
-            case AMF_TYPE_BOOLEAN:
-                return amf_boolean_read(read_proc, user_data);
-            case AMF_TYPE_STRING:
-                return amf_string_read(read_proc, user_data);
-            case AMF_TYPE_OBJECT:
-                return amf_object_read(read_proc, user_data);
-            case AMF_TYPE_NULL:
-                return amf_null_new();
-            case AMF_TYPE_UNDEFINED:
-                return amf_undefined_new();
-            /*case AMF_TYPE_REFERENCE:*/
-            case AMF_TYPE_ASSOCIATIVE_ARRAY:
-                return amf_associative_array_read(read_proc, user_data);
-            case AMF_TYPE_ARRAY:
-                return amf_array_read(read_proc, user_data);
-            case AMF_TYPE_DATE:
-                return amf_date_read(read_proc, user_data);
-            /*case AMF_TYPE_SIMPLEOBJECT:*/
-            case AMF_TYPE_XML:
-            case AMF_TYPE_CLASS:
-            case AMF_TYPE_END:
-                return NULL; /* end of composite object */
-            default:
-                break;
-        }
+    if (read_proc(&type, sizeof(byte), user_data) < sizeof(byte)) {
+        return amf_data_error(AMF_ERROR_EOF);
     }
-    return NULL;
+        
+    switch (type) {
+        case AMF_TYPE_NUMBER:
+            return amf_number_read(read_proc, user_data);
+        case AMF_TYPE_BOOLEAN:
+            return amf_boolean_read(read_proc, user_data);
+        case AMF_TYPE_STRING:
+            return amf_string_read(read_proc, user_data);
+        case AMF_TYPE_OBJECT:
+            return amf_object_read(read_proc, user_data);
+        case AMF_TYPE_NULL:
+            return amf_null_new();
+        case AMF_TYPE_UNDEFINED:
+            return amf_undefined_new();
+        /*case AMF_TYPE_REFERENCE:*/
+        case AMF_TYPE_ASSOCIATIVE_ARRAY:
+            return amf_associative_array_read(read_proc, user_data);
+        case AMF_TYPE_ARRAY:
+            return amf_array_read(read_proc, user_data);
+        case AMF_TYPE_DATE:
+            return amf_date_read(read_proc, user_data);
+        /*case AMF_TYPE_SIMPLEOBJECT:*/
+        case AMF_TYPE_XML:
+        case AMF_TYPE_CLASS:
+            return amf_data_error(AMF_ERROR_UNSUPPORTED_TYPE);
+        case AMF_TYPE_END:
+            return amf_data_error(AMF_ERROR_END_TAG); /* end of composite object */
+        default:
+            return amf_data_error(AMF_ERROR_UNKNOWN_TYPE);
+    }
 }
 
 /* determines the size of the given AMF data */
@@ -664,6 +708,11 @@ byte amf_data_get_type(const amf_data * data) {
     return (data != NULL) ? data->type : AMF_TYPE_NULL;
 }
 
+/* error code */
+byte amf_data_get_error_code(const amf_data * data) {
+    return (data != NULL) ? data->error_code : AMF_ERROR_NULL_POINTER;
+}
+
 /* clone AMF data */
 amf_data * amf_data_clone(const amf_data * data) {
     /* we copy data recursively */
@@ -801,6 +850,15 @@ void amf_data_dump(FILE * stream, const amf_data * data, int indent_level) {
             default: break;
         }
     }
+}
+
+/* return a null AMF object with the specified error code attached to it */
+amf_data * amf_data_error(byte error_code) {
+    amf_data * data = amf_null_new();
+    if (data != NULL) {
+        data->error_code = error_code;
+    }
+    return data;
 }
 
 /* number functions */

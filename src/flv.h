@@ -1,5 +1,5 @@
 /*
-    $Id: flv.h 214 2011-02-02 16:51:31Z marc.noirot $
+    $Id: flv.h 219 2011-04-04 16:44:10Z marc.noirot $
 
     FLV Metadata updater
 
@@ -33,12 +33,14 @@
 #include "amf.h"
 
 /* error statuses */
-#define FLV_OK                  0
-#define FLV_ERROR_OPEN_READ     1
-#define FLV_ERROR_NO_FLV        2
-#define FLV_ERROR_EOF           3
-#define FLV_ERROR_MEMORY        4
-#define FLV_ERROR_EMPTY_TAG     5
+#define FLV_OK                          0
+#define FLV_ERROR_OPEN_READ             1
+#define FLV_ERROR_NO_FLV                2
+#define FLV_ERROR_EOF                   3
+#define FLV_ERROR_MEMORY                4
+#define FLV_ERROR_EMPTY_TAG             5
+#define FLV_ERROR_INVALID_METADATA_NAME 6
+#define FLV_ERROR_INVALID_METADATA      7
 
 /* flv file format structure and definitions */
 
