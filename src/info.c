@@ -1,5 +1,5 @@
 /*
-    $Id: info.c 219 2011-04-04 16:44:10Z marc.noirot $
+    $Id: info.c 221 2011-04-05 10:31:18Z marc.noirot $
 
     FLV Metadata updater
 
@@ -722,8 +722,8 @@ void compute_current_metadata(flv_info * info, flv_metadata * meta) {
 
     meta->on_last_second_name = amf_str("onLastSecond");
     meta->on_last_second = amf_associative_array_new();
-    meta->on_metadata_name = amf_str("onMetaData");
 
+    meta->on_metadata_name = amf_str("onMetaData");
     meta->on_metadata = amf_associative_array_new();
  
     amf_associative_array_add(meta->on_metadata, "hasMetadata", amf_boolean_new(1));

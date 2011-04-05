@@ -476,10 +476,15 @@ int check_flv_file(const flvmeta_opts * opts) {
 
                 if (result == FLV_ERROR_EOF) {
                     print_fatal("F20012", offset + 11, "unexpected end of file in tag");
+                    amf_data_free(name);
+                    amf_data_free(data);
                     goto end;
                 }
 
+                /* TODO more error handling */
 
+                amf_data_free(name);
+                amf_data_free(data);
             }
         }
 
@@ -544,6 +549,14 @@ int check_flv_file(const flvmeta_opts * opts) {
     meta.on_metadata = NULL;
     meta.on_metadata_name = NULL;
     compute_current_metadata(&info, &meta);
+
+    /* TODO more checks */
+
+    /* free computed metadata */
+    amf_data_free(meta.on_last_second);
+    amf_data_free(meta.on_last_second_name);
+    amf_data_free(meta.on_metadata);
+    amf_data_free(meta.on_metadata_name);
 
     /* could we compute video resolution ? */
     if (info.video_width == 0 && info.video_height == 0) {
