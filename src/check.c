@@ -148,6 +148,9 @@ int check_flv_file(const flvmeta_opts * opts) {
 
     int video_frames_number, keyframes_number;
 
+    prev_audio_tag = 0;
+    prev_video_tag = 0;
+
     /* file stats */
     if (stat(opts->input_file, &file_stats) != 0) {
         return ERROR_OPEN_READ;

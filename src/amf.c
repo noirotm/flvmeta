@@ -1,5 +1,5 @@
 /*
-    $Id: amf.c 219 2011-04-04 16:44:10Z marc.noirot $
+    $Id: amf.c 220 2011-04-05 09:42:15Z marc.noirot $
 
     FLV Metadata updater
 
@@ -326,7 +326,10 @@ static amf_data * amf_object_read(amf_read_proc read_proc, void * user_data) {
 
         element = amf_data_read(read_proc, user_data);
         error_code = amf_data_get_error_code(element);
-        if (error_code == AMF_ERROR_END_TAG) {
+        if (error_code == AMF_ERROR_END_TAG || error_code == AMF_ERROR_UNKNOWN_TYPE) {
+            /* end tag or unknown element: end of data, exit loop */
+            amf_data_free(name);
+            amf_data_free(element);
             break;
         }
         else if (error_code != AMF_ERROR_OK) {
@@ -381,7 +384,11 @@ static amf_data * amf_associative_array_read(amf_read_proc read_proc, void * use
 
         element = amf_data_read(read_proc, user_data);
         error_code = amf_data_get_error_code(element);
-        if (error_code == AMF_ERROR_END_TAG || error_code == AMF_ERROR_UNKNOWN_TYPE) {
+
+        if (amf_string_get_size(name) == 0 || error_code == AMF_ERROR_END_TAG || error_code == AMF_ERROR_UNKNOWN_TYPE) {
+            /* end tag or unknown element: end of data, exit loop */
+            amf_data_free(name);
+            amf_data_free(element);
             break;
         }
         else if (error_code != AMF_ERROR_OK) {
