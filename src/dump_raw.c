@@ -109,7 +109,6 @@ static int raw_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * d
     else {
         if (!strcmp((char*)amf_string_get_bytes(name), options->metadata_event)) {
             dump_raw_amf_data(data);
-            return FLVMETA_DUMP_STOP_OK;
         }
     }
     return OK;

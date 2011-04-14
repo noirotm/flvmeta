@@ -1,5 +1,5 @@
 /*
-    $Id: dump_xml.c 222 2011-04-14 13:53:57Z marc.noirot $
+    $Id: dump_xml.c 223 2011-04-14 14:23:09Z marc.noirot $
 
     FLV Metadata updater
 
@@ -227,7 +227,6 @@ static int xml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * d
     else {
         if (!strcmp((char*)amf_string_get_bytes(name), options->metadata_event)) {
             dump_xml_amf_data(data);
-            return FLVMETA_DUMP_STOP_OK;
         }
     }
     return OK;
