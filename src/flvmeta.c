@@ -1,5 +1,5 @@
 /*
-    $Id: flvmeta.c 214 2011-02-02 16:51:31Z marc.noirot $
+    $Id: flvmeta.c 222 2011-04-14 13:53:57Z marc.noirot $
 
     FLV Metadata updater
 
@@ -35,28 +35,29 @@
     Command-line options
 */
 static struct option long_options[] = {
-    { "dump",          no_argument,         NULL, 'D'},
-    { "full-dump",     no_argument,         NULL, 'F'},
-    { "check",         no_argument,         NULL, 'C'},
-    { "update",        no_argument,         NULL, 'U'},
-    { "dump-format",   required_argument,   NULL, 'd'},
-    { "json",          no_argument,         NULL, 'j'},
-    { "raw",           no_argument,         NULL, 'r'},
-    { "xml",           no_argument,         NULL, 'x'},
-    { "yaml",          no_argument,         NULL, 'y'},
-    { "level",         required_argument,   NULL, 'l'},
-    { "quiet",         no_argument,         NULL, 'q'},
-    { "print-metadata", no_argument,        NULL, 'm'},
-    { "add",           required_argument,   NULL, 'a'},
-    { "no-lastsecond", no_argument,         NULL, 's'},
-    { "preserve",      no_argument,         NULL, 'p'},
-    { "fix",           no_argument,         NULL, 'f'},
-    { "ignore",        no_argument,         NULL, 'i'},
-    { "reset-timestamps", no_argument,      NULL, 't'},
-    { "all-keyframes", no_argument,         NULL, 'k'},
-    { "verbose",       no_argument,         NULL, 'v'},
-    { "version",       no_argument,         NULL, 'V'},
-    { "help",          no_argument,         NULL, 'h'},
+    { "dump",               no_argument,        NULL, 'D'},
+    { "full-dump",          no_argument,        NULL, 'F'},
+    { "check",              no_argument,        NULL, 'C'},
+    { "update",             no_argument,        NULL, 'U'},
+    { "dump-format",        required_argument,  NULL, 'd'},
+    { "json",               no_argument,        NULL, 'j'},
+    { "raw",                no_argument,        NULL, 'r'},
+    { "xml",                no_argument,        NULL, 'x'},
+    { "yaml",               no_argument,        NULL, 'y'},
+    { "event",              required_argument,  NULL, 'e'},
+    { "level",              required_argument,  NULL, 'l'},
+    { "quiet",              no_argument,        NULL, 'q'},
+    { "print-metadata",     no_argument,        NULL, 'm'},
+    { "add",                required_argument,  NULL, 'a'},
+    { "no-lastsecond",      no_argument,        NULL, 's'},
+    { "preserve",           no_argument,        NULL, 'p'},
+    { "fix",                no_argument,        NULL, 'f'},
+    { "ignore",             no_argument,        NULL, 'i'},
+    { "reset-timestamps",   no_argument,        NULL, 't'},
+    { "all-keyframes",      no_argument,        NULL, 'k'},
+    { "verbose",            no_argument,        NULL, 'v'},
+    { "version",            no_argument,        NULL, 'V'},
+    { "help",               no_argument,        NULL, 'h'},
     { 0, 0, 0, 0 }
 };
 
@@ -70,6 +71,7 @@ static struct option long_options[] = {
 #define RAW_OPTION                  "r"
 #define XML_OPTION                  "x"
 #define YAML_OPTION                 "y"
+#define EVENT_OPTION                "e:"
 #define LEVEL_OPTION                "l:"
 #define QUIET_OPTION                "q"
 #define PRINT_METADATA_OPTION       "m"
@@ -115,6 +117,7 @@ static void help(const char * name) {
            "  -r, --raw                 equivalent to --dump-format=raw\n"
            "  -x, --xml                 equivalent to --dump-format=xml\n"
            "  -y, --yaml                equivalent to --dump-format=yaml\n"
+           "  -e, --event               specify the event to be dumped instead of onMetadata\n"
            "\nCheck options:\n"
            "  -l, --level=LEVEL         print only messages where level is at least LEVEL\n"
            "                            LEVEL is 'info', 'warning' (default), 'error', or 'fatal'\n"
@@ -154,6 +157,7 @@ static int parse_command_line(int argc, char ** argv, flvmeta_opts * options) {
             RAW_OPTION
             XML_OPTION
             YAML_OPTION
+            EVENT_OPTION
             LEVEL_OPTION
             QUIET_OPTION
             PRINT_METADATA_OPTION
@@ -252,6 +256,7 @@ static int parse_command_line(int argc, char ** argv, flvmeta_opts * options) {
                 options->check_xml_report = 1;
                 break;
             case 'y': options->dump_format = FLVMETA_FORMAT_YAML;    break;
+            case 'e': options->metadata_event = optarg;              break;
             /* update options */
             case 'm': options->dump_metadata = 1;                    break;
             case 'a':
@@ -360,6 +365,7 @@ int main(int argc, char ** argv) {
     options.error_handling = FLVMETA_EXIT_ON_ERROR;
     options.dump_format = FLVMETA_FORMAT_XML;
     options.verbose = 0;
+    options.metadata_event = NULL;
 
 
     /* Command-line parsing */

@@ -1,5 +1,5 @@
 /*
-    $Id: dump.c 214 2011-02-02 16:51:31Z marc.noirot $
+    $Id: dump.c 222 2011-04-14 13:53:57Z marc.noirot $
 
     FLV Metadata updater
 
@@ -113,6 +113,7 @@ int dump_metadata(const flvmeta_opts * options) {
     int retval;
     flv_parser parser;
     memset(&parser, 0, sizeof(flv_parser));
+    parser.user_data = (void*)options;
 
     switch (options->dump_format) {
         case FLVMETA_FORMAT_JSON:

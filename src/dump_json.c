@@ -1,5 +1,5 @@
 /*
-    $Id: dump_json.c 214 2011-02-02 16:51:31Z marc.noirot $
+    $Id: dump_json.c 222 2011-04-14 13:53:57Z marc.noirot $
 
     FLV Metadata updater
 
@@ -168,9 +168,19 @@ static int json_on_stream_end(flv_parser * parser) {
 
 /* JSON FLV file metadata dump callback */
 static int json_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
-    if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
-        dump_json_amf_data(data);
-        return FLVMETA_DUMP_STOP_OK;
+    flvmeta_opts * options = (flvmeta_opts*) parser->user_data;
+
+    if (options->metadata_event == NULL) {
+        if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
+            dump_json_amf_data(data);
+            return FLVMETA_DUMP_STOP_OK;
+        }
+    }
+    else {
+        if (!strcmp((char*)amf_string_get_bytes(name), options->metadata_event)) {
+            dump_json_amf_data(data);
+            return FLVMETA_DUMP_STOP_OK;
+        }
     }
     return OK;
 }

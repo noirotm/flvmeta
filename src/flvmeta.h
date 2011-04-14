@@ -1,5 +1,5 @@
 /*
-    $Id: flvmeta.h 215 2011-02-07 18:32:08Z marc.noirot $
+    $Id: flvmeta.h 222 2011-04-14 13:53:57Z marc.noirot $
 
     FLV Metadata updater
 
@@ -95,6 +95,7 @@ typedef struct __flvmeta_opts {
     int error_handling;
     int dump_format;
     int verbose;
+    char * metadata_event;
 } flvmeta_opts;
 
 #endif /* __FLVMETA_H__ */
