@@ -26,6 +26,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -140,6 +141,10 @@ int check_flv_file(const flvmeta_opts * opts) {
     flv_info info;
     flv_metadata meta;
     int have_desync;
+    int have_on_metadata;
+    amf_data * on_metadata;
+    int have_on_last_second;
+    uint32 on_last_second_timestamp;
 
     int have_prev_audio_tag;
     flv_audio_tag prev_audio_tag;
@@ -232,6 +237,10 @@ int check_flv_file(const flvmeta_opts * opts) {
     have_desync = 0;
     have_prev_audio_tag = have_prev_video_tag = 0;
     video_frames_number = keyframes_number = 0;
+    have_on_metadata = 0;
+    on_metadata = NULL;
+    have_on_last_second = 0;
+    on_last_second_timestamp = 0;
 
     while (flv_get_offset(flv_in) < file_stats.st_size) {
         flv_tag tag;
@@ -480,8 +489,80 @@ int check_flv_file(const flvmeta_opts * opts) {
                     amf_data_free(data);
                     goto end;
                 }
+                else if (result == FLV_ERROR_EMPTY_TAG) {
+                    print_warning("W70038", offset + 11, "empty metadata tag");
+                }
+                else if (result == FLV_ERROR_INVALID_METADATA_NAME) {
+                    print_error("E70039", offset + 11, "invalid metadata name");
+                }
+                else if (result == FLV_ERROR_INVALID_METADATA) {
+                    print_error("E70039", offset + 11, "invalid metadata");
+                }
+                else if (amf_data_get_type(name) != AMF_TYPE_STRING) {
+                    /* name type checking */
+                    sprintf(message, "invalid metadata name type: %d, should be a string (2)", amf_data_get_type(name));
+                    print_error("E70038", offset, message);
+                }
+                else {
+                    /* empty name checking */
+                    if (amf_string_get_size(name) == 0) {
+                        print_warning("W70038", offset, "empty metadata name");
+                    }
 
-                /* TODO more error handling */
+                    /* check whether all body size has been read */
+                    if (flv_in->current_tag_body_length > 0) {
+                        sprintf(message, "%d bytes not read in tag body after metadata end", body_length - flv_in->current_tag_body_length);
+                        print_warning("W70040", offset + flv_in->current_tag_body_length, message);
+                    }
+                    else if (flv_in->current_tag_body_length < 0) {
+                        sprintf(message, "%d bytes missing from tag body after metadata end", flv_in->current_tag_body_length - body_length);
+                        print_warning("W70041", offset + flv_in->current_tag_body_length, message);
+                    }
+
+                    /* onLastSecond checking */
+                    if (!strcmp((char*)amf_string_get_bytes(name), "onLastSecond")) {
+                        if (have_on_last_second == 0) {
+                            have_on_last_second = 1;
+                            on_last_second_timestamp = timestamp;
+                        }
+                        else {
+                            print_warning("W70038", offset, "duplicate onLastSecond event");
+                        }
+                    }
+
+                    /* onMetaData checking */
+                    if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
+                        if (have_on_metadata == 0) {
+                            have_on_metadata = 1;
+                            on_metadata = amf_data_clone(data);
+
+                            /* check onMetadata type */
+                            if (amf_data_get_type(on_metadata) != AMF_TYPE_ASSOCIATIVE_ARRAY) {
+                                sprintf(message, "invalid onMetaData data type: %d, should be an associative array (8)", amf_data_get_type(on_metadata));
+                                print_error("E70038", offset, message);
+                            }
+
+                            /* onMetaData must be the first tag at 0 timestamp */
+                            if (tag_number != 1) {
+                                print_warning("W70038", offset, "onMetadata event found after the first tag");
+                            }
+                            if (timestamp != 0) {
+                                print_warning("W70038", offset, "onMetadata event found after timestamp zero");
+                            }
+                        }
+                        else {
+                            print_warning("W70038", offset, "duplicate onMetaData event");
+                        }
+                    }
+
+                    /* unknown metadata name */
+                    if (strcmp((char*)amf_string_get_bytes(name), "onMetaData")
+                    && strcmp((char*)amf_string_get_bytes(name), "onCuePoint")
+                    && strcmp((char*)amf_string_get_bytes(name), "onLastSecond")) {
+                        sprintf(message, "unknown metadata event name: '%s'", (char*)amf_string_get_bytes(name));
+                        print_info("I70039", flv_get_offset(flv_in), message);
+                    }
+                }
 
                 amf_data_free(name);
                 amf_data_free(data);
@@ -531,32 +612,51 @@ int check_flv_file(const flvmeta_opts * opts) {
     if (have_video && keyframes_number == video_frames_number) {
         print_warning("W60043", file_stats.st_size, "only keyframes detected, probably inefficient compression scheme used");
     }
-    
-    /* compute metadata */
-    opts_loc.verbose = 0;
-    opts_loc.reset_timestamps = 0;
-    opts_loc.preserve_metadata = 0;
-    opts_loc.all_keyframes = 0;
-    opts_loc.error_handling = FLVMETA_IGNORE_ERRORS;
 
-    flv_reset(flv_in);
-    if (get_flv_info(flv_in, &info, &opts_loc) != OK) {
-        print_fatal("F10042", 0, "unable to compute metadata");
-        goto end;
+    /* only keyframes + onLastSecond bug */
+    if (have_video && have_on_last_second && keyframes_number == video_frames_number) {
+        print_warning("W60044", file_stats.st_size, "only keyframes detected and onLastSecond event present, file is probably not playable");
     }
-    meta.on_last_second = NULL;
-    meta.on_last_second_name = NULL;
-    meta.on_metadata = NULL;
-    meta.on_metadata_name = NULL;
-    compute_current_metadata(&info, &meta);
 
-    /* TODO more checks */
+    /* check onLastSecond timestamp */
+    if (have_on_last_second && (last_timestamp - on_last_second_timestamp) >= 2000) {
+        sprintf(message, "onLastSecond event located %d ms before the last tag", last_timestamp - on_last_second_timestamp);
+        print_warning("W70050", file_stats.st_size, message);
+    }
 
-    /* free computed metadata */
-    amf_data_free(meta.on_last_second);
-    amf_data_free(meta.on_last_second_name);
-    amf_data_free(meta.on_metadata);
-    amf_data_free(meta.on_metadata_name);
+    /* check onMetaData presence */
+    if (!have_on_metadata) {
+        print_warning("W70044", file_stats.st_size, "onMetaData event not found, file might not be playable");
+    }
+    else {
+        /* compute metadata */
+        opts_loc.verbose = 0;
+        opts_loc.reset_timestamps = 0;
+        opts_loc.preserve_metadata = 0;
+        opts_loc.all_keyframes = 0;
+        opts_loc.error_handling = FLVMETA_IGNORE_ERRORS;
+
+        flv_reset(flv_in);
+        if (get_flv_info(flv_in, &info, &opts_loc) != OK) {
+            print_fatal("F10042", 0, "unable to compute metadata");
+            goto end;
+        }
+        meta.on_last_second = NULL;
+        meta.on_last_second_name = NULL;
+        meta.on_metadata = NULL;
+        meta.on_metadata_name = NULL;
+        compute_current_metadata(&info, &meta);
+
+        /* TODO more metadata checks */
+
+        /* free computed metadata */
+        amf_data_free(meta.on_last_second);
+        amf_data_free(meta.on_last_second_name);
+        amf_data_free(meta.on_metadata);
+        amf_data_free(meta.on_metadata_name);
+    }
+    
+    
 
     /* could we compute video resolution ? */
     if (info.video_width == 0 && info.video_height == 0) {
@@ -566,6 +666,7 @@ int check_flv_file(const flvmeta_opts * opts) {
 end:
     report_end(opts, errors, warnings);
     
+    amf_data_free(on_metadata);
     flv_close(flv_in);
     
     return (errors > 0) ? ERROR_INVALID_FLV_FILE : OK;
