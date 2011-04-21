@@ -1,5 +1,5 @@
 /*
-    $Id: flv.c 219 2011-04-04 16:44:10Z marc.noirot $
+    $Id: flv.c 225 2011-04-21 15:21:41Z marc.noirot $
 
     FLV Metadata updater
 
@@ -367,11 +367,11 @@ int flv_parse(const char * file, flv_parser * parser) {
 
         if (tag.type == FLV_TAG_TYPE_AUDIO) {
             retval = flv_read_audio_tag(parser->stream, &at);
-            if (retval != FLV_OK) {
+            if (retval == FLV_ERROR_EOF) {
                 flv_close(parser->stream);
                 return retval;
             }
-            if (parser->on_audio_tag != NULL) {
+            if (retval != FLV_ERROR_EMPTY_TAG && parser->on_audio_tag != NULL) {
                 retval = parser->on_audio_tag(&tag, at, parser);
                 if (retval != FLV_OK) {
                     flv_close(parser->stream);
@@ -381,11 +381,11 @@ int flv_parse(const char * file, flv_parser * parser) {
         }
         else if (tag.type == FLV_TAG_TYPE_VIDEO) {
             retval = flv_read_video_tag(parser->stream, &vt);
-            if (retval != FLV_OK) {
+            if (retval == FLV_ERROR_EOF) {
                 flv_close(parser->stream);
                 return retval;
             }
-            if (parser->on_video_tag != NULL) {
+            if (retval != FLV_ERROR_EMPTY_TAG && parser->on_video_tag != NULL) {
                 retval = parser->on_video_tag(&tag, vt, parser);
                 if (retval != FLV_OK) {
                     flv_close(parser->stream);

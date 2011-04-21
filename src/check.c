@@ -512,11 +512,11 @@ int check_flv_file(const flvmeta_opts * opts) {
                     /* check whether all body size has been read */
                     if (flv_in->current_tag_body_length > 0) {
                         sprintf(message, "%d bytes not read in tag body after metadata end", body_length - flv_in->current_tag_body_length);
-                        print_warning("W70040", offset + flv_in->current_tag_body_length, message);
+                        print_warning("W70040", flv_get_offset(flv_in), message);
                     }
                     else if (flv_in->current_tag_body_length < 0) {
                         sprintf(message, "%d bytes missing from tag body after metadata end", flv_in->current_tag_body_length - body_length);
-                        print_warning("W70041", offset + flv_in->current_tag_body_length, message);
+                        print_warning("W70041", flv_get_offset(flv_in), message);
                     }
 
                     /* onLastSecond checking */
