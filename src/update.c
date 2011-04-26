@@ -254,7 +254,7 @@ static int write_flv(flv_stream * flv_in, FILE * flv_out, const flv_info * info,
     }
 
     if (opts->verbose) {
-        fprintf(stdout, "%s sucessfully written\n", opts->output_file);
+        fprintf(stdout, "%s successfully written\n", opts->output_file);
     }
 
     free(copy_buffer);
