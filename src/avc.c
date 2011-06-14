@@ -1,5 +1,5 @@
 /*
-    $Id: avc.c 214 2011-02-02 16:51:31Z marc.noirot $
+    $Id: avc.c 227 2011-06-14 16:42:03Z marc.noirot $
 
     FLV Metadata updater
 
@@ -101,11 +101,11 @@ typedef struct __AVCDecoderConfigurationRecord {
 
 int read_avc_decoder_configuration_record(flv_stream * f, AVCDecoderConfigurationRecord * adcr) {
     if (flv_read_tag_body(f, &adcr->configurationVersion, 1) == 1
-    && flv_read_tag_body(f, &adcr->configurationVersion, 1) == 1
-    && flv_read_tag_body(f, &adcr->configurationVersion, 1) == 1
-    && flv_read_tag_body(f, &adcr->configurationVersion, 1) == 1
-    && flv_read_tag_body(f, &adcr->configurationVersion, 1) == 1
-    && flv_read_tag_body(f, &adcr->configurationVersion, 1) == 1) {
+    && flv_read_tag_body(f, &adcr->AVCProfileIndication, 1) == 1
+    && flv_read_tag_body(f, &adcr->profile_compatibility, 1) == 1
+    && flv_read_tag_body(f, &adcr->AVCLevelIndication, 1) == 1
+    && flv_read_tag_body(f, &adcr->lengthSizeMinusOne, 1) == 1
+    && flv_read_tag_body(f, &adcr->numOfSequenceParameterSets, 1) == 1) {
         return FLV_OK;
     }
     else {
