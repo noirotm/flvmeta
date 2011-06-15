@@ -1,5 +1,5 @@
 /*
-    $Id: flvmeta.c 226 2011-04-26 10:45:38Z marc.noirot $
+    $Id: flvmeta.c 228 2011-06-15 09:04:07Z marc.noirot $
 
     FLV Metadata updater
 
@@ -100,7 +100,7 @@ static void usage(const char * name) {
 
 static void help(const char * name) {
     printf("Usage: %s [COMMAND] [OPTIONS] INPUT_FILE [OUTPUT_FILE]\n", name);
-    printf("\nIf OUTPUT_FILE is omitted for commands needing it, INPUT_FILE will be overwritten instead.\n"
+    printf("\nIf OUTPUT_FILE is omitted for commands expecting it, INPUT_FILE will be overwritten instead.\n"
            "\nCommands:\n"
            "  -D, --dump                dump onMetaData tag (default without output file)\n"
            "  -F, --full-dump           dump all tags\n"
@@ -117,7 +117,7 @@ static void help(const char * name) {
            "  -r, --raw                 equivalent to --dump-format=raw\n"
            "  -x, --xml                 equivalent to --dump-format=xml\n"
            "  -y, --yaml                equivalent to --dump-format=yaml\n"
-           "  -e, --event               specify the event to be dumped instead of onMetadata\n"
+           "  -e, --event               specify the event to be dumped instead of 'onMetadata'\n"
            "\nCheck options:\n"
            "  -l, --level=LEVEL         print only messages where level is at least LEVEL\n"
            "                            LEVEL is 'info', 'warning' (default), 'error', or 'fatal'\n"
