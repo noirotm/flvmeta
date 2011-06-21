@@ -14,7 +14,7 @@ if(MATCHES)
       execute_process(COMMAND           svnversion -n
                       WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
                       OUTPUT_VARIABLE   SVNVERSION)
-      string(REGEX MATCH "[0-9]+" SVNVERSION_IS_NUMERIC "${SVNVERSION}")
+      string(REGEX MATCH "^[0-9]+$" SVNVERSION_IS_NUMERIC "${SVNVERSION}")
       if(SVNVERSION_IS_NUMERIC)
         # if we have a numeric revision, use it as release number
         set(FLVMETA_VERSION "${FLVMETA_VERSION}-r${SVNVERSION}")
@@ -92,6 +92,8 @@ endif(MSVC)
 
 # installation
 set(CPACK_PACKAGE_VENDOR "Marc Noirot <marc.noirot@gmail.com>")
+set(CPACK_SOURCE_IGNORE_FILES "/build.*;/CVS/;/\\\\.svn/;/\\\\.bzr/;/\\\\.hg/;/\\\\.git/;\\\\.swp$;\\\\.#;/#")
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "flvmeta-${PACKAGE_VERSION}-src")
 
 if(WIN32)
   if (CMAKE_CL_64)
