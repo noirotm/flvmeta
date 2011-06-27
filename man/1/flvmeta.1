@@ -1,0 +1,125 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH FLVMETA 1 "April 13, 2011"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+flvmeta \- a metadata injector for FLV video files 
+.SH SYNOPSIS
+.B flvmeta
+.I [COMMAND]
+.I [OPTIONS]
+.I INPUT_FILE
+.I [OUTPUT_FILE]
+.br
+.SH DESCRIPTION
+.PP
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invode bold face and italics,
+.\" respectively.
+\fBflvmeta\fP is a program that could dumps, injects all standard metadata tags
+into the onMetaData event, as well as insert an onLastSecond event.
+.PP
+If OUTPUT_FILE is omitted for commands expecting it, INPUT_FILE will be overwritten instead.
+.br
+.SH COMMAND
+.TP
+.B \-D, \-\-dump
+dump onMetaData tag (default without output file)
+.TP
+.B \-F, \-\-full\-dump
+dump all tags
+.TP
+.B \-C, \-\-check
+check the validity of INPUT_FILE, returning 0 if the file is valid, or 10 if it contains errors
+.TP
+.B \-U, \-\-update
+update computed onMetaData tag from INPUT_FILE into OUTPUT_FILE (default with output file)
+.SH OPTIONS
+.B Dump options:
+.TP
+.B \-d, \-\-dump\-format=TYPE
+dump format is of type TYPE. TYPE is 'xml' (default), 'json', 'raw', or 'yaml'
+.TP
+.B \-j, \-\-json
+equivalent to \-\-dump\-format=json
+.TP
+.B \-r, \-\-raw
+equivalent to \-\-dump\-format=raw
+.TP
+.B \-x, \-\-xml
+equivalent to \-\-dump\-format=xml
+.TP
+.B \-y, \-\-yaml
+equivalent to \-\-dump\-format=yaml
+.TP
+.B \-e, \-\-event
+specify the event to be dumped instead of 'onMetaData'
+.TP
+.B Check options:
+.TP
+.B \-l, \-\-level=LEVEL
+print only messages where level is at least LEVEL. LEVEL is 'info', 'warning' (default), 'error', or 'fatal'
+.TP
+.B \-q, \-\-quiet
+do not print messages, only return the status code
+.TP
+.B \-x, \-\-xml
+generate an XML report
+.TP
+.B Update options:
+.TP
+.B \-m, \-\-print\-metadata
+print metadata to stdout after update using the specified format
+.TP
+.B \-a, \-\-add=NAME=VALUE
+add a metadata string value to the output file
+.TP
+.B \-s, \-\-no\-lastsecond
+do not create the onLastSecond tag
+.TP
+.B \-p, \-\-preserve
+preserve input file existing onMetadata tags
+.TP
+.B \-f, \-\-fix
+fix invalid tags from the input file
+.TP
+.B \-i, \-\-ignore
+ignore invalid tags from the input file (the default is to stop with an error)
+.TP
+.B \-t, \-\-reset\-timestamps
+reset timestamps so OUTPUT_FILE starts at zero
+.TP
+.B \-k, \-\-all\-keyframes
+index all keyframe tags, including duplicate timestamps
+.TP
+.B Common options:
+.TP
+.B \-v, \-\-verbose
+display informative messages
+.TP
+.B Miscellaneous:
+.TP
+.B \-V, \-\-version
+print version information and exit
+.TP
+.B \-h, \-\-help
+display help information and exit
+
+.SH AUTHOR
+flvmeta was written by Marc Noirot <marc.noirot@gmail.com>.
+.PP
+This manual page was written by Neutron Soutmun <neo.neutron@gmail.com>,
+for the Debian project (and may be used by others).
