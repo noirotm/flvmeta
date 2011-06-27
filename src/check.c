@@ -1,5 +1,5 @@
 /*
-    $Id: check.c 231 2011-06-27 13:46:19Z marc.noirot $
+    $Id: check.c 233 2011-06-27 14:29:18Z marc.noirot $
 
     FLV Metadata updater
 
@@ -155,6 +155,17 @@ int check_flv_file(const flvmeta_opts * opts) {
 
     prev_audio_tag = 0;
     prev_video_tag = 0;
+    
+    have_audio = have_video = 0;
+    tag_number = 0;
+    last_timestamp = last_video_timestamp = last_audio_timestamp = 0;
+    have_desync = 0;
+    have_prev_audio_tag = have_prev_video_tag = 0;
+    video_frames_number = keyframes_number = 0;
+    have_on_metadata = 0;
+    on_metadata = NULL;
+    have_on_last_second = 0;
+    on_last_second_timestamp = 0;
 
     /* file stats */
     if (stat(opts->input_file, &file_stats) != 0) {
@@ -231,17 +242,6 @@ int check_flv_file(const flvmeta_opts * opts) {
     }
 
     /** read tags **/
-    have_audio = have_video = 0;
-    tag_number = 0;
-    last_timestamp = last_video_timestamp = last_audio_timestamp = 0;
-    have_desync = 0;
-    have_prev_audio_tag = have_prev_video_tag = 0;
-    video_frames_number = keyframes_number = 0;
-    have_on_metadata = 0;
-    on_metadata = NULL;
-    have_on_last_second = 0;
-    on_last_second_timestamp = 0;
-
     while (flv_get_offset(flv_in) < file_stats.st_size) {
         flv_tag tag;
         file_offset_t offset;
