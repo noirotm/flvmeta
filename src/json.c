@@ -1137,7 +1137,7 @@ json_escape (char *text)
 {
 	rcstring *output;
 	size_t i, length;
-	char buffer[6];
+	char buffer[7];
 	/* check if pre-conditions are met */
 	assert (text != NULL);
 
@@ -1334,7 +1334,7 @@ json_unescape (char *text)
 					}
 					else
 					{
-						fprintf (stderr, "JSON: unsupported unicode value: 0x%llX\n", unicode);
+						fprintf (stderr, "JSON: unsupported unicode value: 0x%llX\n", (uint64_t)unicode);
 					}
 				}
 				break;
