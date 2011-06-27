@@ -1,5 +1,5 @@
 /*
-    $Id: update.h 229 2011-06-16 09:44:05Z marc.noirot $
+    $Id: update.h 231 2011-06-27 13:46:19Z marc.noirot $
 
     FLV Metadata updater
 
@@ -19,7 +19,7 @@
 
     You should have received a copy of the GNU General Public License
     along with FLVMeta; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 #ifndef __UPDATE_H__
 #define __UPDATE_H__

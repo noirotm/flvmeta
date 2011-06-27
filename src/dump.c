@@ -1,5 +1,5 @@
 /*
-    $Id: dump.c 222 2011-04-14 13:53:57Z marc.noirot $
+    $Id: dump.c 231 2011-06-27 13:46:19Z marc.noirot $
 
     FLV Metadata updater
 
@@ -19,7 +19,7 @@
 
     You should have received a copy of the GNU General Public License
     along with FLVMeta; if not, write to the Free Software
-    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 #include "flvmeta.h"
 #include "dump_json.h"
