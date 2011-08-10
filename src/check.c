@@ -1,5 +1,5 @@
 /*
-    $Id: check.c 233 2011-06-27 14:29:18Z marc.noirot $
+    $Id: check.c 236 2011-08-10 15:30:04Z marc.noirot@gmail.com $
 
     FLV Metadata updater
 
@@ -24,6 +24,7 @@
 #include "check.h"
 #include "info.h"
 
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -125,6 +126,25 @@ static void report_print_message(
     if (opts->check_level <= FLVMETA_CHECK_LEVEL_FATAL) ++errors; \
     report_print_message(FLVMETA_CHECK_LEVEL_FATAL, code, offset, message, opts)
 
+/* get string representing given AMF type */
+const char * get_amf_type_string(byte type) {
+    switch (type) {
+        case AMF_TYPE_NUMBER: return "Number";
+        case AMF_TYPE_BOOLEAN: return "Boolean";
+        case AMF_TYPE_STRING: return "String";
+        case AMF_TYPE_NULL: return "Null";
+        case AMF_TYPE_UNDEFINED: return "Undefined";
+        /*case AMF_TYPE_REFERENCE:*/
+        case AMF_TYPE_OBJECT: return "Object";
+        case AMF_TYPE_ASSOCIATIVE_ARRAY: return "Associative array";
+        case AMF_TYPE_ARRAY: return "Array";
+        case AMF_TYPE_DATE: return "Date";
+        /*case AMF_TYPE_SIMPLEOBJECT:*/
+        case AMF_TYPE_XML: return "XML";
+        case AMF_TYPE_CLASS: return "Class";
+        default: return "Unknown type";
+    }
+}
 
 /* check FLV file validity */
 int check_flv_file(const flvmeta_opts * opts) {
@@ -139,9 +159,9 @@ int check_flv_file(const flvmeta_opts * opts) {
     int have_audio, have_video;
     flvmeta_opts opts_loc;
     flv_info info;
-    flv_metadata meta;
     int have_desync;
     int have_on_metadata;
+    file_offset_t on_metadata_offset;
     amf_data * on_metadata;
     int have_on_last_second;
     uint32 on_last_second_timestamp;
@@ -163,6 +183,7 @@ int check_flv_file(const flvmeta_opts * opts) {
     have_prev_audio_tag = have_prev_video_tag = 0;
     video_frames_number = keyframes_number = 0;
     have_on_metadata = 0;
+    on_metadata_offset = 0;
     on_metadata = NULL;
     have_on_last_second = 0;
     on_last_second_timestamp = 0;
@@ -534,6 +555,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
                         if (have_on_metadata == 0) {
                             have_on_metadata = 1;
+                            on_metadata_offset = offset;
                             on_metadata = amf_data_clone(data);
 
                             /* check onMetadata type */
@@ -629,6 +651,12 @@ int check_flv_file(const flvmeta_opts * opts) {
         print_warning("W70044", file_stats.st_size, "onMetaData event not found, file might not be playable");
     }
     else {
+        amf_node * n;
+        int have_width, have_height;
+
+        have_width = 0;
+        have_height = 0;
+
         /* compute metadata */
         opts_loc.verbose = 0;
         opts_loc.reset_timestamps = 0;
@@ -641,22 +669,119 @@ int check_flv_file(const flvmeta_opts * opts) {
             print_fatal("F10042", 0, "unable to compute metadata");
             goto end;
         }
-        meta.on_last_second = NULL;
-        meta.on_last_second_name = NULL;
-        meta.on_metadata = NULL;
-        meta.on_metadata_name = NULL;
-        compute_current_metadata(&info, &meta);
 
-        /* TODO more metadata checks */
+        /* more metadata checks */
+        for (n = amf_associative_array_first(on_metadata); n != NULL; n = amf_associative_array_next(n)) {
+            byte * name;
+            amf_data * data;
+            byte type;
 
-        /* free computed metadata */
-        amf_data_free(meta.on_last_second);
-        amf_data_free(meta.on_last_second_name);
-        amf_data_free(meta.on_metadata);
-        amf_data_free(meta.on_metadata_name);
+            name = amf_string_get_bytes(amf_associative_array_get_name(n));
+            data = amf_associative_array_get_data(n);
+            type = amf_data_get_type(data);
+
+            /* hasMetadata (bool): true */
+            if (!strcmp((char*)name, "hasMetadata")) {
+                if (type == AMF_TYPE_BOOLEAN) {
+                    if (amf_boolean_get_value(data) == 0) {
+                        print_warning("W70045", on_metadata_offset, "hasMetadata should be set to true");
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for hasMetadata: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_BOOLEAN),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
+            /* hasVideo (bool) */
+            if (!strcmp((char*)name, "hasVideo")) {
+                if (type == AMF_TYPE_BOOLEAN) {
+                    if (amf_boolean_get_value(data) != info.have_video) {
+                        sprintf(message, "hasVideo should be set to %s", info.have_video ? "true" : "false");
+                        print_warning("W70045", on_metadata_offset, message);
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for hasVideo: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_BOOLEAN),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
+            /* hasAudio (bool) */
+            if (!strcmp((char*)name, "hasAudio")) {
+                if (type == AMF_TYPE_BOOLEAN) {
+                    if (amf_boolean_get_value(data) != info.have_audio) {
+                        sprintf(message, "hasAudio should be set to %s", info.have_audio ? "true" : "false");
+                        print_warning("W70045", on_metadata_offset, message);
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for hasAudio: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_BOOLEAN),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
+            /* duration (number) */
+            if (!strcmp((char*)name, "duration")) {
+                if (type == AMF_TYPE_NUMBER) {
+                    number64 duration, file_duration;
+                    if (info.have_audio) {
+                        duration = (info.last_timestamp - info.first_timestamp + info.audio_frame_duration) / 1000.0;
+                    }
+                    else {
+                        duration = (info.last_timestamp - info.first_timestamp + info.video_frame_duration) / 1000.0;
+                    }
+                    file_duration = amf_number_get_value(data);
+
+                    if (fabs(file_duration - duration) > 1.0) {
+                        sprintf(message, "duration should be %.12g, got %.12g", duration, file_duration);
+                        print_warning("W70045", on_metadata_offset, message);
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for duration: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_NUMBER),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
+            /* lasttimestamp: (number) */
+            /* lastkeyframetimestamp: (number) */
+            /* width: (number) */
+            /* height: (number) */
+            /* videodatarate: (number)*/
+            /* framerate: (number) */
+            /* audiodatarate: (number) */
+            /* audiosamplerate: (number) */
+            /* audiosamplesize: (number) */
+            /* stereo: (boolean) */
+            /* filesize: (number) */
+            /* videosize: (number) */
+            /* audiosize: (number) */
+            /* datasize: (number) */
+            /* audiocodecid: (number) */
+            /* videocodecid: (number) */
+            /* audiodelay: (number) */
+            /* canSeekToEnd: (boolean) */
+            /* hasKeyframes: (boolean) */
+            /* keyframes: (object) */
+        }
+
+        /* missing width or height can cause size problem in various players */
+        if (!have_width) {
+            print_error("E60047", on_metadata_offset, "width information not found in metadata, problems might occur in some players");
+        }
+        if (!have_height) {
+            print_error("E60047", on_metadata_offset, "height information not found in metadata, problems might occur in some players");
+        }
     }
-    
-    
 
     /* could we compute video resolution ? */
     if (info.video_width == 0 && info.video_height == 0) {
