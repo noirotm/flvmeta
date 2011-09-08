@@ -92,6 +92,9 @@ endif(MSVC)
 
 # installation
 set(CPACK_PACKAGE_VENDOR "Marc Noirot <marc.noirot@gmail.com>")
+set(CPACK_PACKAGE_VERSION   "${FLVMETA_VERSION}")
+set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_SOURCE_DIR}/COPYING)
+set(CPACK_RESOURCE_FILE_README ${CMAKE_SOURCE_DIR}/README)
 set(CPACK_SOURCE_IGNORE_FILES "/build.*;/CVS/;/\\\\.svn/;/\\\\.bzr/;/\\\\.hg/;/\\\\.git/;\\\\.swp$;\\\\.#;/#")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "flvmeta-${PACKAGE_VERSION}-src")
 
