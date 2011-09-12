@@ -739,7 +739,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                     file_duration = amf_number_get_value(data);
 
-                    if (fabs(file_duration - duration) > 1.0) {
+                    if (fabs(file_duration - duration) >= 1.0) {
                         sprintf(message, "duration should be %.12g, got %.12g", duration, file_duration);
                         print_warning("W70045", on_metadata_offset, message);
                     }
@@ -753,10 +753,121 @@ int check_flv_file(const flvmeta_opts * opts) {
             }
 
             /* lasttimestamp: (number) */
+            if (!strcmp((char*)name, "lasttimestamp")) {
+                if (type == AMF_TYPE_NUMBER) {
+                    number64 last_timestamp, file_last_timestamp;
+                    last_timestamp = info.last_timestamp;
+                    file_last_timestamp = amf_number_get_value(data);
+
+                    if (fabs(file_last_timestamp - last_timestamp) >= 1.0) {
+                        sprintf(message, "lasttimestamp should be %.12g, got %.12g", last_timestamp, file_last_timestamp);
+                        print_warning("W70045", on_metadata_offset, message);
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for lasttimestamp: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_NUMBER),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
             /* lastkeyframetimestamp: (number) */
+            if (!strcmp((char*)name, "lastkeyframetimestamp")) {
+                if (type == AMF_TYPE_NUMBER) {
+                    number64 last_kftimestamp, file_last_kftimestamp;
+                    last_kftimestamp = info.last_keyframe_timestamp;
+                    file_last_kftimestamp = amf_number_get_value(data);
+
+                    if (fabs(file_last_kftimestamp - last_kftimestamp) >= 1.0) {
+                        sprintf(message, "lastkeyframetimestamp should be %.12g, got %.12g", last_timestamp, file_last_kftimestamp);
+                        print_warning("W70045", on_metadata_offset, message);
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for lastkeyframetimestamp: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_NUMBER),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
             /* width: (number) */
+            if (!strcmp((char*)name, "width")) {
+                if (type == AMF_TYPE_NUMBER) {
+                    if (info.have_video) {
+                        number64 width, file_width;
+                        width = info.video_width;
+                        file_width = amf_number_get_value(data);
+
+                        if (fabs(file_width - width) >= 1.0) {
+                            sprintf(message, "width should be %.12g, got %.12g", width, file_width);
+                            print_warning("W70045", on_metadata_offset, message);
+                        }
+                    }
+                    else {
+                        print_warning("W70047", on_metadata_offset, "width metadata present without video data");
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for width: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_NUMBER),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
             /* height: (number) */
+            if (!strcmp((char*)name, "height")) {
+                if (type == AMF_TYPE_NUMBER) {
+                    if (info.have_video) {
+                        number64 height, file_height;
+                        height = info.video_height;
+                        file_height = amf_number_get_value(data);
+
+                        if (fabs(file_height - height) >= 1.0) {
+                            sprintf(message, "height should be %.12g, got %.12g", height, file_height);
+                            print_warning("W70045", on_metadata_offset, message);
+                        }
+                    }
+                    else {
+                        print_warning("W70047", on_metadata_offset, "height metadata present without video data");
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for height: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_NUMBER),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
             /* videodatarate: (number)*/
+            if (!strcmp((char*)name, "videodatarate")) {
+                if (type == AMF_TYPE_NUMBER) {
+                    if (info.have_video) {
+                        number64 videodatarate, file_videodatarate, duration;
+                        duration = (info.last_timestamp - info.first_timestamp + info.audio_frame_duration) / 1000.0;
+                        videodatarate = ((info.real_video_data_size / 1024.0) * 8.0) / duration;
+                        file_videodatarate = amf_number_get_value(data);
+
+                        if (fabs(file_videodatarate - videodatarate) >= 1.0) {
+                            sprintf(message, "videodatarate should be %.12g, got %.12g", videodatarate, file_videodatarate);
+                            print_warning("W70045", on_metadata_offset, message);
+                        }
+                    }
+                    else {
+                        print_warning("W70047", on_metadata_offset, "videodatarate metadata present without video data");
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for videodatarate: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_NUMBER),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
             /* framerate: (number) */
             /* audiodatarate: (number) */
             /* audiosamplerate: (number) */
@@ -775,11 +886,13 @@ int check_flv_file(const flvmeta_opts * opts) {
         }
 
         /* missing width or height can cause size problem in various players */
-        if (!have_width) {
-            print_error("E60047", on_metadata_offset, "width information not found in metadata, problems might occur in some players");
-        }
-        if (!have_height) {
-            print_error("E60047", on_metadata_offset, "height information not found in metadata, problems might occur in some players");
+        if (info.have_video) {
+            if (!have_width) {
+                print_error("E60047", on_metadata_offset, "width information not found in metadata, problems might occur in some players");
+            }
+            if (!have_height) {
+                print_error("E60047", on_metadata_offset, "height information not found in metadata, problems might occur in some players");
+            }
         }
     }
 
