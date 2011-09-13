@@ -2,26 +2,23 @@ cmake_minimum_required(VERSION 2.6)
 project(flvmeta C)
 
 set(FLVMETA_VERSION "1.1")
+set(FLVMETA_STABLE no)
 
 # check whether we're in an instable branch
-string(REGEX MATCH "^[0-9]+\\.([0-9]+)" MATCHES "${FLVMETA_VERSION}")
-if(MATCHES)
-  math(EXPR FLVMETA_MINOR_ODD "${CMAKE_MATCH_1} % 2")
-  if(FLVMETA_MINOR_ODD)
+if(FLVMETA_STABLE)
+  message(STATUS "Set flvmeta version to ${FLVMETA_VERSION}")
+else(FLVMETA_STABLE)
   # if so, check for svnversion, and retrieve current revision
-    find_program(SVNVERSION_FOUND "svnversion")
-    if(SVNVERSION_FOUND)
-      execute_process(COMMAND           svnversion -n
-                      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-                      OUTPUT_VARIABLE   SVNVERSION)
-      string(REGEX MATCH "^[0-9]+$" SVNVERSION_IS_NUMERIC "${SVNVERSION}")
-      if(SVNVERSION_IS_NUMERIC)
-        # if we have a numeric revision, use it as release number
-        set(FLVMETA_VERSION "${FLVMETA_VERSION}-r${SVNVERSION}")
-      endif(SVNVERSION_IS_NUMERIC)
-    endif(SVNVERSION_FOUND)
-  endif(FLVMETA_MINOR_ODD)
-endif(MATCHES)
+  find_program(GIT_PATH "git")
+  if(GIT_PATH)
+    execute_process(COMMAND           "${GIT_PATH}" rev-parse --short HEAD
+                    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+                    OUTPUT_VARIABLE   GIT_RELEASE)
+    string(REPLACE "\n" "" GIT_RELEASE ${GIT_RELEASE})
+    set(FLVMETA_VERSION "${FLVMETA_VERSION}-g${GIT_RELEASE}")
+    message(STATUS "Set unstable flvmeta version to ${FLVMETA_VERSION}")
+  endif(GIT_PATH)
+endif(FLVMETA_STABLE)
 
 # generic variables
 set(PACKAGE           "flvmeta")

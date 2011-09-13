@@ -3,10 +3,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
 
-dnl SVN revision
-define([svnversion], esyscmd([sh -c "svnversion -n"]))dnl
-
-AC_INIT([flvmeta], [1.1-r]svnversion, [flvmeta-discussion@googlegroups.com])
+AC_INIT([flvmeta], [1.1], [flvmeta-discussion@googlegroups.com])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
