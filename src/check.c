@@ -669,12 +669,22 @@ int check_flv_file(const flvmeta_opts * opts) {
             print_fatal("F10042", 0, "unable to compute metadata");
             goto end;
         }
+        /* delete useless info data */
+        amf_data_free(info.original_on_metadata);
 
         /* more metadata checks */
         for (n = amf_associative_array_first(on_metadata); n != NULL; n = amf_associative_array_next(n)) {
             byte * name;
             amf_data * data;
             byte type;
+            number64 duration;
+
+            if (info.have_audio) {
+                duration = (info.last_timestamp - info.first_timestamp + info.audio_frame_duration) / 1000.0;
+            }
+            else {
+                duration = (info.last_timestamp - info.first_timestamp + info.video_frame_duration) / 1000.0;
+            }
 
             name = amf_string_get_bytes(amf_associative_array_get_name(n));
             data = amf_associative_array_get_data(n);
@@ -730,13 +740,7 @@ int check_flv_file(const flvmeta_opts * opts) {
             /* duration (number) */
             if (!strcmp((char*)name, "duration")) {
                 if (type == AMF_TYPE_NUMBER) {
-                    number64 duration, file_duration;
-                    if (info.have_audio) {
-                        duration = (info.last_timestamp - info.first_timestamp + info.audio_frame_duration) / 1000.0;
-                    }
-                    else {
-                        duration = (info.last_timestamp - info.first_timestamp + info.video_frame_duration) / 1000.0;
-                    }
+                    number64 file_duration;
                     file_duration = amf_number_get_value(data);
 
                     if (fabs(file_duration - duration) >= 1.0) {
@@ -846,8 +850,7 @@ int check_flv_file(const flvmeta_opts * opts) {
             if (!strcmp((char*)name, "videodatarate")) {
                 if (type == AMF_TYPE_NUMBER) {
                     if (info.have_video) {
-                        number64 videodatarate, file_videodatarate, duration;
-                        duration = (info.last_timestamp - info.first_timestamp + info.audio_frame_duration) / 1000.0;
+                        number64 videodatarate, file_videodatarate;
                         videodatarate = ((info.real_video_data_size / 1024.0) * 8.0) / duration;
                         file_videodatarate = amf_number_get_value(data);
 
@@ -869,11 +872,162 @@ int check_flv_file(const flvmeta_opts * opts) {
             }
 
             /* framerate: (number) */
+            if (!strcmp((char*)name, "framerate")) {
+                if (type == AMF_TYPE_NUMBER) {
+                    if (info.have_video) {
+                        number64 framerate, file_framerate;
+                        framerate = info.video_frames_number / duration;
+                        file_framerate = amf_number_get_value(data);
+
+                        if (fabs(file_framerate - framerate) >= 1.0) {
+                            sprintf(message, "framerate should be %.12g, got %.12g", framerate, file_framerate);
+                            print_warning("W70045", on_metadata_offset, message);
+                        }
+                    }
+                    else {
+                        print_warning("W70047", on_metadata_offset, "framerate metadata present without video data");
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for framerate: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_NUMBER),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
             /* audiodatarate: (number) */
+            if (!strcmp((char*)name, "audiodatarate")) {
+                if (type == AMF_TYPE_NUMBER) {
+                    if (info.have_audio) {
+                        number64 audiodatarate, file_audiodatarate;
+                        audiodatarate = ((info.real_audio_data_size / 1024.0) * 8.0) / duration;
+                        file_audiodatarate = amf_number_get_value(data);
+
+                        if (fabs(file_audiodatarate - audiodatarate) >= 1.0) {
+                            sprintf(message, "audiodatarate should be %.12g, got %.12g", audiodatarate, file_audiodatarate);
+                            print_warning("W70045", on_metadata_offset, message);
+                        }
+                    }
+                    else {
+                        print_warning("W70048", on_metadata_offset, "audiodatarate metadata present without audio data");
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for audiodatarate: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_NUMBER),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
             /* audiosamplerate: (number) */
+            if (!strcmp((char*)name, "audiosamplerate")) {
+                if (type == AMF_TYPE_NUMBER) {
+                    if (info.have_audio) {
+                        number64 audiosamplerate, file_audiosamplerate;
+                        audiosamplerate = 0.0;
+                        switch (info.audio_rate) {
+                            case FLV_AUDIO_TAG_SOUND_RATE_5_5: audiosamplerate = 5500.0; break;
+                            case FLV_AUDIO_TAG_SOUND_RATE_11:  audiosamplerate = 11000.0; break;
+                            case FLV_AUDIO_TAG_SOUND_RATE_22:  audiosamplerate = 22050.0; break;
+                            case FLV_AUDIO_TAG_SOUND_RATE_44:  audiosamplerate = 44100.0; break;
+                        }
+                        file_audiosamplerate = amf_number_get_value(data);
+
+                        /* 100 tolerance, since 44000 is sometimes used instead of 44100 */
+                        if (fabs(file_audiosamplerate - audiosamplerate) > 100.0) {
+                            sprintf(message, "audiosamplerate should be %.12g, got %.12g", audiosamplerate, file_audiosamplerate);
+                            print_warning("W70045", on_metadata_offset, message);
+                        }
+                    }
+                    else {
+                        print_warning("W70048", on_metadata_offset, "audiosamplerate metadata present without audio data");
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for audiosamplerate: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_NUMBER),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
             /* audiosamplesize: (number) */
+            if (!strcmp((char*)name, "audiosamplesize")) {
+                if (type == AMF_TYPE_NUMBER) {
+                    if (info.have_audio) {
+                        number64 audiosamplesize, file_audiosamplesize;
+                        audiosamplesize = 0.0;
+                        switch (info.audio_size) {
+                            case FLV_AUDIO_TAG_SOUND_SIZE_8:  audiosamplesize = 8.0; break;
+                            case FLV_AUDIO_TAG_SOUND_SIZE_16: audiosamplesize = 16.0; break;
+                        }
+                        file_audiosamplesize = amf_number_get_value(data);
+
+                        if (fabs(file_audiosamplesize - audiosamplesize) >= 1.0) {
+                            sprintf(message, "audiosamplesize should be %.12g, got %.12g", audiosamplesize, file_audiosamplesize);
+                            print_warning("W70045", on_metadata_offset, message);
+                        }
+                    }
+                    else {
+                        print_warning("W70048", on_metadata_offset, "audiosamplesize metadata present without audio data");
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for audiosamplesize: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_NUMBER),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
             /* stereo: (boolean) */
+            if (!strcmp((char*)name, "stereo")) {
+                if (type == AMF_TYPE_NUMBER) {
+                    if (info.have_audio) {
+                        uint8 stereo, file_stereo;
+                        stereo = (info.audio_stereo == FLV_AUDIO_TAG_SOUND_TYPE_STEREO);
+                        file_stereo = amf_boolean_get_value(data);
+
+                        if (file_stereo != stereo) {
+                            sprintf(message, "stereo should be %s, got %s", stereo ? "true" : "false", file_stereo ? "true" : "false");
+                            print_warning("W70045", on_metadata_offset, message);
+                        }
+                    }
+                    else {
+                        print_warning("W70048", on_metadata_offset, "stereo metadata present without audio data");
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for stereo: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_NUMBER),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
             /* filesize: (number) */
+            if (!strcmp((char*)name, "filesize")) {
+                if (type == AMF_TYPE_NUMBER) {
+                    number64 filesize, file_filesize;
+                    filesize = (number64)(FLV_HEADER_SIZE + info.total_prev_tags_size + info.video_data_size
+                        + info.audio_data_size + info.meta_data_size + amf_data_size(on_metadata));
+                    file_filesize = amf_number_get_value(data);
+
+                    if (fabs(file_filesize - filesize) >= 1.0) {
+                        sprintf(message, "filesize should be %.12g, got %.12g", filesize, file_filesize);
+                        print_warning("W70045", on_metadata_offset, message);
+                    }
+                }
+                else {
+                    sprintf(message, "Invalid type for filesize: expected %s, got %s",
+                        get_amf_type_string(AMF_TYPE_NUMBER),
+                        get_amf_type_string(type));
+                    print_warning("W70046", on_metadata_offset, message);
+                }
+            }
+
             /* videosize: (number) */
             /* audiosize: (number) */
             /* datasize: (number) */
