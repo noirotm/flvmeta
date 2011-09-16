@@ -1,125 +1,189 @@
-.\"                                      Hey, EMACS: -*- nroff -*-
-.\" First parameter, NAME, should be all caps
-.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
-.\" other parameters are allowed: see man(7), man(1)
-.TH FLVMETA 1 "April 13, 2011"
-.\" Please adjust this date whenever revising the manpage.
-.\"
-.\" Some roff macros, for reference:
-.\" .nh        disable hyphenation
-.\" .hy        enable hyphenation
-.\" .ad l      left justify
-.\" .ad b      justify to both left and right margins
-.\" .nf        disable filling
-.\" .fi        enable filling
-.\" .br        insert line break
-.\" .sp <n>    insert n+1 empty lines
-.\" for manpage-specific macros, see man(7)
-.SH NAME
-flvmeta \- a metadata injector for FLV video files 
-.SH SYNOPSIS
-.B flvmeta
-.I [COMMAND]
-.I [OPTIONS]
-.I INPUT_FILE
-.I [OUTPUT_FILE]
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "FLVMETA" "1" "September 2011" "" ""
+.
+.SH "NAME"
+\fBflvmeta\fR \- manipulate or extract metadata in Adobe Flash Video Files
+.
+.SH "SYNOPSIS"
+\fBflvmeta\fR \fIINPUT_FILE\fR
+.
 .br
-.SH DESCRIPTION
-.PP
-.\" TeX users may be more comfortable with the \fB<whatever>\fP and
-.\" \fI<whatever>\fP escape sequences to invode bold face and italics,
-.\" respectively.
-\fBflvmeta\fP is a program that could dumps, injects all standard metadata tags
-into the onMetaData event, as well as insert an onLastSecond event.
-.PP
-If OUTPUT_FILE is omitted for commands expecting it, INPUT_FILE will be overwritten instead.
+\fBflvmeta\fR \fIINPUT_FILE\fR \fIOUTPUT_FILE\fR
+.
 .br
-.SH COMMAND
-.TP
-.B \-D, \-\-dump
-dump onMetaData tag (default without output file)
-.TP
-.B \-F, \-\-full\-dump
-dump all tags
-.TP
-.B \-C, \-\-check
-check the validity of INPUT_FILE, returning 0 if the file is valid, or 10 if it contains errors
-.TP
-.B \-U, \-\-update
-update computed onMetaData tag from INPUT_FILE into OUTPUT_FILE (default with output file)
-.SH OPTIONS
-.B Dump options:
-.TP
-.B \-d, \-\-dump\-format=TYPE
-dump format is of type TYPE. TYPE is 'xml' (default), 'json', 'raw', or 'yaml'
-.TP
-.B \-j, \-\-json
-equivalent to \-\-dump\-format=json
-.TP
-.B \-r, \-\-raw
-equivalent to \-\-dump\-format=raw
-.TP
-.B \-x, \-\-xml
-equivalent to \-\-dump\-format=xml
-.TP
-.B \-y, \-\-yaml
-equivalent to \-\-dump\-format=yaml
-.TP
-.B \-e, \-\-event
-specify the event to be dumped instead of 'onMetaData'
-.TP
-.B Check options:
-.TP
-.B \-l, \-\-level=LEVEL
-print only messages where level is at least LEVEL. LEVEL is 'info', 'warning' (default), 'error', or 'fatal'
-.TP
-.B \-q, \-\-quiet
-do not print messages, only return the status code
-.TP
-.B \-x, \-\-xml
-generate an XML report
-.TP
-.B Update options:
-.TP
-.B \-m, \-\-print\-metadata
-print metadata to stdout after update using the specified format
-.TP
-.B \-a, \-\-add=NAME=VALUE
-add a metadata string value to the output file
-.TP
-.B \-s, \-\-no\-lastsecond
-do not create the onLastSecond tag
-.TP
-.B \-p, \-\-preserve
-preserve input file existing onMetadata tags
-.TP
-.B \-f, \-\-fix
-fix invalid tags from the input file
-.TP
-.B \-i, \-\-ignore
-ignore invalid tags from the input file (the default is to stop with an error)
-.TP
-.B \-t, \-\-reset\-timestamps
-reset timestamps so OUTPUT_FILE starts at zero
-.TP
-.B \-k, \-\-all\-keyframes
-index all keyframe tags, including duplicate timestamps
-.TP
-.B Common options:
-.TP
-.B \-v, \-\-verbose
-display informative messages
-.TP
-.B Miscellaneous:
-.TP
-.B \-V, \-\-version
-print version information and exit
-.TP
-.B \-h, \-\-help
-display help information and exit
+\fBflvmeta\fR \fB\-D\fR|\fB\-\-dump\fR [\fIoptions\fR] \fIINPUT_FILE\fR
+.
+.br
+\fBflvmeta\fR \fB\-F\fR|\fB\-\-full\-dump\fR [\fIoptions\fR] \fIINPUT_FILE\fR
+.
+.br
+\fBflvmeta\fR \fB\-C\fR|\fB\-\-check\fR [\fIoptions\fR] \fIINPUT_FILE\fR
+.
+.br
+\fBflvmeta\fR \fB\-U\fR|\fB\-\-update\fR [\fIoptions\fR] \fIINPUT_FILE\fR [\fIOUTPUT_FILE\fR]
+.
+.SH "DESCRIPTION"
+\fBflvmeta\fR is a command\-line utility aimed at manipulating Adobe(tm) Flash Video Files (FLV), through several commands, only one of which can be used for each invocation of the program\.
+.
+.P
+It possesses the ability to compute and inject a variety of values in the \fIonMetaData\fR event tag, including keyframe indices used by most video players to allow random\-access seeking, notably for HTTP pseudo\-streamed files via a server\-side module, by having the client send the file offset looked up for the nearest desired keyframe\. Tools such as \fBflvmeta\fR must be used in the case the initial encoding process is unable to inject those metadata\.
+.
+.P
+It can also optionnally inject the \fIonLastSecond\fR event, used to signal the end of playback, used for example to revert the player software to a \'stopped\' state\.
+.
+.P
+\fBflvmeta\fR also has the ability to dump metadata and full file information to standard output, in a variety of textual output formats, including XML, YAML, and JSON\.
+.
+.P
+Finally, the program can analyze FLV files to detect potential problems and errors, and generate a textual report in a raw format, or in XML\. It has the ability to detect more than a hundred problems, going from harmless to potentially unplayable, using a few real world encountered issues\. This analysis can also determine and display the minimal Flash Player version which can be used to correctly play a given file, as well as codec information\.
+.
+.P
+\fBflvmeta\fR can operate on arbitrarily large files, and can handle FLV files using extended (32\-bit) timestamps\. It can guess video frame dimensions for all known video codecs supported by the official FLV specification\.
+.
+.P
+Its memory usage remains minimal, as it uses a two\-pass reading algorithm which permits the computation of all necessary tags without loading anything more than the file\'s tags headers in memory\. Only the dumping of JSON data can consume more memory, since the bundled \fBmjson\fR library constructs a data tree in memory before outputting the formatted data\.
+.
+.SH "COMMANDS"
+Only one command can be specified for an invocation of \fBflvmeta\fR\. The chosen command determines the mode of execution of the program\.
+.
+.P
+By default, if no command is specified, \fBflvmeta\fR will implicitely choose the command to use according to the presence of \fIINPUT_FILE\fR and \fIOUTPUT_FILE\fR\.
+.
+.P
+If only \fIINPUT_FILE\fR is present, the \fB\-D\fR|\fB\-\-dump\fR command will be executed\.
+.
+.P
+If both \fIINPUT_FILE\fR and \fIOUTPUT_FILE\fR are present, the \fB\-U\fR|\fB\-\-update\fR command will be executed\.
+.
+.IP "\(bu" 4
+\fB\-D\fR, \fB\-\-dump\fR: Dump a textual representation of the first \fIonMetaData\fR tag found in \fIINPUT_FILE\fR to standard output\. The default format is XML, unless specified otherwise\.
+.
+.IP
+It is also possible to specify another event via the \fB\-e\fR option, such as \fIonLastSecond\fR\.
+.
+.IP "\(bu" 4
+\fB\-F\fR, \fB\-\-full\-dump\fR: Dump a textual representation of the whole contents of \fIINPUT_FILE\fR to standard output\. The default format is XML, unless specified otherwise\.
+.
+.IP "\(bu" 4
+\fB\-C\fR, \fB\-\-check\fR: Print a report to standard output listing warnings and errors detected in \fIINPUT_FILE\fR, as well as potential incompatibilities, and informations about the codecs used in the file\. The exit code will be set to a non\-zero value if there is at least one error in the file\.
+.
+.IP
+The output format can either be plain text or XML using the \fB\-\-xml\fR option\. It can also be disabled altogether using the \fB\-\-quiet\fR option if you are only interested in the exit status\.
+.
+.IP
+Messages are divided into four specific levels of increasing importance:
+.
+.IP "\(bu" 4
+\fIinfo\fR: informational messages that do not pertain to the file validity
+.
+.IP "\(bu" 4
+\fIwarning\fR: messages that inform of oddities to the flv format but that might not hamper file reading or playability, this is the default level
+.
+.IP "\(bu" 4
+\fIerror\fR: messages that inform of errors that might render the file impossible to play or stream correctly
+.
+.IP "\(bu" 4
+\fIfatal\fR: messages that inform of errors that make further file reading impossible therefore ending parsing completely
+.
+.IP "" 0
+.
+.IP
+Each message or message template presented to the user is identified by a specific code of the following format:
+.
+.IP
+\fB[level][topic][id]\fR
+.
+.IP "\(bu" 4
+\fIlevel\fR is an upper\-case letter that can be either I, W, E, F according to the aforementioned message levels
+.
+.IP "\(bu" 4
+\fItopic\fR is a two\-digit integer representing the general topic of the message
+.
+.IP "\(bu" 4
+\fIid\fR is a unique three\-digit identifier for the message, or message template if parameterized
+.
+.IP "" 0
+.
+.IP
+Messages can be related to the following topics :
+.
+.IP "\(bu" 4
+.
+.IP "\(bu" 4
+\fI11\fR file header
+.
+.IP "\(bu" 4
+\fI12\fR previous tag size
+.
+.IP "" 0
 
-.SH AUTHOR
-flvmeta was written by Marc Noirot <marc.noirot@gmail.com>.
-.PP
-This manual page was written by Neutron Soutmun <neo.neutron@gmail.com>,
-for the Debian project (and may be used by others).
+.
+.IP "\(bu" 4
+\fI20\fR tag format
+.
+.IP "\(bu" 4
+\fI30\fR tag types
+.
+.IP "\(bu" 4
+\fI40\fR timestamps
+.
+.IP "\(bu" 4
+.
+.IP "\(bu" 4
+\fI51\fR audio codecs
+.
+.IP "" 0
+
+.
+.IP "\(bu" 4
+.
+.IP "\(bu" 4
+\fI61\fR video codecs
+.
+.IP "" 0
+
+.
+.IP "\(bu" 4
+\fI70\fR metadata
+.
+.IP "\(bu" 4
+.
+.IP "\(bu" 4
+\fI81\fR keyframes
+.
+.IP "\(bu" 4
+\fI82\fR cue points
+.
+.IP "" 0
+
+.
+.IP "" 0
+.
+.IP
+For example, \fIW10050\fR represents a Warning in topic 10 with the id 050\.
+.
+.IP "" 0
+.
+.SH "OPTIONS"
+.
+.SS "DUMP"
+.
+.SS "FULL DUMP"
+.
+.SH "FORMATS"
+.
+.SH "EXAMPLES"
+.
+.SH "EXIT STATUS"
+.
+.SH "BUGS"
+\fBflvmeta\fR does not support encrypted FLV files yet\.
+.
+.SH "AUTHOR"
+.
+.SH "COPYRIGHT"
+.
+.SH "CONTACT"
+
