@@ -9,15 +9,19 @@ if(FLVMETA_STABLE)
   message(STATUS "Set flvmeta version to ${FLVMETA_VERSION}")
 else(FLVMETA_STABLE)
   # if so, check for svnversion, and retrieve current revision
-  find_program(GIT_PATH "git")
-  if(GIT_PATH)
-    execute_process(COMMAND           "${GIT_PATH}" rev-parse --short HEAD
+  find_program(GIT "git")
+  if(GIT)
+    execute_process(COMMAND           "${GIT}" rev-parse --short HEAD
                     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
                     OUTPUT_VARIABLE   GIT_RELEASE)
     string(REPLACE "\n" "" GIT_RELEASE ${GIT_RELEASE})
     set(FLVMETA_VERSION "${FLVMETA_VERSION}-g${GIT_RELEASE}")
     message(STATUS "Set unstable flvmeta version to ${FLVMETA_VERSION}")
-  endif(GIT_PATH)
+    unset(GIT CACHE)
+  else(GIT)
+    message(STATUS "Git not found, set flvmeta version to ${FLVMETA_VERSION}")
+    unset(GIT-NOT_FOUND CACHE)
+  endif(GIT)
 endif(FLVMETA_STABLE)
 
 # generic variables
