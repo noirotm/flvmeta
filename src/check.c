@@ -1222,9 +1222,13 @@ int check_flv_file(const flvmeta_opts * opts) {
             /* keyframes: (object) */
             if (!strcmp((char*)name, "keyframes")) {
                 if (type == AMF_TYPE_OBJECT) {
-                    amf_data * times, * filepositions;
+                    amf_data * times, * filepositions, * file_times, * file_filepositions;
                     times = amf_object_get(data, "times");
                     filepositions = amf_object_get(data, "filepositions");
+
+                    /* TODO : do not check an array against itself, not a very productive approach */
+                    file_times = amf_object_get(on_metadata, "times");
+                    file_filepositions = amf_object_get(on_metadata, "filepositions");
 
                     /* check sub-arrays' presence */
                     if (times == NULL) {
@@ -1248,7 +1252,7 @@ int check_flv_file(const flvmeta_opts * opts) {
 
                         fp_type = amf_data_get_type(filepositions);
                         if (fp_type != AMF_TYPE_ARRAY) {
-                            sprintf(message, "Invalid type for times: expected %s, got %s",
+                            sprintf(message, "Invalid type for filepositions: expected %s, got %s",
                                 get_amf_type_string(AMF_TYPE_ARRAY),
                                 get_amf_type_string(fp_type));
                             print_warning("W81046", on_metadata_offset, message);
@@ -1256,7 +1260,10 @@ int check_flv_file(const flvmeta_opts * opts) {
 
                         if (times_type == AMF_TYPE_ARRAY && fp_type == AMF_TYPE_ARRAY) {
                             /* check array sizes */
-
+                            if (amf_array_size(times) != amf_array_size(file_times) ||
+                                amf_array_size(filepositions) != amf_array_size(file_filepositions)) {
+                                print_warning("W81047", on_metadata_offset, "Invalid keyframes");
+                            }
 
 
                             /* iterate in parallel, until a diff is found */
