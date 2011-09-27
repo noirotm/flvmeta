@@ -41,7 +41,6 @@ typedef struct __flv_info {
     file_offset_t video_data_size;
     file_offset_t audio_data_size;
     file_offset_t meta_data_size;
-    file_offset_t meta_data_only_size;
     file_offset_t real_video_data_size;
     file_offset_t real_audio_data_size;
     uint32 video_first_timestamp;

@@ -32,7 +32,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#define MAX_ACCEPTABLE_TAG_BODY_LENGTH 100000
+#define MAX_ACCEPTABLE_TAG_BODY_LENGTH 1000000
 
 /* start the report */
 static void report_start(const flvmeta_opts * opts) {
@@ -162,7 +162,7 @@ int check_flv_file(const flvmeta_opts * opts) {
     int have_desync;
     int have_on_metadata;
     file_offset_t on_metadata_offset;
-    amf_data * on_metadata;
+    amf_data * on_metadata, * on_metadata_name;
     int have_on_last_second;
     uint32 on_last_second_timestamp;
 
@@ -184,7 +184,7 @@ int check_flv_file(const flvmeta_opts * opts) {
     video_frames_number = keyframes_number = 0;
     have_on_metadata = 0;
     on_metadata_offset = 0;
-    on_metadata = NULL;
+    on_metadata = on_metadata_name = NULL;
     have_on_last_second = 0;
     on_last_second_timestamp = 0;
 
@@ -557,6 +557,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                             have_on_metadata = 1;
                             on_metadata_offset = offset;
                             on_metadata = amf_data_clone(data);
+                            on_metadata_name = amf_data_clone(name);
 
                             /* check onMetadata type */
                             if (amf_data_get_type(on_metadata) != AMF_TYPE_ASSOCIATIVE_ARRAY) {
@@ -601,7 +602,6 @@ int check_flv_file(const flvmeta_opts * opts) {
         if (prev_tag_size != FLV_TAG_SIZE + body_length) {
             sprintf(message, "previous tag size should be %d, %d found instead", FLV_TAG_SIZE + body_length, prev_tag_size);
             print_error("E12037", flv_get_offset(flv_in), message);
-            goto end;
         }
     }
 
@@ -762,7 +762,7 @@ int check_flv_file(const flvmeta_opts * opts) {
             if (!strcmp((char*)name, "lasttimestamp")) {
                 if (type == AMF_TYPE_NUMBER) {
                     number64 lasttimestamp, file_lasttimestamp;
-                    lasttimestamp = info.last_timestamp;
+                    lasttimestamp = info.last_timestamp / 1000.0;
                     file_lasttimestamp = amf_number_get_value(data);
 
                     if (fabs(file_lasttimestamp - lasttimestamp) >= 1.0) {
@@ -782,7 +782,7 @@ int check_flv_file(const flvmeta_opts * opts) {
             if (!strcmp((char*)name, "lastkeyframetimestamp")) {
                 if (type == AMF_TYPE_NUMBER) {
                     number64 lastkeyframetimestamp, file_lastkeyframetimestamp;
-                    lastkeyframetimestamp = info.last_keyframe_timestamp;
+                    lastkeyframetimestamp = info.last_keyframe_timestamp / 1000.0;
                     file_lastkeyframetimestamp = amf_number_get_value(data);
 
                     if (fabs(file_lastkeyframetimestamp - lastkeyframetimestamp) >= 1.0) {
@@ -812,6 +812,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                             sprintf(message, "width should be %.12g, got %.12g", width, file_width);
                             print_warning("W80045", on_metadata_offset, message);
                         }
+                        have_width = 1;
                     }
                     else {
                         print_warning("W80047", on_metadata_offset, "width metadata present without video data");
@@ -837,6 +838,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                             sprintf(message, "height should be %.12g, got %.12g", height, file_height);
                             print_warning("W80045", on_metadata_offset, message);
                         }
+                        have_height = 1;
                     }
                     else {
                         print_warning("W80047", on_metadata_offset, "height metadata present without video data");
@@ -988,7 +990,7 @@ int check_flv_file(const flvmeta_opts * opts) {
 
             /* stereo: (boolean) */
             if (!strcmp((char*)name, "stereo")) {
-                if (type == AMF_TYPE_NUMBER) {
+                if (type == AMF_TYPE_BOOLEAN) {
                     if (info.have_audio) {
                         uint8 stereo, file_stereo;
                         stereo = (info.audio_stereo == FLV_AUDIO_TAG_SOUND_TYPE_STEREO);
@@ -1015,8 +1017,12 @@ int check_flv_file(const flvmeta_opts * opts) {
             if (!strcmp((char*)name, "filesize")) {
                 if (type == AMF_TYPE_NUMBER) {
                     number64 filesize, file_filesize;
+                    uint32 on_metadata_size;
+                    
+                    on_metadata_size = FLV_TAG_SIZE + sizeof(uint32_be) +
+                        (uint32)(amf_data_size(on_metadata_name) + amf_data_size(on_metadata));
                     filesize = (number64)(FLV_HEADER_SIZE + info.total_prev_tags_size + info.video_data_size +
-                        info.audio_data_size + info.meta_data_size + amf_data_size(on_metadata));
+                        info.audio_data_size + info.meta_data_size + on_metadata_size);
                     file_filesize = amf_number_get_value(data);
 
                     if (fabs(file_filesize - filesize) >= 1.0) {
@@ -1086,8 +1092,11 @@ int check_flv_file(const flvmeta_opts * opts) {
             if (!strcmp((char*)name, "datasize")) {
                 if (type == AMF_TYPE_NUMBER) {
                     number64 datasize, file_datasize;
-                    datasize = (number64)(info.meta_data_only_size +
-                        amf_data_size(on_metadata) + (uint32)(FLV_TAG_SIZE + sizeof(uint32_be)));
+                    uint32 on_metadata_size;
+                    
+                    on_metadata_size = FLV_TAG_SIZE +
+                        (uint32)(amf_data_size(on_metadata_name) + amf_data_size(on_metadata));
+                    datasize = (number64)(info.meta_data_size + on_metadata_size);
                     file_datasize = amf_number_get_value(data);
 
                     if (fabs(file_datasize - datasize) >= 1.0) {
@@ -1249,6 +1258,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                             /* check array sizes */
 
 
+
                             /* iterate in parallel, until a diff is found */
                         }
                     }
@@ -1287,6 +1297,7 @@ end:
     report_end(opts, errors, warnings);
     
     amf_data_free(on_metadata);
+    amf_data_free(on_metadata_name);
     flv_close(flv_in);
     
     return (errors > 0) ? ERROR_INVALID_FLV_FILE : OK;
