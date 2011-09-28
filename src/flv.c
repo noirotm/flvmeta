@@ -42,6 +42,7 @@ flv_stream * flv_open(const char * file) {
         return NULL;
     }
     stream->current_tag_body_length = 0;
+    stream->current_tag_body_overflow = 0;
     stream->current_tag_offset = 0;
     stream->state = FLV_STREAM_STATE_START;
     return stream;
@@ -139,6 +140,7 @@ int flv_read_tag(flv_stream * stream, flv_tag * tag) {
         else {
             memcpy(&stream->current_tag, tag, sizeof(flv_tag));
             stream->current_tag_body_length = uint24_be_to_uint32(tag->body_length);
+            stream->current_tag_body_overflow = 0;
             stream->state = FLV_STREAM_STATE_TAG_BODY;
             return FLV_OK;
         }
@@ -164,10 +166,19 @@ int flv_read_audio_tag(flv_stream * stream, flv_audio_tag * tag) {
         return FLV_ERROR_EOF;
     }
     
-    stream->current_tag_body_length -= sizeof(flv_audio_tag);
+    if (stream->current_tag_body_length >= sizeof(flv_audio_tag)) {
+        stream->current_tag_body_length -= sizeof(flv_audio_tag);
+    }
+    else {
+        stream->current_tag_body_overflow = sizeof(flv_audio_tag) - stream->current_tag_body_length;
+        stream->current_tag_body_length = 0;
+    }
 
-    if (stream->current_tag_body_length <= 0) {
+    if (stream->current_tag_body_length == 0) {
         stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
+        if (stream->current_tag_body_overflow > 0) {
+            lfs_fseek(stream->flvin, -(file_offset_t)stream->current_tag_body_overflow, SEEK_CUR);
+        }
     }
 
     return FLV_OK;
@@ -189,10 +200,19 @@ int flv_read_video_tag(flv_stream * stream, flv_video_tag * tag) {
         return FLV_ERROR_EOF;
     }
 
-    stream->current_tag_body_length -= sizeof(flv_video_tag);
+    if (stream->current_tag_body_length >= sizeof(flv_video_tag)) {
+        stream->current_tag_body_length -= sizeof(flv_video_tag);
+    }
+    else {
+        stream->current_tag_body_overflow = sizeof(flv_video_tag) - stream->current_tag_body_length;
+        stream->current_tag_body_length = 0;
+    }
 
-    if (stream->current_tag_body_length <= 0) {
+    if (stream->current_tag_body_length == 0) {
         stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
+        if (stream->current_tag_body_overflow > 0) {
+            lfs_fseek(stream->flvin, -(file_offset_t)stream->current_tag_body_overflow, SEEK_CUR);
+        }
     }
 
     return FLV_OK;
@@ -201,6 +221,7 @@ int flv_read_video_tag(flv_stream * stream, flv_video_tag * tag) {
 int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
     amf_data * d;
     byte error_code;
+    size_t data_size;
 
     if (stream == NULL
     || stream->flvin == NULL
@@ -224,7 +245,22 @@ int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
         return FLV_ERROR_INVALID_METADATA_NAME;
     }
     
-    stream->current_tag_body_length -= amf_data_size(d);
+    /* if only name can be read, metadata are invalid */
+    data_size = amf_data_size(d);
+    if (stream->current_tag_body_length > data_size) {
+        stream->current_tag_body_length -= data_size;
+    }
+    else {
+        stream->current_tag_body_length = 0;
+        stream->current_tag_body_overflow = data_size - stream->current_tag_body_length;
+
+        stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
+        if (stream->current_tag_body_overflow > 0) {
+            lfs_fseek(stream->flvin, -(file_offset_t)stream->current_tag_body_overflow, SEEK_CUR);
+        }
+
+        return FLV_ERROR_INVALID_METADATA;
+    }
     
     /* read metadata contents */
     d = amf_data_file_read(stream->flvin);
@@ -237,10 +273,20 @@ int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
         return FLV_ERROR_INVALID_METADATA;
     }
     
-    stream->current_tag_body_length -= amf_data_size(d);
+    data_size = amf_data_size(d);
+    if (stream->current_tag_body_length >= data_size) {
+        stream->current_tag_body_length -= data_size;
+    }
+    else {
+        stream->current_tag_body_overflow = data_size - stream->current_tag_body_length;
+        stream->current_tag_body_length = 0;
+    }
 
-    if (stream->current_tag_body_length <= 0) {
+    if (stream->current_tag_body_length == 0) {
         stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
+        if (stream->current_tag_body_overflow > 0) {
+            lfs_fseek(stream->flvin, -(file_offset_t)stream->current_tag_body_overflow, SEEK_CUR);
+        }
     }
 
     return FLV_OK;

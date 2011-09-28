@@ -158,6 +158,7 @@ typedef struct __flv_stream {
     flv_tag current_tag;
     file_offset_t current_tag_offset;
     uint32 current_tag_body_length;
+    uint32 current_tag_body_overflow;
 } flv_stream;
 
 /* FLV stream functions */

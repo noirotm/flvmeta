@@ -535,8 +535,8 @@ int check_flv_file(const flvmeta_opts * opts) {
                         sprintf(message, "%d bytes not read in tag body after metadata end", body_length - flv_in->current_tag_body_length);
                         print_warning("W70040", flv_get_offset(flv_in), message);
                     }
-                    else if (flv_in->current_tag_body_length < 0) {
-                        sprintf(message, "%d bytes missing from tag body after metadata end", flv_in->current_tag_body_length - body_length);
+                    else if (flv_in->current_tag_body_overflow > 0) {
+                        sprintf(message, "%d bytes missing from tag body after metadata end", flv_in->current_tag_body_overflow);
                         print_warning("W70041", flv_get_offset(flv_in), message);
                     }
 
@@ -700,7 +700,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for hasMetadata: expected %s, got %s",
+                    sprintf(message, "invalid type for hasMetadata: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_BOOLEAN),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -716,7 +716,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for hasVideo: expected %s, got %s",
+                    sprintf(message, "invalid type for hasVideo: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_BOOLEAN),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -732,7 +732,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for hasAudio: expected %s, got %s",
+                    sprintf(message, "invalid type for hasAudio: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_BOOLEAN),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -751,7 +751,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for duration: expected %s, got %s",
+                    sprintf(message, "invalid type for duration: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -771,7 +771,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for lasttimestamp: expected %s, got %s",
+                    sprintf(message, "invalid type for lasttimestamp: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -793,7 +793,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for lastkeyframetimestamp: expected %s, got %s",
+                    sprintf(message, "invalid type for lastkeyframetimestamp: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -819,7 +819,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for width: expected %s, got %s",
+                    sprintf(message, "invalid type for width: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -845,7 +845,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for height: expected %s, got %s",
+                    sprintf(message, "invalid type for height: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -870,7 +870,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for videodatarate: expected %s, got %s",
+                    sprintf(message, "invalid type for videodatarate: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -895,7 +895,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for framerate: expected %s, got %s",
+                    sprintf(message, "invalid type for framerate: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -920,7 +920,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for audiodatarate: expected %s, got %s",
+                    sprintf(message, "invalid type for audiodatarate: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -952,7 +952,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for audiosamplerate: expected %s, got %s",
+                    sprintf(message, "invalid type for audiosamplerate: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -981,7 +981,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for audiosamplesize: expected %s, got %s",
+                    sprintf(message, "invalid type for audiosamplesize: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -1006,7 +1006,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for stereo: expected %s, got %s",
+                    sprintf(message, "invalid type for stereo: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_BOOLEAN),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -1017,12 +1017,8 @@ int check_flv_file(const flvmeta_opts * opts) {
             if (!strcmp((char*)name, "filesize")) {
                 if (type == AMF_TYPE_NUMBER) {
                     number64 filesize, file_filesize;
-                    uint32 on_metadata_size;
-                    
-                    on_metadata_size = FLV_TAG_SIZE + sizeof(uint32_be) +
-                        (uint32)(amf_data_size(on_metadata_name) + amf_data_size(on_metadata));
-                    filesize = (number64)(FLV_HEADER_SIZE + info.total_prev_tags_size + info.video_data_size +
-                        info.audio_data_size + info.meta_data_size + on_metadata_size);
+
+                    filesize = (number64)(file_stats.st_size);
                     file_filesize = amf_number_get_value(data);
 
                     if (fabs(file_filesize - filesize) >= 1.0) {
@@ -1031,7 +1027,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for filesize: expected %s, got %s",
+                    sprintf(message, "invalid type for filesize: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -1056,7 +1052,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for videosize: expected %s, got %s",
+                    sprintf(message, "invalid type for videosize: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -1081,7 +1077,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for audiosize: expected %s, got %s",
+                    sprintf(message, "invalid type for audiosize: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -1105,7 +1101,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for datasize: expected %s, got %s",
+                    sprintf(message, "invalid type for datasize: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -1130,7 +1126,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for audiocodecid: expected %s, got %s",
+                    sprintf(message, "invalid type for audiocodecid: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -1155,7 +1151,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for videocodecid: expected %s, got %s",
+                    sprintf(message, "invalid type for videocodecid: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -1180,7 +1176,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for audiodelay: expected %s, got %s",
+                    sprintf(message, "invalid type for audiodelay: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_NUMBER),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -1196,7 +1192,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for canSeekToEnd: expected %s, got %s",
+                    sprintf(message, "invalid type for canSeekToEnd: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_BOOLEAN),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -1212,7 +1208,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for hasKeyframes: expected %s, got %s",
+                    sprintf(message, "invalid type for hasKeyframes: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_BOOLEAN),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -1222,37 +1218,34 @@ int check_flv_file(const flvmeta_opts * opts) {
             /* keyframes: (object) */
             if (!strcmp((char*)name, "keyframes")) {
                 if (type == AMF_TYPE_OBJECT) {
-                    amf_data * times, * filepositions, * file_times, * file_filepositions;
-                    times = amf_object_get(data, "times");
-                    filepositions = amf_object_get(data, "filepositions");
-
-                    /* TODO : do not check an array against itself, not a very productive approach */
-                    file_times = amf_object_get(on_metadata, "times");
-                    file_filepositions = amf_object_get(on_metadata, "filepositions");
+                    amf_data * file_times, * file_filepositions;
+                    
+                    file_times = amf_object_get(data, "times");
+                    file_filepositions = amf_object_get(data, "filepositions");
 
                     /* check sub-arrays' presence */
-                    if (times == NULL) {
+                    if (file_times == NULL) {
                         print_warning("W81050", on_metadata_offset, "Missing times metadata");
                     }
-                    if (filepositions == NULL) {
+                    if (file_filepositions == NULL) {
                         print_warning("W81051", on_metadata_offset, "Missing filepositions metadata");
                     }
 
-                    if (times != NULL && filepositions != NULL) {
+                    if (file_times != NULL && file_filepositions != NULL) {
                         /* check types */
                         uint8 times_type, fp_type;
 
-                        times_type = amf_data_get_type(times);
+                        times_type = amf_data_get_type(file_times);
                         if (times_type != AMF_TYPE_ARRAY) {
-                            sprintf(message, "Invalid type for times: expected %s, got %s",
+                            sprintf(message, "invalid type for times: expected %s, got %s",
                                 get_amf_type_string(AMF_TYPE_ARRAY),
                                 get_amf_type_string(times_type));
                             print_warning("W81046", on_metadata_offset, message);
                         }
 
-                        fp_type = amf_data_get_type(filepositions);
+                        fp_type = amf_data_get_type(file_filepositions);
                         if (fp_type != AMF_TYPE_ARRAY) {
-                            sprintf(message, "Invalid type for filepositions: expected %s, got %s",
+                            sprintf(message, "invalid type for filepositions: expected %s, got %s",
                                 get_amf_type_string(AMF_TYPE_ARRAY),
                                 get_amf_type_string(fp_type));
                             print_warning("W81046", on_metadata_offset, message);
@@ -1260,18 +1253,84 @@ int check_flv_file(const flvmeta_opts * opts) {
 
                         if (times_type == AMF_TYPE_ARRAY && fp_type == AMF_TYPE_ARRAY) {
                             /* check array sizes */
-                            if (amf_array_size(times) != amf_array_size(file_times) ||
-                                amf_array_size(filepositions) != amf_array_size(file_filepositions)) {
-                                print_warning("W81047", on_metadata_offset, "Invalid keyframes");
+                            if (amf_array_size(info.times) != amf_array_size(file_times) ||
+                                amf_array_size(info.filepositions) != amf_array_size(file_filepositions) ||
+                                amf_array_size(file_filepositions) != amf_array_size(file_times)) {
+                                print_warning("W81047", on_metadata_offset, "invalid keyframes arrays length");
                             }
+                            else {
+                                number64 last_file_time;
+                                int have_last_time;
+                                amf_node * ff_node, * ft_node, * f_node, * t_node;
 
+                                /* iterate in parallel, report diffs */
+                                last_file_time = 0;
+                                have_last_time = 0;
 
-                            /* iterate in parallel, until a diff is found */
+                                t_node = amf_array_first(info.times);
+                                f_node = amf_array_first(info.filepositions);
+                                ft_node = amf_array_first(file_times);
+                                ff_node = amf_array_first(file_filepositions);
+
+                                while (t_node != NULL && f_node != NULL && ft_node != NULL && ff_node != NULL) {
+                                    number64 time, f_time, position, f_position;
+                                    time = amf_number_get_value(amf_array_get(t_node));
+                                    position = amf_number_get_value(amf_array_get(f_node));
+
+                                    /* time */
+                                    if (amf_data_get_type(amf_array_get(ft_node)) != AMF_TYPE_NUMBER) {
+                                        sprintf(message, "invalid type for time: expected %s, got %s",
+                                            get_amf_type_string(AMF_TYPE_NUMBER),
+                                            get_amf_type_string(type));
+                                        print_warning("W81048", on_metadata_offset, message);
+                                    }
+                                    else {
+                                        f_time = amf_number_get_value(amf_array_get(ft_node));
+
+                                        if (fabs(time - f_time) >= 1.0) {
+                                            sprintf(message, "invalid keyframe time: expected %.12g, got %.12g",
+                                                time, f_time);
+                                            print_warning("W81049", on_metadata_offset, message);
+                                        }
+                                        
+                                        /* check for duplicate time, can happen in H.264 files */
+                                        if (have_last_time && last_file_time == f_time) {
+                                            sprintf(message, "Duplicate keyframe time: %.12g", f_time);
+                                            print_warning("W81050", on_metadata_offset, message);
+                                        }
+                                        have_last_time = 1;
+                                        last_file_time = f_time;
+                                    }
+
+                                    /* position */
+                                    if (amf_data_get_type(amf_array_get(ff_node)) != AMF_TYPE_NUMBER) {
+                                        sprintf(message, "invalid type for file position: expected %s, got %s",
+                                            get_amf_type_string(AMF_TYPE_NUMBER),
+                                            get_amf_type_string(type));
+                                        print_warning("W81051", on_metadata_offset, message);
+                                    }
+                                    else {
+                                        f_position = amf_number_get_value(amf_array_get(ff_node));
+
+                                        if (fabs(time - f_time) >= 1.0) {
+                                            sprintf(message, "invalid keyframe file position: expected %.12g, got %.12g",
+                                                time, f_time);
+                                            print_warning("W81052", on_metadata_offset, message);
+                                        }
+                                    }
+
+                                    /* next entry */
+                                    t_node = amf_array_next(t_node);
+                                    f_node = amf_array_next(f_node);
+                                    ft_node = amf_array_next(ft_node);
+                                    ff_node = amf_array_next(ff_node);
+                                }
+                            }
                         }
                     }
                 }
                 else {
-                    sprintf(message, "Invalid type for keyframes: expected %s, got %s",
+                    sprintf(message, "invalid type for keyframes: expected %s, got %s",
                         get_amf_type_string(AMF_TYPE_BOOLEAN),
                         get_amf_type_string(type));
                     print_warning("W80046", on_metadata_offset, message);
@@ -1287,17 +1346,17 @@ int check_flv_file(const flvmeta_opts * opts) {
         /* missing width or height can cause size problem in various players */
         if (info.have_video) {
             if (!have_width) {
-                print_error("E60047", on_metadata_offset, "width information not found in metadata, problems might occur in some players");
+                print_error("E60053", on_metadata_offset, "width information not found in metadata, problems might occur in some players");
             }
             if (!have_height) {
-                print_error("E60047", on_metadata_offset, "height information not found in metadata, problems might occur in some players");
+                print_error("E60054", on_metadata_offset, "height information not found in metadata, problems might occur in some players");
             }
         }
     }
 
     /* could we compute video resolution ? */
     if (info.video_width == 0 && info.video_height == 0) {
-        print_warning("W60044", file_stats.st_size, "unable to determine video resolution");
+        print_warning("W60055", file_stats.st_size, "unable to determine video resolution");
     }
 
 end:
