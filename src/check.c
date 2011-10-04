@@ -815,7 +815,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         have_width = 1;
                     }
                     else {
-                        print_warning("W80047", on_metadata_offset, "width metadata present without video data");
+                        print_warning(WARNING_AMF_DATA_VIDEO_NEEDED, on_metadata_offset, "width metadata present without video data");
                     }
                 }
                 else {
@@ -841,7 +841,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         have_height = 1;
                     }
                     else {
-                        print_warning("W80047", on_metadata_offset, "height metadata present without video data");
+                        print_warning(WARNING_AMF_DATA_VIDEO_NEEDED, on_metadata_offset, "height metadata present without video data");
                     }
                 }
                 else {
@@ -866,7 +866,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         }
                     }
                     else {
-                        print_warning("W80047", on_metadata_offset, "videodatarate metadata present without video data");
+                        print_warning(WARNING_AMF_DATA_VIDEO_NEEDED, on_metadata_offset, "videodatarate metadata present without video data");
                     }
                 }
                 else {
@@ -891,7 +891,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         }
                     }
                     else {
-                        print_warning("W80047", on_metadata_offset, "framerate metadata present without video data");
+                        print_warning(WARNING_AMF_DATA_VIDEO_NEEDED, on_metadata_offset, "framerate metadata present without video data");
                     }
                 }
                 else {
@@ -916,7 +916,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         }
                     }
                     else {
-                        print_warning("W80048", on_metadata_offset, "audiodatarate metadata present without audio data");
+                        print_warning(WARNING_AMF_DATA_AUDIO_NEEDED, on_metadata_offset, "audiodatarate metadata present without audio data");
                     }
                 }
                 else {
@@ -948,7 +948,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         }
                     }
                     else {
-                        print_warning("W80048", on_metadata_offset, "audiosamplerate metadata present without audio data");
+                        print_warning(WARNING_AMF_DATA_AUDIO_NEEDED, on_metadata_offset, "audiosamplerate metadata present without audio data");
                     }
                 }
                 else {
@@ -977,7 +977,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         }
                     }
                     else {
-                        print_warning("W80048", on_metadata_offset, "audiosamplesize metadata present without audio data");
+                        print_warning(WARNING_AMF_DATA_AUDIO_NEEDED, on_metadata_offset, "audiosamplesize metadata present without audio data");
                     }
                 }
                 else {
@@ -1002,7 +1002,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         }
                     }
                     else {
-                        print_warning("W80048", on_metadata_offset, "stereo metadata present without audio data");
+                        print_warning(WARNING_AMF_DATA_AUDIO_NEEDED, on_metadata_offset, "stereo metadata present without audio data");
                     }
                 }
                 else {
@@ -1048,7 +1048,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         }
                     }
                     else {
-                        print_warning("W80047", on_metadata_offset, "videosize metadata present without video data");
+                        print_warning(WARNING_AMF_DATA_VIDEO_NEEDED, on_metadata_offset, "videosize metadata present without video data");
                     }
                 }
                 else {
@@ -1073,7 +1073,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         }
                     }
                     else {
-                        print_warning("W80047", on_metadata_offset, "audiosize metadata present without video data");
+                        print_warning(WARNING_AMF_DATA_AUDIO_NEEDED, on_metadata_offset, "audiosize metadata present without audio data");
                     }
                 }
                 else {
@@ -1122,7 +1122,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         }
                     }
                     else {
-                        print_warning("W80048", on_metadata_offset, "audiocodecid metadata present without audio data");
+                        print_warning(WARNING_AMF_DATA_AUDIO_NEEDED, on_metadata_offset, "audiocodecid metadata present without audio data");
                     }
                 }
                 else {
@@ -1147,7 +1147,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         }
                     }
                     else {
-                        print_warning("W80048", on_metadata_offset, "videocodecid metadata present without audio data");
+                        print_warning(WARNING_AMF_DATA_VIDEO_NEEDED, on_metadata_offset, "videocodecid metadata present without video data");
                     }
                 }
                 else {
@@ -1172,7 +1172,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         }
                     }
                     else {
-                        print_warning("W80049", on_metadata_offset, "audiodelay metadata present without audio and video data");
+                        print_warning(WARNING_AMF_DATA_AUDIO_VIDEO_NEEDED, on_metadata_offset, "audiodelay metadata present without audio and video data");
                     }
                 }
                 else {
@@ -1225,10 +1225,10 @@ int check_flv_file(const flvmeta_opts * opts) {
 
                     /* check sub-arrays' presence */
                     if (file_times == NULL) {
-                        print_warning("W81050", on_metadata_offset, "Missing times metadata");
+                        print_warning(WARNING_KEYFRAMES_TIMES_MISSING, on_metadata_offset, "Missing times metadata");
                     }
                     if (file_filepositions == NULL) {
-                        print_warning("W81051", on_metadata_offset, "Missing filepositions metadata");
+                        print_warning(WARNING_KEYFRAMES_FILEPOS_MISSING, on_metadata_offset, "Missing filepositions metadata");
                     }
 
                     if (file_times != NULL && file_filepositions != NULL) {
@@ -1240,7 +1240,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                             sprintf(message, "invalid type for times: expected %s, got %s",
                                 get_amf_type_string(AMF_TYPE_ARRAY),
                                 get_amf_type_string(times_type));
-                            print_warning("W81046", on_metadata_offset, message);
+                            print_warning(WARNING_KEYFRAMES_TIMES_TYPE_BAD, on_metadata_offset, message);
                         }
 
                         fp_type = amf_data_get_type(file_filepositions);
@@ -1248,7 +1248,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                             sprintf(message, "invalid type for filepositions: expected %s, got %s",
                                 get_amf_type_string(AMF_TYPE_ARRAY),
                                 get_amf_type_string(fp_type));
-                            print_warning("W81046", on_metadata_offset, message);
+                            print_warning(WARNING_KEYFRAMES_FILEPOS_TYPE_BAD, on_metadata_offset, message);
                         }
 
                         if (times_type == AMF_TYPE_ARRAY && fp_type == AMF_TYPE_ARRAY) {
@@ -1256,7 +1256,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                             if (amf_array_size(info.times) != amf_array_size(file_times) ||
                                 amf_array_size(info.filepositions) != amf_array_size(file_filepositions) ||
                                 amf_array_size(file_filepositions) != amf_array_size(file_times)) {
-                                print_warning("W81047", on_metadata_offset, "invalid keyframes arrays length");
+                                print_warning(WARNING_KEYFRAMES_ARRAY_LENGTH_BAD, on_metadata_offset, "invalid keyframes arrays length");
                             }
                             else {
                                 number64 last_file_time;
@@ -1282,7 +1282,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                                         sprintf(message, "invalid type for time: expected %s, got %s",
                                             get_amf_type_string(AMF_TYPE_NUMBER),
                                             get_amf_type_string(type));
-                                        print_warning("W81048", on_metadata_offset, message);
+                                        print_warning(WARNING_KEYFRAMES_TIME_TYPE_BAD, on_metadata_offset, message);
                                     }
                                     else {
                                         f_time = amf_number_get_value(amf_array_get(ft_node));
@@ -1290,13 +1290,13 @@ int check_flv_file(const flvmeta_opts * opts) {
                                         if (fabs(time - f_time) >= 1.0) {
                                             sprintf(message, "invalid keyframe time: expected %.12g, got %.12g",
                                                 time, f_time);
-                                            print_warning("W81049", on_metadata_offset, message);
+                                            print_warning(WARNING_KEYFRAMES_TIME_BAD, on_metadata_offset, message);
                                         }
                                         
                                         /* check for duplicate time, can happen in H.264 files */
                                         if (have_last_time && last_file_time == f_time) {
                                             sprintf(message, "Duplicate keyframe time: %.12g", f_time);
-                                            print_warning("W81050", on_metadata_offset, message);
+                                            print_warning(WARNING_KEYFRAMES_TIME_DUPLICATE, on_metadata_offset, message);
                                         }
                                         have_last_time = 1;
                                         last_file_time = f_time;
@@ -1307,7 +1307,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                                         sprintf(message, "invalid type for file position: expected %s, got %s",
                                             get_amf_type_string(AMF_TYPE_NUMBER),
                                             get_amf_type_string(type));
-                                        print_warning("W81051", on_metadata_offset, message);
+                                        print_warning(WARNING_KEYFRAMES_POS_TYPE_BAD, on_metadata_offset, message);
                                     }
                                     else {
                                         f_position = amf_number_get_value(amf_array_get(ff_node));
@@ -1315,7 +1315,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                                         if (fabs(time - f_time) >= 1.0) {
                                             sprintf(message, "invalid keyframe file position: expected %.12g, got %.12g",
                                                 time, f_time);
-                                            print_warning("W81052", on_metadata_offset, message);
+                                            print_warning(WARNING_KEYFRAMES_POS_BAD, on_metadata_offset, message);
                                         }
                                     }
 
@@ -1346,17 +1346,17 @@ int check_flv_file(const flvmeta_opts * opts) {
         /* missing width or height can cause size problem in various players */
         if (info.have_video) {
             if (!have_width) {
-                print_error("E60053", on_metadata_offset, "width information not found in metadata, problems might occur in some players");
+                print_error(ERROR_VIDEO_WIDTH_MISSING, on_metadata_offset, "width information not found in metadata, problems might occur in some players");
             }
             if (!have_height) {
-                print_error("E60054", on_metadata_offset, "height information not found in metadata, problems might occur in some players");
+                print_error(ERROR_VIDEO_HEIGHT_MISSING, on_metadata_offset, "height information not found in metadata, problems might occur in some players");
             }
         }
     }
 
     /* could we compute video resolution ? */
     if (info.video_width == 0 && info.video_height == 0) {
-        print_warning("W60055", file_stats.st_size, "unable to determine video resolution");
+        print_warning(WARNING_VIDEO_SIZE_ERROR, file_stats.st_size, "unable to determine video resolution");
     }
 
 end:
