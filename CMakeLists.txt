@@ -13,8 +13,8 @@ else(FLVMETA_STABLE)
   if(GIT)
     execute_process(COMMAND           "${GIT}" rev-parse --short HEAD
                     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-                    OUTPUT_VARIABLE   GIT_RELEASE)
-    string(REPLACE "\n" "" GIT_RELEASE ${GIT_RELEASE})
+                    OUTPUT_VARIABLE   GIT_RELEASE
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
     set(FLVMETA_VERSION "${FLVMETA_VERSION}-g${GIT_RELEASE}")
     message(STATUS "Set unstable flvmeta version to ${FLVMETA_VERSION}")
     unset(GIT CACHE)
