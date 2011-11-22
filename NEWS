@@ -1,4 +1,4 @@
-Version 1.1 (2010-??-??)
+Version 1.1 (2011-??-??)
   - Beta release. All features should be considered relatively
     stable unless explicitely stated otherwise.
   - Added proper command line handling and help.
@@ -11,7 +11,7 @@ Version 1.1 (2010-??-??)
     flvdump functionality into flvmeta.
   - Added support for XML, YAML, and JSON formats for dumping.
   - Added XML schemas describing the various formats used by flvmeta.
-  - Added a file checking feature (currently unimplemented)
+  - Added a file checking feature.
   - Added the possibility to print output file metadata after
     a successful update using one of the supported formats.
   - Added a feature to insert custom metadata strings while updating.
@@ -23,9 +23,9 @@ Version 1.1 (2010-??-??)
     instead of exiting at the first error detected.
   - Added an option to reset the file timestamps in order to
     correctly start at zero, for example if the file has been
-    incorrectly split by buggy tools
+    incorrectly split by buggy tools.
   - Added an option to display informative messages while processing
-    (not quite exhaustive for the moment)
+    (not quite exhaustive for the moment).
   - Changed keyframe index generation so only the first keyframe
     for a given timestamp will be indexed. This behaviour can be
     overriden with the --all-keyframes/-k option.
