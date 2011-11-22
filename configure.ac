@@ -23,6 +23,16 @@ ifdef([PKG_CHECK_MODULES],
 )
 AM_CONDITIONAL([MAKE_TESTS], [test "$have_check" = yes])
 
+dnl Checks for --with-system-libs
+AC_ARG_WITH([system-libs],
+  [AC_HELP_STRING([--with-system-libs], [Build with system libraries])]
+)
+AM_CONDITIONAL([USE_SYSTEM_LIBS], [test "x$with_system_libs" = "xyes"])
+
+if test "x$with_system_libs" = "xyes"; then
+    PKG_CHECK_MODULES([YAML], [yaml-0.1 >= 0.1.3])
+fi
+
 dnl Checks for header files.
 AC_CHECK_HEADERS([stdlib.h stdio.h string.h])
 

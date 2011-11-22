@@ -1,10 +1,16 @@
-AM_CFLAGS = -Wall -I@srcdir@/libyaml
-
-SUBDIRS = libyaml
-
 bin_PROGRAMS = flvmeta
 
-flvmeta_LDADD = @builddir@/libyaml/libyaml.a
+if USE_SYSTEM_LIBS
+EXPORT_CFLAGS = $(YAML_CFLAGS)
+EXPORT_LDADD = $(YAML_LIBS)
+else
+SUBDIRS = libyaml
+EXPORT_CFLAGS = -I@srcdir@/libyaml
+EXPORT_LDADD = @builddir@/libyaml/libyaml.a
+endif
+
+AM_CFLAGS = -Wall $(EXPORT_CFLAGS)
+flvmeta_LDADD = $(EXPORT_LDADD)
 
 flvmeta_SOURCES = amf.c \
                   amf.h \
