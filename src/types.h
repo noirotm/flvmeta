@@ -115,12 +115,14 @@ uint24_be uint32_to_uint24_be(uint32);
 # define lfs_ftell ftello
 # define lfs_fseek fseeko
 
+# define FILE_OFFSET_T_64_BITS 1
 typedef off_t file_offset_t;
 
 #else /* !HAVE_SEEKO */
 
 # ifdef WIN32
 
+# define FILE_OFFSET_T_64_BITS 1
 typedef long long int file_offset_t;
 
 /* Win32 large file support */
@@ -139,7 +141,7 @@ typedef long file_offset_t;
 #endif /* HAVE_FSEEKO */
 
 /* file offset printf specifier */
-#if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
+#ifdef FILE_OFFSET_T_64_BITS
 # define FILE_OFFSET_PRINTF_FORMAT "ll"
 #else
 # define FILE_OFFSET_PRINTF_FORMAT "l"

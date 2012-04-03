@@ -71,7 +71,8 @@ endif(IS_BIGENDIAN)
 check_function_exists("fseeko" HAVE_FSEEKO)
 if(HAVE_FSEEKO)
   execute_process(COMMAND getconf LFS_CFLAGS
-    OUTPUT_VARIABLE LFS_CFLAGS)
+    OUTPUT_VARIABLE LFS_CFLAGS
+    ERROR_QUIET)
   if(LFS_CFLAGS)
     add_definitions(${LFS_CFLAGS})
   endif(LFS_CFLAGS)
