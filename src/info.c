@@ -214,7 +214,6 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
     info->video_data_size = 0;
     info->audio_data_size = 0;
     info->meta_data_size = 0;
-    info->meta_data_only_size = 0;
     info->real_video_data_size = 0;
     info->real_audio_data_size = 0;
     info->video_first_timestamp = 0;
@@ -364,7 +363,7 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
                 }
             }
 
-            /* just ignore metadata that don't have a proper name */
+            /* check metadata name */
             if (body_length > 0 && amf_data_get_type(tag_name) == AMF_TYPE_STRING) {
                 char * name = (char *)amf_string_get_bytes(tag_name);
                 size_t len = (size_t)amf_string_get_size(tag_name);
@@ -394,7 +393,6 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
                     if (!strncmp(name, "onLastSecond", len)) {
                         info->have_on_last_second = 1;
                     }
-                    info->meta_data_only_size += body_length;
                     info->meta_data_size += (body_length + FLV_TAG_SIZE);
                     info->total_prev_tags_size += sizeof(uint32_be);
                     if (data != NULL) {
@@ -402,8 +400,8 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
                     }
                 }
             }
+            /* just ignore metadata that don't have a proper name */
             else {
-                info->meta_data_only_size += body_length;
                 info->meta_data_size += (body_length + FLV_TAG_SIZE);
                 info->total_prev_tags_size += sizeof(uint32_be);
                 amf_data_free(data);
@@ -693,16 +691,17 @@ void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts *
         node_f = amf_array_next(node_f);
     }
 
-    /* compute data size, ie. size of metadata excluding tags and prev_tag_size */
-    data_size = info->meta_data_only_size + new_on_metadata_size;
+    /* compute data size, ie. size of metadata excluding prev_tag_size */
+    data_size = info->meta_data_size + FLV_TAG_SIZE +
+        (uint32)(amf_data_size(meta->on_metadata_name) + amf_data_size(meta->on_metadata));
     if (!info->have_on_last_second && opts->insert_onlastsecond) {
-        data_size += (uint32)on_last_second_size;
+        data_size += (uint32)on_last_second_size + FLV_TAG_SIZE;
     }
     amf_number_set_value(amf_total_data_size, (number64)data_size);
   
     /* compute total file size */
-    total_filesize = FLV_HEADER_SIZE + info->total_prev_tags_size + info->video_data_size
-        + info->audio_data_size + info->meta_data_size + new_on_metadata_size;
+    total_filesize = FLV_HEADER_SIZE + info->total_prev_tags_size + info->video_data_size +
+        info->audio_data_size + info->meta_data_size + new_on_metadata_size;
 
     if (!info->have_on_last_second && opts->insert_onlastsecond) {
         /* if we have to add onLastSecond, we must count the header and new prevTagSize we add */
@@ -710,101 +709,4 @@ void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts *
     }
 
     amf_number_set_value(amf_total_filesize, (number64)total_filesize);
-}
-
-/*
-    compute the metadata without reserving space for actual insertion
-*/
-void compute_current_metadata(flv_info * info, flv_metadata * meta) {
-    file_offset_t data_size;
-    number64 duration, video_data_rate, framerate;
-    amf_data * amf_total_data_size;
-
-    meta->on_last_second_name = amf_str("onLastSecond");
-    meta->on_last_second = amf_associative_array_new();
-
-    meta->on_metadata_name = amf_str("onMetaData");
-    meta->on_metadata = amf_associative_array_new();
- 
-    amf_associative_array_add(meta->on_metadata, "hasMetadata", amf_boolean_new(1));
-    amf_associative_array_add(meta->on_metadata, "hasVideo", amf_boolean_new(info->have_video));
-    amf_associative_array_add(meta->on_metadata, "hasAudio", amf_boolean_new(info->have_audio));
-    
-    if (info->have_audio) {
-        duration = (info->last_timestamp - info->first_timestamp + info->audio_frame_duration) / 1000.0;
-    }
-    else {
-        duration = (info->last_timestamp - info->first_timestamp + info->video_frame_duration) / 1000.0;
-    }
-    amf_associative_array_add(meta->on_metadata, "duration", amf_number_new(duration));
-
-    amf_associative_array_add(meta->on_metadata, "lasttimestamp", amf_number_new(info->last_timestamp / 1000.0));
-    amf_associative_array_add(meta->on_metadata, "lastkeyframetimestamp", amf_number_new(info->last_keyframe_timestamp / 1000.0));
-    
-    if (info->video_width > 0)
-        amf_associative_array_add(meta->on_metadata, "width", amf_number_new(info->video_width));
-    if (info->video_height > 0)
-        amf_associative_array_add(meta->on_metadata, "height", amf_number_new(info->video_height));
-
-    video_data_rate = ((info->real_video_data_size / 1024.0) * 8.0) / duration;
-    amf_associative_array_add(meta->on_metadata, "videodatarate", amf_number_new(video_data_rate));
-
-    framerate = info->video_frames_number / duration;
-    amf_associative_array_add(meta->on_metadata, "framerate", amf_number_new(framerate));
-
-    if (info->have_audio) {
-        number64 audio_khz, audio_sample_rate;
-        number64 audio_data_rate = ((info->real_audio_data_size / 1024.0) * 8.0) / duration;
-        amf_associative_array_add(meta->on_metadata, "audiodatarate", amf_number_new(audio_data_rate));
-
-        audio_khz = 0.0;
-        switch (info->audio_rate) {
-            case FLV_AUDIO_TAG_SOUND_RATE_5_5: audio_khz = 5500.0; break;
-            case FLV_AUDIO_TAG_SOUND_RATE_11:  audio_khz = 11000.0; break;
-            case FLV_AUDIO_TAG_SOUND_RATE_22:  audio_khz = 22050.0; break;
-            case FLV_AUDIO_TAG_SOUND_RATE_44:  audio_khz = 44100.0; break;
-        }
-        amf_associative_array_add(meta->on_metadata, "audiosamplerate", amf_number_new(audio_khz));
-        audio_sample_rate = 0.0;
-        switch (info->audio_size) {
-            case FLV_AUDIO_TAG_SOUND_SIZE_8:  audio_sample_rate = 8.0; break;
-            case FLV_AUDIO_TAG_SOUND_SIZE_16: audio_sample_rate = 16.0; break;
-        }
-        amf_associative_array_add(meta->on_metadata, "audiosamplesize", amf_number_new(audio_sample_rate));
-        amf_associative_array_add(meta->on_metadata, "stereo", amf_boolean_new(info->audio_stereo == FLV_AUDIO_TAG_SOUND_TYPE_STEREO));
-    }
-
-    if (info->have_video) {
-        amf_associative_array_add(meta->on_metadata, "videosize", amf_number_new((number64)info->video_data_size));
-    }
-    if (info->have_audio) {
-        amf_associative_array_add(meta->on_metadata, "audiosize", amf_number_new((number64)info->audio_data_size));
-    }
-
-    /* to be computed later */
-    amf_total_data_size = amf_number_new(0);
-    amf_associative_array_add(meta->on_metadata, "datasize", amf_total_data_size);
-
-    amf_associative_array_add(meta->on_metadata, "metadatacreator", amf_str(PACKAGE_STRING));
-
-    amf_associative_array_add(meta->on_metadata, "metadatadate", amf_date_new((number64)time(NULL)*1000, 0));
-    if (info->have_audio) {
-        amf_associative_array_add(meta->on_metadata, "audiocodecid", amf_number_new((number64)info->audio_codec));
-    }
-    if (info->have_video) {
-        amf_associative_array_add(meta->on_metadata, "videocodecid", amf_number_new((number64)info->video_codec));
-    }
-    if (info->have_audio && info->have_video) {
-        number64 audio_delay = ((sint32)info->audio_first_timestamp - (sint32)info->video_first_timestamp) / 1000.0;
-        amf_associative_array_add(meta->on_metadata, "audiodelay", amf_number_new((number64)audio_delay));
-    }
-    amf_associative_array_add(meta->on_metadata, "canSeekToEnd", amf_boolean_new(info->can_seek_to_end));
-    
-    amf_associative_array_add(meta->on_metadata, "hasKeyframes", amf_boolean_new(info->have_keyframes));
-    amf_associative_array_add(meta->on_metadata, "keyframes", info->keyframes);
-
-    /* compute data size, ie. size of metadata excluding tags and prev_tag_size */
-    data_size = info->meta_data_only_size + amf_data_size(info->original_on_metadata) + (uint32)(FLV_TAG_SIZE + sizeof(uint32_be));
-
-    amf_number_set_value(amf_total_data_size, (number64)data_size);
 }
