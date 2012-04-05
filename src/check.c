@@ -22,6 +22,7 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 #include "check.h"
+#include "dump.h"
 #include "info.h"
 
 #include <math.h>
@@ -502,6 +503,8 @@ int check_flv_file(const flvmeta_opts * opts) {
                 amf_data * name;
                 amf_data * data;
 
+                name = NULL;
+                data = NULL;
                 result = flv_read_metadata(flv_in, &name, &data);
 
                 if (result == FLV_ERROR_EOF) {
@@ -691,6 +694,8 @@ int check_flv_file(const flvmeta_opts * opts) {
             name = amf_string_get_bytes(amf_associative_array_get_name(n));
             data = amf_associative_array_get_data(n);
             type = amf_data_get_type(data);
+
+            /* TODO: check UTF-8 strings, in key, and value if string type */
 
             /* hasMetadata (bool): true */
             if (!strcmp((char*)name, "hasMetadata")) {
@@ -1357,6 +1362,36 @@ int check_flv_file(const flvmeta_opts * opts) {
     /* could we compute video resolution ? */
     if (info.video_width == 0 && info.video_height == 0) {
         print_warning(WARNING_VIDEO_SIZE_ERROR, file_stats.st_size, "unable to determine video resolution");
+    }
+
+    /* global info */
+
+    if (info.have_video) {
+        /* video codec */
+        sprintf(message, "video codec is %s", dump_string_get_video_codec(prev_video_tag));
+        print_info(INFO_VIDEO_CODEC, 0, message);
+
+    }
+
+    if (info.have_audio) {
+        /* audio info */
+        sprintf(message, "audio format is %s (%s, %s-bit, %s kHz)",
+            dump_string_get_sound_format(prev_audio_tag),
+            dump_string_get_sound_type(prev_audio_tag),
+            dump_string_get_sound_size(prev_audio_tag),
+            dump_string_get_sound_rate(prev_audio_tag)
+        );
+        print_info(INFO_AUDIO_FORMAT, 0, message);
+    }
+
+    /* does the file use extended timestamps ? */
+    if (last_timestamp > 0x00FFFFFF) {
+        print_info(INFO_TIMESTAMP_USE_EXTENDED, 0, "extended timestamps used in the file");
+    }
+
+    /* is the file larger than 4GB ? */
+    if (file_stats.st_size > 0xFFFFFFFFULL) {
+        print_info(INFO_GENERAL_LARGE_FILE, 0, "file is larger than 4 GB");
     }
 
 end:

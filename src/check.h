@@ -128,6 +128,10 @@
 #define ERROR_VIDEO_WIDTH_MISSING           LEVEL_ERROR     TOPIC_VIDEO_DATA        "077"
 #define ERROR_VIDEO_HEIGHT_MISSING          LEVEL_ERROR     TOPIC_VIDEO_DATA        "078"
 #define WARNING_VIDEO_SIZE_ERROR            LEVEL_WARNING   TOPIC_VIDEO_DATA        "079"
+#define INFO_VIDEO_CODEC                    LEVEL_INFO      TOPIC_VIDEO_CODECS      "080"
+#define INFO_AUDIO_FORMAT                   LEVEL_INFO      TOPIC_AUDIO_CODECS      "081"
+#define INFO_TIMESTAMP_USE_EXTENDED         LEVEL_INFO      TOPIC_TIMESTAMPS        "082"
+#define INFO_GENERAL_LARGE_FILE             LEVEL_INFO      TOPIC_GENERAL_FORMAT    "083"
 
 #ifdef __cplusplus
 extern "C" {
@@ -141,4 +145,3 @@ int check_flv_file(const flvmeta_opts * opts);
 #endif /* __cplusplus */
 
 #endif /* __CHECK_H__ */
-
