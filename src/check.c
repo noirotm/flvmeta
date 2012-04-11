@@ -1317,9 +1317,9 @@ int check_flv_file(const flvmeta_opts * opts) {
                                     else {
                                         f_position = amf_number_get_value(amf_array_get(ff_node));
 
-                                        if (fabs(time - f_time) >= 1.0) {
+                                        if (fabs(position - f_position) >= 1.0) {
                                             sprintf(message, "invalid keyframe file position: expected %.12g, got %.12g",
-                                                time, f_time);
+                                                position, f_position);
                                             print_warning(WARNING_KEYFRAMES_POS_BAD, on_metadata_offset, message);
                                         }
                                     }
