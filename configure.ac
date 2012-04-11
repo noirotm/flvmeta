@@ -67,5 +67,6 @@ src/Makefile
 src/libyaml/Makefile
 tests/Makefile
 schemas/Makefile
+man/Makefile
 ])
 AC_OUTPUT
