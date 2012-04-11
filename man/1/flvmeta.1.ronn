@@ -25,8 +25,7 @@ Tools such as `flvmeta` must be used in the case the initial encoding process is
 unable to inject those metadata.
 
 It can also optionnally inject the _onLastSecond_ event, used to signal the end
-of playback, used for example to revert the player software to a 'stopped'
-state.
+of playback, for example to revert the player software to a 'stopped' state.
 
 `flvmeta` also has the ability to dump metadata and full file information to
 standard output, in a variety of textual output formats, including XML, YAML,
@@ -95,6 +94,10 @@ will be executed.
     * *fatal*: messages that inform of errors that make further file reading
       impossible therefore ending parsing completely
 
+    The `--level` option allows to limit the display of messages to a minimum
+    level among those, for example if the user is only interested in error
+    messages and above.
+
     Each message or message template presented to the user is identified by a
     specific code of the following format:
     
@@ -110,21 +113,49 @@ will be executed.
     Messages can be related to the following topics :
 
     * *10* general flv file format
-      * *11* file header
-      * *12* previous tag size 
+    * *11* file header
+    * *12* previous tag size 
     * *20* tag format
     * *30* tag types
     * *40* timestamps
     * *50* audio data
-      * *51* audio codecs
+    * *51* audio codecs
     * *60* video data
-      * *61* video codecs
+    * *61* video codecs
     * *70* metadata
     * *80* AMF data
-      * *81* keyframes
-      * *82* cue points
+    * *81* keyframes
+    * *82* cue points
     
-    For example, <W10050> represents a Warning in topic 10 with the id 050.
+    For example, <W51050> represents a Warning in topic 51 with the id 050,
+    which represents a warning message related to audio codecs, in that case to
+    signal that an audio tag has an unknown codec.
+    
+  * `-U`, `--update`:
+    Update the given input file by inserting a computed _onMetaData_ tag. If an
+    output file is specified, it will be created or overwritten instead and
+    the input file will not be modified. If the original file is to be updated,
+    a temporary file will be created in the default temp directory of the
+    platform, and it will be copied over the original file at the end of
+    the operation. This is due to the fact that the output file is written
+    while the original file is being read due to the two-pass method.
+    
+    The computed metadata contains among other data full keyframe informations,
+    in order to allow HTTP pseudo-streaming and random-access seeking in the
+    file.
+    
+    By default, an _onLastSecond_ tag will be inserted, unless the
+    `--no-last-second` option is specified.
+    
+    Normally overwritten by the update process, the existing metadata found in
+    the input file can be preserved by the `--preserve` option.
+    
+    It is also possible to insert custom string values with the `--add` option,
+    which can be specified multiple times.
+    
+    By default, the update operation is performed without output, unless the
+    `--verbose` option is specified, or the `--print-metadata` is used to
+    print the newly written metadata to the standard output.
 
 
 ## OPTIONS
@@ -132,6 +163,10 @@ will be executed.
 ### DUMP
 
 ### FULL DUMP
+
+### CHECK
+
+### UPDATE
 
 ## FORMATS
 
