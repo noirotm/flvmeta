@@ -20,5 +20,3 @@ Complete test suites.
 Batch mode to handle multiple input files in one invocation.
 
 Scripting environment for custom manipulation of FLV files and metadata.
-
-Fix Mac OSX invalid desync report in --check.

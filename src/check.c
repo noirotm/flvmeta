@@ -361,9 +361,9 @@ int check_flv_file(const flvmeta_opts * opts) {
         last_timestamp = timestamp;
 
         /* check for desyncs between audio and video: one second or more is suspicious */
-        if (have_video && have_audio && !have_desync && labs(last_video_timestamp - last_audio_timestamp) >= 1000) {
-            sprintf(message, "audio and video streams are desynchronized by %ld ms",
-                labs(last_video_timestamp - last_audio_timestamp));
+        if (have_video && have_audio && !have_desync && abs(last_video_timestamp - last_audio_timestamp) >= 1000) {
+            sprintf(message, "audio and video streams are desynchronized by %d ms",
+                abs(last_video_timestamp - last_audio_timestamp));
             print_warning(WARNING_TIMESTAMP_DESYNC, offset + 4, message);
             have_desync = 1; /* do not repeat */
         }
@@ -619,7 +619,7 @@ int check_flv_file(const flvmeta_opts * opts) {
     }
 
     /* check last timestamps */
-    if (have_video && have_audio && labs(last_audio_timestamp - last_video_timestamp) >= 1000) {
+    if (have_video && have_audio && abs(last_audio_timestamp - last_video_timestamp) >= 1000) {
         if (last_audio_timestamp > last_video_timestamp) {
             sprintf(message, "video stops %d ms before audio", last_audio_timestamp - last_video_timestamp);
             print_warning(WARNING_TIMESTAMP_VIDEO_ENDS_FIRST, file_stats.st_size, message);
