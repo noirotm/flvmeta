@@ -19,7 +19,6 @@ It also cleanly compiles as a 64-bit binary without alteration.
 FLVmeta is fast (only bound by I/O speed) and has a very small memory footprint.
 
 The FLVmeta source package includes and uses the following software:
-- the mjson JSON document parser and emitter (http://mjson.sourceforge.net/)
 - the libyaml YAML parser and emitter (http://pyyaml.org/wiki/LibYAML)
 
 
