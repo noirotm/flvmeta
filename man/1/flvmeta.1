@@ -1,206 +1,289 @@
-.\" generated with Ronn/v0.7.3
-.\" http://github.com/rtomayko/ronn/tree/0.7.3
-.
-.TH "FLVMETA" "1" "April 2012" "" ""
-.
-.SH "NAME"
-\fBflvmeta\fR \- manipulate or extract metadata in Adobe Flash Video Files
-.
-.SH "SYNOPSIS"
-\fBflvmeta\fR \fIINPUT_FILE\fR
-.
-.br
-\fBflvmeta\fR \fIINPUT_FILE\fR \fIOUTPUT_FILE\fR
-.
-.br
-\fBflvmeta\fR \fB\-D\fR|\fB\-\-dump\fR [\fIoptions\fR] \fIINPUT_FILE\fR
-.
-.br
-\fBflvmeta\fR \fB\-F\fR|\fB\-\-full\-dump\fR [\fIoptions\fR] \fIINPUT_FILE\fR
-.
-.br
-\fBflvmeta\fR \fB\-C\fR|\fB\-\-check\fR [\fIoptions\fR] \fIINPUT_FILE\fR
-.
-.br
-\fBflvmeta\fR \fB\-U\fR|\fB\-\-update\fR [\fIoptions\fR] \fIINPUT_FILE\fR [\fIOUTPUT_FILE\fR]
-.
-.SH "DESCRIPTION"
-\fBflvmeta\fR is a command\-line utility aimed at manipulating Adobe(tm) Flash Video Files (FLV), through several commands, only one of which can be used for each invocation of the program\.
-.
+.TH flvmeta 1 "April 2012" "flvmeta user manual"
+.SH NAME
+.PP
+flvmeta - manipulate or extract metadata in Adobe Flash Video files
+.SH SYNOPSIS
+.PP
+\f[B]flvmeta\f[] \f[I]INPUT_FILE\f[]
+.PD 0
 .P
-It possesses the ability to compute and inject a variety of values in the \fIonMetaData\fR event tag, including keyframe indices used by most video players to allow random\-access seeking, notably for HTTP pseudo\-streamed files via a server\-side module, by having the client send the file offset looked up for the nearest desired keyframe\. Tools such as \fBflvmeta\fR must be used in the case the initial encoding process is unable to inject those metadata\.
-.
+.PD
+\f[B]flvmeta\f[] \f[I]INPUT_FILE\f[] \f[I]OUTPUT_FILE\f[]
+.PD 0
 .P
-It can also optionnally inject the \fIonLastSecond\fR event, used to signal the end of playback, for example to revert the player software to a \'stopped\' state\.
-.
+.PD
+\f[B]flvmeta\f[] \f[C]-D\f[]|\f[C]--dump\f[] [\f[I]options\f[]]
+\f[I]INPUT_FILE\f[]
+.PD 0
 .P
-\fBflvmeta\fR also has the ability to dump metadata and full file information to standard output, in a variety of textual output formats, including XML, YAML, and JSON\.
-.
+.PD
+\f[B]flvmeta\f[] \f[C]-F\f[]|\f[C]--full-dump\f[] [\f[I]options\f[]]
+\f[I]INPUT_FILE\f[]
+.PD 0
 .P
-Finally, the program can analyze FLV files to detect potential problems and errors, and generate a textual report in a raw format, or in XML\. It has the ability to detect more than a hundred problems, going from harmless to potentially unplayable, using a few real world encountered issues\. This analysis can also determine and display the minimal Flash Player version which can be used to correctly play a given file, as well as codec information\.
-.
+.PD
+\f[B]flvmeta\f[] \f[C]-C\f[]|\f[C]--check\f[] [\f[I]options\f[]]
+\f[I]INPUT_FILE\f[]
+.PD 0
 .P
-\fBflvmeta\fR can operate on arbitrarily large files, and can handle FLV files using extended (32\-bit) timestamps\. It can guess video frame dimensions for all known video codecs supported by the official FLV specification\.
-.
+.PD
+\f[B]flvmeta\f[] \f[C]-U\f[]|\f[C]--update\f[] [\f[I]options\f[]]
+\f[I]INPUT_FILE\f[] [\f[I]OUTPUT_FILE\f[]]
+.SH DESCRIPTION
+.PP
+\f[B]flvmeta\f[] is a command-line utility aimed at manipulating
+Adobe(tm) Flash Video files (FLV), through several commands, only one of
+which can be used for each invocation of the program.
+.PP
+It possesses the ability to compute and inject a variety of values in
+the \f[I]onMetaData\f[] event tag, including keyframe indices used by
+most video players to allow random-access seeking, notably for HTTP
+pseudo-streamed files via a server-side module, by having the client
+send the file offset looked up for the nearest desired keyframe.
+.PD 0
 .P
-Its memory usage remains minimal, as it uses a two\-pass reading algorithm which permits the computation of all necessary tags without loading anything more than the file\'s tags headers in memory\. Only the dumping of JSON data can consume more memory, since the bundled \fBmjson\fR library constructs a data tree in memory before outputting the formatted data\.
-.
-.SH "COMMANDS"
-Only one command can be specified for an invocation of \fBflvmeta\fR\. The chosen command determines the mode of execution of the program\.
-.
+.PD
+Tools such as \f[B]flvmeta\f[] must be used in the case the initial
+encoding process is unable to inject those metadata.
+.PP
+It can also optionnally inject the \f[I]onLastSecond\f[] event, used to
+signal the end of playback, for example to revert the player software to
+a `stopped' state.
+.PP
+\f[B]flvmeta\f[] also has the ability to dump metadata and full file
+information to standard output, in a variety of textual output formats,
+including XML, YAML, and JSON.
+.PP
+Finally, the program can analyze FLV files to detect potential problems
+and errors, and generate a textual report in a raw format, or in XML.
+It has the ability to detect more than a hundred problems, going from
+harmless to potentially unplayable, using a few real world encountered
+issues.
+This analysis can also determine and display the minimal Flash Player
+version which can be used to correctly play a given file, as well as
+codec information.
+.PP
+\f[B]flvmeta\f[] can operate on arbitrarily large files, and can handle
+FLV files using extended (32-bit) timestamps.
+It can guess video frame dimensions for all known video codecs supported
+by the official FLV specification.
+.PP
+Its memory usage remains minimal, as it uses a two-pass reading
+algorithm which permits the computation of all necessary tags without
+loading anything more than the file's tags headers in memory.
+Only the dumping of JSON data can consume more memory, since the bundled
+\f[C]mjson\f[] library constructs a data tree in memory before
+outputting the formatted data.
+.SH COMMANDS
+.PP
+Only one command can be specified for an invocation of \f[B]flvmeta\f[].
+The chosen command determines the mode of execution of the program.
+.PP
+By default, if no command is specified, \f[B]flvmeta\f[] will
+implicitely choose the command to use according to the presence of
+\f[I]INPUT_FILE\f[] and \f[I]OUTPUT_FILE\f[].
+.PP
+If only \f[I]INPUT_FILE\f[] is present, the \f[C]--dump\f[] command will
+be executed.
+.PP
+If both \f[I]INPUT_FILE\f[] and \f[I]OUTPUT_FILE\f[] are present, the
+\f[C]--update\f[] command will be executed.
+.PP
+Here is a list of the supported commands:
+.SS -D, --dump
+.PP
+Dump a textual representation of the first \f[I]onMetaData\f[] tag found
+in \f[I]INPUT_FILE\f[] to standard output.
+The default format is XML, unless specified otherwise.
+.PD 0
 .P
-By default, if no command is specified, \fBflvmeta\fR will implicitely choose the command to use according to the presence of \fIINPUT_FILE\fR and \fIOUTPUT_FILE\fR\.
-.
-.P
-If only \fIINPUT_FILE\fR is present, the \fB\-\-dump\fR command will be executed\.
-.
-.P
-If both \fIINPUT_FILE\fR and \fIOUTPUT_FILE\fR are present, the \fB\-\-update\fR command will be executed\.
-.
-.IP "\(bu" 4
-\fB\-D\fR, \fB\-\-dump\fR: Dump a textual representation of the first \fIonMetaData\fR tag found in \fIINPUT_FILE\fR to standard output\. The default format is XML, unless specified otherwise\.
-.
-.IP
-It is also possible to specify another event via the \fB\-\-event\fR option, such as \fIonLastSecond\fR\.
-.
-.IP "\(bu" 4
-\fB\-F\fR, \fB\-\-full\-dump\fR: Dump a textual representation of the whole contents of \fIINPUT_FILE\fR to standard output\. The default format is XML, unless specified otherwise\.
-.
-.IP "\(bu" 4
-\fB\-C\fR, \fB\-\-check\fR: Print a report to standard output listing warnings and errors detected in \fIINPUT_FILE\fR, as well as potential incompatibilities, and informations about the codecs used in the file\. The exit code will be set to a non\-zero value if there is at least one error in the file\.
-.
-.IP
-The output format can either be plain text or XML using the \fB\-\-xml\fR option\. It can also be disabled altogether using the \fB\-\-quiet\fR option if you are only interested in the exit status\.
-.
-.IP
+.PD
+It is also possible to specify another event via the \f[C]--event\f[]
+option, such as \f[I]onLastSecond\f[].
+.SS -F, --full-dump
+.PP
+Dump a textual representation of the whole contents of
+\f[I]INPUT_FILE\f[] to standard output.
+The default format is XML, unless specified otherwise.
+.SS -C, --check
+.PP
+Print a report to standard output listing warnings and errors detected
+in \f[I]INPUT_FILE\f[], as well as potential incompatibilities, and
+informations about the codecs used in the file.
+The exit code will be set to a non-zero value if there is at least one
+error in the file.
+.PP
+The output format can either be plain text or XML using the
+\f[C]--xml\f[] option.
+It can also be disabled altogether using the \f[C]--quiet\f[] option if
+you are only interested in the exit status.
+.PP
 Messages are divided into four specific levels of increasing importance:
-.
-.IP "\(bu" 4
-\fIinfo\fR: informational messages that do not pertain to the file validity
-.
-.IP "\(bu" 4
-\fIwarning\fR: messages that inform of oddities to the flv format but that might not hamper file reading or playability, this is the default level
-.
-.IP "\(bu" 4
-\fIerror\fR: messages that inform of errors that might render the file impossible to play or stream correctly
-.
-.IP "\(bu" 4
-\fIfatal\fR: messages that inform of errors that make further file reading impossible therefore ending parsing completely
-.
-.IP "" 0
-.
-.IP
-The \fB\-\-level\fR option allows to limit the display of messages to a minimum level among those, for example if the user is only interested in error messages and above\.
-.
-.IP
-Each message or message template presented to the user is identified by a specific code of the following format:
-.
-.IP
-\fB[level][topic][id]\fR
-.
-.IP "\(bu" 4
-\fIlevel\fR is an upper\-case letter that can be either I, W, E, F according to the aforementioned message levels
-.
-.IP "\(bu" 4
-\fItopic\fR is a two\-digit integer representing the general topic of the message
-.
-.IP "\(bu" 4
-\fIid\fR is a unique three\-digit identifier for the message, or message template if parameterized
-.
-.IP "" 0
-.
-.IP
+.IP \[bu] 2
+\f[B]info\f[]: informational messages that do not pertain to the file
+validity
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]warning\f[]: messages that inform of oddities to the flv format but
+that might not hamper file reading or playability, this is the default
+level
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]error\f[]: messages that inform of errors that might render the
+file impossible to play or stream correctly
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]fatal\f[]: messages that inform of errors that make further file
+reading impossible therefore ending parsing completely
+.PP
+The \f[C]--level\f[] option allows to limit the display of messages to a
+minimum level among those, for example if the user is only interested in
+error messages and above.
+.PP
+Each message or message template presented to the user is identified by
+a specific code of the following format:
+.PP
+\f[C][level][topic][id]\f[]
+.IP \[bu] 2
+\f[B]level\f[] is an upper-case letter that can be either I, W, E, F
+according to the aforementioned message levels
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]topic\f[] is a two-digit integer representing the general topic of
+the message
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]id\f[] is a unique three-digit identifier for the message, or
+message template if parameterized
+.PP
 Messages can be related to the following topics :
-.
-.IP "\(bu" 4
-\fI10\fR general flv file format
-.
-.IP "\(bu" 4
-\fI11\fR file header
-.
-.IP "\(bu" 4
-\fI12\fR previous tag size
-.
-.IP "\(bu" 4
-\fI20\fR tag format
-.
-.IP "\(bu" 4
-\fI30\fR tag types
-.
-.IP "\(bu" 4
-\fI40\fR timestamps
-.
-.IP "\(bu" 4
-\fI50\fR audio data
-.
-.IP "\(bu" 4
-\fI51\fR audio codecs
-.
-.IP "\(bu" 4
-\fI60\fR video data
-.
-.IP "\(bu" 4
-\fI61\fR video codecs
-.
-.IP "\(bu" 4
-\fI70\fR metadata
-.
-.IP "\(bu" 4
-\fI80\fR AMF data
-.
-.IP "\(bu" 4
-\fI81\fR keyframes
-.
-.IP "\(bu" 4
-\fI82\fR cue points
-.
-.IP "" 0
-.
-.IP
-For example, \fIW51050\fR represents a Warning in topic 51 with the id 050, which represents a warning message related to audio codecs, in that case to signal that an audio tag has an unknown codec\.
-.
-.IP "\(bu" 4
-\fB\-U\fR, \fB\-\-update\fR: Update the given input file by inserting a computed \fIonMetaData\fR tag\. If an output file is specified, it will be created or overwritten instead and the input file will not be modified\. If the original file is to be updated, a temporary file will be created in the default temp directory of the platform, and it will be copied over the original file at the end of the operation\. This is due to the fact that the output file is written while the original file is being read due to the two\-pass method\.
-.
-.IP
-The computed metadata contains among other data full keyframe informations, in order to allow HTTP pseudo\-streaming and random\-access seeking in the file\.
-.
-.IP
-By default, an \fIonLastSecond\fR tag will be inserted, unless the \fB\-\-no\-last\-second\fR option is specified\.
-.
-.IP
-Normally overwritten by the update process, the existing metadata found in the input file can be preserved by the \fB\-\-preserve\fR option\.
-.
-.IP
-It is also possible to insert custom string values with the \fB\-\-add\fR option, which can be specified multiple times\.
-.
-.IP
-By default, the update operation is performed without output, unless the \fB\-\-verbose\fR option is specified, or the \fB\-\-print\-metadata\fR is used to print the newly written metadata to the standard output\.
-.
-.IP "" 0
-.
-.SH "OPTIONS"
-.
-.SS "DUMP"
-.
-.SS "FULL DUMP"
-.
-.SS "CHECK"
-.
-.SS "UPDATE"
-.
-.SH "FORMATS"
-.
-.SH "EXAMPLES"
-.
-.SH "EXIT STATUS"
-.
-.SH "BUGS"
-\fBflvmeta\fR does not support encrypted FLV files yet\.
-.
-.SH "AUTHOR"
-.
-.SH "COPYRIGHT"
-.
-.SH "CONTACT"
-
+.IP \[bu] 2
+\f[B]10\f[] general flv file format
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]11\f[] file header
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]12\f[] previous tag size
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]20\f[] tag format
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]30\f[] tag types
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]40\f[] timestamps
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]50\f[] audio data
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]51\f[] audio codecs
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]60\f[] video data
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]61\f[] video codecs
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]70\f[] metadata
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]80\f[] AMF data
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]81\f[] keyframes
+.PD 0
+.P
+.PD
+.IP \[bu] 2
+\f[B]82\f[] cue points
+.PP
+For example, represents a Warning in topic 51 with the id 050, which
+represents a warning message related to audio codecs, in that case to
+signal that an audio tag has an unknown codec.
+.SS -U, --update
+.PP
+Update the given input file by inserting a computed \f[I]onMetaData\f[]
+tag.
+If \f[I]OUTPUT_FILE\f[] is specified, it will be created or overwritten
+instead and the input file will not be modified.
+If the original file is to be updated, a temporary file will be created
+in the default temp directory of the platform, and it will be copied
+over the original file at the end of the operation.
+This is due to the fact that the output file is written while the
+original file is being read due to the two-pass method.
+.PP
+The computed metadata contains among other data full keyframe
+informations, in order to allow HTTP pseudo-streaming and random-access
+seeking in the file.
+.PP
+By default, an \f[I]onLastSecond\f[] tag will be inserted, unless the
+\f[C]--no-last-second\f[] option is specified.
+.PP
+Normally overwritten by the update process, the existing metadata found
+in the input file can be preserved by the \f[C]--preserve\f[] option.
+.PP
+It is also possible to insert custom string values with the
+\f[C]--add\f[] option, which can be specified multiple times.
+.PP
+By default, the update operation is performed without output, unless the
+\f[C]--verbose\f[] option is specified, or the \f[C]--print-metadata\f[]
+is used to print the newly written metadata to the standard output.
+.SH OPTIONS
+.SS DUMP
+.TP
+.B -d \f[I]FORMAT\f[], --dump-format=\f[I]FORMAT\f[]
+specify dump format where \f[I]FORMAT\f[] is `xml' (default), `json',
+`raw', or `yaml'
+.RS
+.RE
+.SS FULL DUMP
+.SS CHECK
+.SS UPDATE
+.SS GENERAL
+.SH FORMATS
+.SH EXAMPLES
+.SH EXIT STATUS
+.SH BUGS
+.PP
+\f[B]flvmeta\f[] does not support encrypted FLV files yet.
+.SH AUTHOR
+.SH COPYRIGHT
+.SH CONTACT
