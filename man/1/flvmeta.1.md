@@ -17,17 +17,17 @@ flvmeta - manipulate or extract metadata in Adobe Flash Video files
 
 # DESCRIPTION
 
-**flvmeta** is a command-line utility aimed at manipulating Adobe(tm) Flash Video
-files (FLV), through several commands, only one of which can be used for each
-invocation of the program.
+**flvmeta** is a command-line utility aimed at manipulating Adobe(tm) Flash
+Video files (FLV), through several commands, only one of which can be used for
+each invocation of the program.
 
 It possesses the ability to compute and inject a variety of values in the
 _onMetaData_ event tag, including keyframe indices used by most video players to
 allow random-access seeking, notably for HTTP pseudo-streamed files via a 
 server-side module, by having the client send the file offset looked up for the
 nearest desired keyframe.  
-Tools such as **flvmeta** must be used in the case the initial encoding process is
-unable to inject those metadata.
+Tools such as **flvmeta** must be used in the case the initial encoding process
+is unable to inject those metadata.
 
 It can also optionnally inject the _onLastSecond_ event, used to signal the end
 of playback, for example to revert the player software to a 'stopped' state.
@@ -43,8 +43,8 @@ to potentially unplayable, using a few real world encountered issues.
 This analysis can also determine and display the minimal Flash Player version
 which can be used to correctly play a given file, as well as codec information.
 
-**flvmeta** can operate on arbitrarily large files, and can handle FLV files using
-extended (32-bit) timestamps.
+**flvmeta** can operate on arbitrarily large files, and can handle FLV files
+using extended (32-bit) timestamps.
 It can guess video frame dimensions for all known video codecs supported by the
 official FLV specification.
 
@@ -173,15 +173,77 @@ print the newly written metadata to the standard output.
 
 -d *FORMAT*, \--dump-format=*FORMAT*
 :   specify dump format where *FORMAT* is 'xml' (default), 'json', 'raw', or
-    'yaml'
+    'yaml'. Also applicable for the **\--full-dump** command.
 
-## FULL DUMP
+-j, \--json
+:   equivalent to **\--dump-format=json**
+
+-r, \--raw
+:   equivalent to **\--dump-format=raw**
+
+-x, \--xml
+:   equivalent to **\--dump-format=xml**
+
+-y, \--yaml
+:   equivalent to **\--dump-format=yaml**
+
+-e *EVENT*, \--event=*EVENT*
+:   specify the event to dump instead of _onMetaData_, for example
+    _onLastSecond_.
 
 ## CHECK
 
+-l *LEVEL*, \--level=*LEVEL*
+:   print only messages where level is at least *LEVEL*. The levels are, by
+    ascending importance, 'info', 'warning' (default), 'error', or 'fatal'.
+
+-q, \--quiet
+:   do not print messages, only return the status code
+
+-x, \--xml
+:   generate an XML report instead of the default 'compiler-friendly' text
+
 ## UPDATE
 
+-m, \--print-metadata
+:   print metadata to stdout after update using  the format specified by
+    the **\--format** option
+
+-a *NAME=VALUE*, \--add=*NAME=VALUE*
+:   add a metadata string value to the output file
+
+-s, \--no-lastsecond
+:   do not create the *onLastSecond* tag
+
+-p, \--preserve
+:   preserve input file existing *onMetadata* tags
+
+-f, \--fix
+:   fix invalid tags from the input file
+
+-i, \--ignore
+:   ignore invalid tags from the input file (the default behaviour is to stop
+    the update process with an error)
+
+-t, \--reset-timestamps
+:   reset timestamps so *OUTPUT_FILE* starts at zero. This has been added
+    because some FLV files are produced by cutting bigger files, and the
+    software doing the cutting does not resets the timestamps as required
+    by the standard, which can cause playback issues.
+
+-k, --all-keyframes
+:   index all keyframe tags, including duplicate timestamps
+
 ## GENERAL
+
+-v, \--verbose
+:   display informative messages
+
+-V, \--version
+:   print version information and exit
+
+-h, \--help
+:   display help on the program usage and exit
 
 # FORMATS
 
