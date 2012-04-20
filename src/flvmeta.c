@@ -117,7 +117,7 @@ static void help(const char * name) {
            "  -r, --raw                 equivalent to --dump-format=raw\n"
            "  -x, --xml                 equivalent to --dump-format=xml\n"
            "  -y, --yaml                equivalent to --dump-format=yaml\n"
-           "  -e, --event               specify the event to be dumped instead of 'onMetadata'\n"
+           "  -e, --event=EVENT         specify the event to be dumped instead of 'onMetadata'\n"
            "\nCheck options:\n"
            "  -l, --level=LEVEL         print only messages where level is at least LEVEL\n"
            "                            LEVEL is 'info', 'warning' (default), 'error', or 'fatal'\n"
