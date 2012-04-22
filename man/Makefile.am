@@ -1,1 +1,1 @@
-man1_MANS = flvmeta.1
+dist_man_MANS = flvmeta.1
