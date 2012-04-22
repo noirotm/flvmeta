@@ -1,1 +1,1 @@
-man1_MANS = 1/flvmeta.1
+man1_MANS = flvmeta.1
