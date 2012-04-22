@@ -248,11 +248,11 @@ int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
     /* if only name can be read, metadata are invalid */
     data_size = amf_data_size(d);
     if (stream->current_tag_body_length > data_size) {
-        stream->current_tag_body_length -= data_size;
+        stream->current_tag_body_length -= (uint32)data_size;
     }
     else {
         stream->current_tag_body_length = 0;
-        stream->current_tag_body_overflow = data_size - stream->current_tag_body_length;
+        stream->current_tag_body_overflow = (uint32)data_size - stream->current_tag_body_length;
 
         stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
         if (stream->current_tag_body_overflow > 0) {
@@ -275,10 +275,10 @@ int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
     
     data_size = amf_data_size(d);
     if (stream->current_tag_body_length >= data_size) {
-        stream->current_tag_body_length -= data_size;
+        stream->current_tag_body_length -= (uint32)data_size;
     }
     else {
-        stream->current_tag_body_overflow = data_size - stream->current_tag_body_length;
+        stream->current_tag_body_overflow = (uint32)data_size - stream->current_tag_body_length;
         stream->current_tag_body_length = 0;
     }
 
@@ -305,7 +305,7 @@ size_t flv_read_tag_body(flv_stream * stream, void * buffer, size_t buffer_size)
     bytes_number = (buffer_size > stream->current_tag_body_length) ? stream->current_tag_body_length : buffer_size;
     bytes_number = fread(buffer, sizeof(byte), bytes_number, stream->flvin);
     
-    stream->current_tag_body_length -= bytes_number;
+    stream->current_tag_body_length -= (uint32)bytes_number;
 
     if (stream->current_tag_body_length == 0) {
         stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
