@@ -14,6 +14,12 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
 
+dnl Checks for pandoc
+AC_ARG_VAR(PANDOC, [pandoc path])
+AC_PATH_PROG(PANDOC, [pandoc], [])
+
+AM_CONDITIONAL([BUILD_MAN], [test -x "$PANDOC"])
+
 dnl Checks for check.
 ifdef([PKG_CHECK_MODULES],
     [PKG_CHECK_MODULES([CHECK], [check >= 0.9.4],

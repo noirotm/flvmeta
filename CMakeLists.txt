@@ -119,6 +119,7 @@ endif(WIN32)
 include(CPack)
 
 add_subdirectory(src)
+add_subdirectory(man)
 
 # tests
 #enable_testing()

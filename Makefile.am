@@ -1,3 +1,7 @@
-SUBDIRS = src tests schemas man
+if BUILD_MAN
+    MAN_SUBDIR = man
+endif
+
+SUBDIRS = src tests schemas $(MAN_SUBDIR)
 EXTRA_DIST = autogen.sh \
              CMakeLists.txt

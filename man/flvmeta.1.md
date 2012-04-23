@@ -210,7 +210,8 @@ print the newly written metadata to the standard output.
     the **\--format** option
 
 -a *NAME=VALUE*, \--add=*NAME=VALUE*
-:   add a metadata string value to the output file
+:   add a metadata string value to the output file. The name/value pair will be
+    appended at the end of the _onMetaData_ tag.
 
 -s, \--no-lastsecond
 :   do not create the *onLastSecond* tag
