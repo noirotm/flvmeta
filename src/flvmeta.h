@@ -44,13 +44,12 @@
 #define ERROR_OPEN_WRITE    6
 #define ERROR_INVALID_TAG   7
 #define ERROR_WRITE         8
-#define ERROR_SAME_FILE     9
 
 /* invalid flv file reported by the check command (one or more errors) */
-#define ERROR_INVALID_FLV_FILE 10
+#define ERROR_INVALID_FLV_FILE 9
 
 /* stop file parsing without error */
-#define FLVMETA_DUMP_STOP_OK 11
+#define FLVMETA_DUMP_STOP_OK 10
 
 /* commands */
 #define FLVMETA_DEFAULT_COMMAND     0
