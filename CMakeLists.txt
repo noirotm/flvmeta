@@ -4,6 +4,8 @@ project(flvmeta C)
 set(FLVMETA_VERSION "1.1")
 set(FLVMETA_STABLE no)
 
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
+
 # check whether we're in an instable branch
 if(FLVMETA_STABLE)
   message(STATUS "Set flvmeta version to ${FLVMETA_VERSION}")
@@ -11,10 +13,12 @@ else(FLVMETA_STABLE)
   # if so, check for svnversion, and retrieve current revision
   find_program(GIT "git")
   if(GIT)
-    execute_process(COMMAND           "${GIT}" rev-parse --short HEAD
-                    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-                    OUTPUT_VARIABLE   GIT_RELEASE
-                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(
+      COMMAND "${GIT}" rev-parse --short HEAD
+      WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+      OUTPUT_VARIABLE   GIT_RELEASE
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
     set(FLVMETA_VERSION "${FLVMETA_VERSION}-g${GIT_RELEASE}")
     message(STATUS "Set unstable flvmeta version to ${FLVMETA_VERSION}")
     unset(GIT CACHE)
@@ -30,6 +34,12 @@ set(PACKAGE_NAME      ${PACKAGE})
 set(PACKAGE_BUGREPORT "flvmeta-discussion@googlegroups.com")
 set(PACKAGE_VERSION   "${FLVMETA_VERSION}")
 set(PACKAGE_STRING    "${PACKAGE_NAME} ${PACKAGE_VERSION}")
+
+# build options
+set(
+  FLVMETA_USE_SYSTEM_LIBYAML FALSE
+  CACHE BOOL "Build flvmeta by linking it to the currently installed version of libyaml"
+)
 
 #platform tests
 include(CheckFunctionExists)
@@ -70,9 +80,11 @@ endif(IS_BIGENDIAN)
 # large file support
 check_function_exists("fseeko" HAVE_FSEEKO)
 if(HAVE_FSEEKO)
-  execute_process(COMMAND getconf LFS_CFLAGS
+  execute_process(
+    COMMAND getconf LFS_CFLAGS
     OUTPUT_VARIABLE LFS_CFLAGS
-    ERROR_QUIET)
+    ERROR_QUIET
+  )
   if(LFS_CFLAGS)
     add_definitions(${LFS_CFLAGS})
   endif(LFS_CFLAGS)
