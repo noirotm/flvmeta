@@ -62,9 +62,9 @@ command determines the mode of execution of the program.
 By default, if no command is specified, **flvmeta** will implicitely choose the
 command to use according to the presence of *INPUT_FILE* and *OUTPUT_FILE*.
 
-If only *INPUT_FILE* is present, the `--dump` command will be executed.
+If only *INPUT_FILE* is present, the **\--dump** command will be executed.
 
-If both *INPUT_FILE* and *OUTPUT_FILE* are present, the `--update` command
+If both *INPUT_FILE* and *OUTPUT_FILE* are present, the **\--update** command
 will be executed.
 
 Here is a list of the supported commands:
@@ -74,7 +74,7 @@ Here is a list of the supported commands:
 Dump a textual representation of the first _onMetaData_ tag found in
 *INPUT_FILE* to standard output. The default format is XML, unless
 specified otherwise.  
-It is also possible to specify another event via the `--event` option,
+It is also possible to specify another event via the **\--event** option,
 such as _onLastSecond_.
 
 ## -F, \--full-dump
@@ -89,8 +89,8 @@ Print a report to standard output listing warnings and errors detected in
 the codecs used in the file. The exit code will be set to a non-zero value
 if there is at least one error in the file.
 
-The output format can either be plain text or XML using the `--xml` option.
-It can also be disabled altogether using the `--quiet` option if you are
+The output format can either be plain text or XML using the **\--xml** option.
+It can also be disabled altogether using the **\--quiet** option if you are
 only interested in the exit status.
 
 Messages are divided into four specific levels of increasing importance:
@@ -103,7 +103,7 @@ Messages are divided into four specific levels of increasing importance:
 * **fatal**: messages that inform of errors that make further file reading
   impossible therefore ending parsing completely
 
-The `--level` option allows to limit the display of messages to a minimum
+The **\--level** option allows to limit the display of messages to a minimum
 level among those, for example if the user is only interested in error
 messages and above.
 
@@ -155,16 +155,16 @@ in order to allow HTTP pseudo-streaming and random-access seeking in the
 file.
 
 By default, an _onLastSecond_ tag will be inserted, unless the
-`--no-last-second` option is specified.
+**\--no-last-second** option is specified.
 
 Normally overwritten by the update process, the existing metadata found in
-the input file can be preserved by the `--preserve` option.
+the input file can be preserved by the **\--preserve** option.
 
-It is also possible to insert custom string values with the `--add` option,
+It is also possible to insert custom string values with the **\--add** option,
 which can be specified multiple times.
 
 By default, the update operation is performed without output, unless the
-`--verbose` option is specified, or the `--print-metadata` is used to
+**\--verbose** option is specified, or the **\--print-metadata** is used to
 print the newly written metadata to the standard output.
 
 # OPTIONS
@@ -189,7 +189,7 @@ print the newly written metadata to the standard output.
 
 -e *EVENT*, \--event=*EVENT*
 :   specify the event to dump instead of _onMetaData_, for example
-    _onLastSecond_.
+    _onLastSecond_
 
 ## CHECK
 
@@ -248,9 +248,54 @@ print the newly written metadata to the standard output.
 
 # FORMATS
 
+The various XML formats used by **flvmeta** are precisely described by the
+following XSD schemas:
+
+* http://schemas.flvmeta.org/flv.xsd: describes the general organization of FLV
+  files
+* http://schemas.flvmeta.org/Amf0.xsd: describes an XML representation of the
+  Adobe(TM) AMF0 serialization format
+* http://schemas.flvmeta.org/report.xsd: describes the XML output format of the
+  **\--check** **\--xml** command
+
 # EXAMPLES
 
+**flvmeta example.flv**
+
+Prints the onMetadata tag contents of example.flv as XML output.
+
+**flvmeta example.flv out.flv**
+
+Creates a file named out.flv containing updated metadata and an onLastSecond
+tag from the exemple.flv file.
+
+**flvmeta \--check \--xml \--level=error example.flv**
+
+Checks the validity of the example.flv file and prints the error report to
+stdout in XML format, displaying only errors and fatal errors.
+
+**flvmeta \--full-dump \--yaml example.flv**
+
+Prints the full contents of example.flv as YAML format to stdout.
+
+**flvmeta \--update \--no-last-second \--show-metadata \--json example.flv**
+
+Performs an in-place update of example.flv by inserting computed onMetadata
+without an onLastSecond tag, and prints the newly inserted metadata on stdout
+as JSON.
+
 # EXIT STATUS
+
+* **0** flvmeta exited without error  
+* **1** an error occured when trying to open an input file  
+* **2** the input file was not recognized as an FLV file  
+* **3** an end-of-file condition was encountered unexpectedly  
+* **4** a memory allocation error occured during the run of the program  
+* **5** an empty tag was encountered in an input file  
+* **6** an error occured when trying to open an output file  
+* **7** an invalid tag was encountered in an input file  
+* **8** an error was encountered while writing an output file  
+* **9** the **\--check** command reported an invalid file (one or more errors)
 
 # BUGS
 
