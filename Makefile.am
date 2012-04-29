@@ -4,4 +4,7 @@ endif
 
 SUBDIRS = src tests schemas $(MAN_SUBDIR)
 EXTRA_DIST = autogen.sh \
-             CMakeLists.txt
+             CMakeLists.txt \
+             .gitignore \
+             config-cmake.h.in \
+             FindLibYaml.cmake
