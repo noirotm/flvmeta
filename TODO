@@ -7,8 +7,6 @@ The program does not have much output, mainly errors, so it should be easy
 to translate it in several languages.
 If you want to contribute, send an email to flvmeta-discussion@googlegroups.com.
 
-Man page (infotex).
-
 Complete verbose mode.
 
 Fix onLastSecond insertion, which should be before the last second.

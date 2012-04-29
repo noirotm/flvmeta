@@ -3,4 +3,7 @@ This file is not maintained anymore.
 Please see the change list at :
     http://code.google.com/p/flvmeta/source/list
 
-If you are a package maintainer for a given distribution which policy states that a ChangeLog file must be appropriately filled with relevant information, you can use the `svn2cl' tool which can be found at http://arthurdejong.org/svn2cl/ to generate the ChangeLog file from the Subversion logs.
+If you are a package maintainer for a given distribution which policy states
+that a ChangeLog file must be appropriately filled with relevant information,
+you can use the `git2cl' tool which can be found at
+http://josefsson.org/git2cl/ to generate the ChangeLog file from the Git logs.
