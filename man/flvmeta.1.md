@@ -258,6 +258,16 @@ print the newly written metadata to the standard output.
 
 # AUTHOR
 
+Marc Noirot \<marc.noirot@gmail.com\>
+
 # COPYRIGHT
 
+Copyright 2007-2012 Marc Noirot
+
+This is free software; see the source for copying conditions.
+There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
+
 # CONTACT
+
+Please report bugs to \<flvmeta-discussion@googlegroups.com\>
