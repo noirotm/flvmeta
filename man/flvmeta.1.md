@@ -51,8 +51,6 @@ official FLV specification.
 Its memory usage remains minimal, as it uses a two-pass reading algorithm which
 permits the computation of all necessary tags without loading anything more than
 the file's tags headers in memory.
-Only the dumping of JSON data can consume more memory, since the bundled `mjson`
-library constructs a data tree in memory before outputting the formatted data.
 
 # COMMANDS
 
