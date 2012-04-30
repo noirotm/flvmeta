@@ -32,7 +32,7 @@ extern "C" {
 
 /* raw dumping functions */
 void dump_raw_setup_metadata_dump(flv_parser * parser);
-void dump_raw_setup_file_dump(flv_parser * parser);
+int dump_raw_file(flv_parser * parser, const flvmeta_opts * options);
 int dump_raw_amf_data(const amf_data * data);
 
 #ifdef __cplusplus

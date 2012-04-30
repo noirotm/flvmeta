@@ -122,16 +122,16 @@ void dump_raw_setup_metadata_dump(flv_parser * parser) {
     }
 }
 
-void dump_raw_setup_file_dump(flv_parser * parser) {
-    if (parser != NULL) {
-        parser->on_header = raw_on_header;
-        parser->on_tag = raw_on_tag;
-        parser->on_audio_tag = raw_on_audio_tag;
-        parser->on_video_tag = raw_on_video_tag;
-        parser->on_metadata_tag = raw_on_metadata_tag;
-        parser->on_prev_tag_size = raw_on_prev_tag_size;
-        parser->on_stream_end = raw_on_stream_end;
-    }
+int dump_raw_file(flv_parser * parser, const flvmeta_opts * options) {
+    parser->on_header = raw_on_header;
+    parser->on_tag = raw_on_tag;
+    parser->on_audio_tag = raw_on_audio_tag;
+    parser->on_video_tag = raw_on_video_tag;
+    parser->on_metadata_tag = raw_on_metadata_tag;
+    parser->on_prev_tag_size = raw_on_prev_tag_size;
+    parser->on_stream_end = raw_on_stream_end;
+    
+    return flv_parse(options->input_file, parser);
 }
 
 int dump_raw_amf_data(const amf_data * data) {

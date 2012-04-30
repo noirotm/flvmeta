@@ -31,9 +31,9 @@ extern "C" {
 #endif /* __cplusplus */
 
 /* XML dumping functions */
-extern void dump_xml_setup_metadata_dump(flv_parser * parser);
-extern void dump_xml_setup_file_dump(flv_parser * parser);
-extern int dump_xml_amf_data(const amf_data * data);
+void dump_xml_setup_metadata_dump(flv_parser * parser);
+int dump_xml_file(flv_parser * parser, const flvmeta_opts * options);
+int dump_xml_amf_data(const amf_data * data);
 
 #ifdef __cplusplus
 }

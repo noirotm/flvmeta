@@ -124,64 +124,51 @@ static int yaml_on_header(flv_header * header, flv_parser * parser) {
     yaml_event_t event;
     char buffer[20];
 
-    emitter = (yaml_emitter_t *)malloc(sizeof(yaml_emitter_t));
-    if (emitter != NULL) {
-        yaml_emitter_initialize(emitter);
-        parser->user_data = emitter;
-        
-        yaml_emitter_set_output_file(emitter, stdout);
-        yaml_emitter_open(emitter);
+    emitter = (yaml_emitter_t *)parser->user_data;
 
-        yaml_document_start_event_initialize(&event, NULL, NULL, NULL, 0);
-        yaml_emitter_emit(emitter, &event);
+    yaml_mapping_start_event_initialize(&event, NULL, NULL, 1, YAML_ANY_MAPPING_STYLE);
+    yaml_emitter_emit(emitter, &event);
 
-        yaml_mapping_start_event_initialize(&event, NULL, NULL, 1, YAML_ANY_MAPPING_STYLE);
-        yaml_emitter_emit(emitter, &event);
+    /* magic */
+    yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"magic", 5, 1, 1, YAML_ANY_SCALAR_STYLE);
+    yaml_emitter_emit(emitter, &event);
 
-        /* magic */
-        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"magic", 5, 1, 1, YAML_ANY_SCALAR_STYLE);
-        yaml_emitter_emit(emitter, &event);
+    sprintf(buffer, "%.3s", header->signature);
+    yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)buffer, (int)strlen(buffer), 1, 1, YAML_ANY_SCALAR_STYLE);
+    yaml_emitter_emit(emitter, &event);
 
-        sprintf(buffer, "%.3s", header->signature);
-        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)buffer, (int)strlen(buffer), 1, 1, YAML_ANY_SCALAR_STYLE);
-        yaml_emitter_emit(emitter, &event);
+    /* hasVideo */
+    yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"hasVideo", 8, 1, 1, YAML_ANY_SCALAR_STYLE);
+    yaml_emitter_emit(emitter, &event);
 
-        /* hasVideo */
-        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"hasVideo", 8, 1, 1, YAML_ANY_SCALAR_STYLE);
-        yaml_emitter_emit(emitter, &event);
+    sprintf(buffer, "%s", flv_header_has_video(*header) ? "true" : "false");
+    yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)buffer, (int)strlen(buffer), 1, 1, YAML_ANY_SCALAR_STYLE);
+    yaml_emitter_emit(emitter, &event);
 
-        sprintf(buffer, "%s", flv_header_has_video(*header) ? "true" : "false");
-        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)buffer, (int)strlen(buffer), 1, 1, YAML_ANY_SCALAR_STYLE);
-        yaml_emitter_emit(emitter, &event);
+    /* hasAudio */
+    yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"hasAudio", 8, 1, 1, YAML_ANY_SCALAR_STYLE);
+    yaml_emitter_emit(emitter, &event);
 
-        /* hasAudio */
-        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"hasAudio", 8, 1, 1, YAML_ANY_SCALAR_STYLE);
-        yaml_emitter_emit(emitter, &event);
+    sprintf(buffer, "%s", flv_header_has_audio(*header) ? "true" : "false");
+    yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)buffer, (int)strlen(buffer), 1, 1, YAML_ANY_SCALAR_STYLE);
+    yaml_emitter_emit(emitter, &event);
 
-        sprintf(buffer, "%s", flv_header_has_audio(*header) ? "true" : "false");
-        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)buffer, (int)strlen(buffer), 1, 1, YAML_ANY_SCALAR_STYLE);
-        yaml_emitter_emit(emitter, &event);
+    /* version */
+    yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"version", 7, 1, 1, YAML_ANY_SCALAR_STYLE);
+    yaml_emitter_emit(emitter, &event);
 
-        /* version */
-        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"version", 7, 1, 1, YAML_ANY_SCALAR_STYLE);
-        yaml_emitter_emit(emitter, &event);
+    sprintf(buffer, "%i", header->version);
+    yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)buffer, (int)strlen(buffer), 1, 1, YAML_ANY_SCALAR_STYLE);
+    yaml_emitter_emit(emitter, &event);
 
-        sprintf(buffer, "%i", header->version);
-        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)buffer, (int)strlen(buffer), 1, 1, YAML_ANY_SCALAR_STYLE);
-        yaml_emitter_emit(emitter, &event);
+    /* start of tags array */
+    yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"tags", 4, 1, 1, YAML_ANY_SCALAR_STYLE);
+    yaml_emitter_emit(emitter, &event);
 
-        /* start of tags array */
-        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"tags", 4, 1, 1, YAML_ANY_SCALAR_STYLE);
-        yaml_emitter_emit(emitter, &event);
+    yaml_sequence_start_event_initialize(&event, NULL, NULL, 1, YAML_ANY_SEQUENCE_STYLE);
+    yaml_emitter_emit(emitter, &event);
 
-        yaml_sequence_start_event_initialize(&event, NULL, NULL, 1, YAML_ANY_SEQUENCE_STYLE);
-        yaml_emitter_emit(emitter, &event);
-
-        return OK;
-    }
-    else {
-        return ERROR_MEMORY;
-    }
+    return OK;
 }
 
 static int yaml_on_tag(flv_tag * tag, flv_parser * parser) {
@@ -355,15 +342,6 @@ static int yaml_on_stream_end(flv_parser * parser) {
     yaml_mapping_end_event_initialize(&event);
     yaml_emitter_emit(emitter, &event);
 
-    yaml_document_end_event_initialize(&event, 1);
-    yaml_emitter_emit(emitter, &event);
-
-    yaml_emitter_flush(emitter);
-    yaml_emitter_close(emitter);
-    yaml_emitter_delete(emitter);
-
-    free(emitter);
-
     return OK;
 }
 
@@ -392,16 +370,38 @@ void dump_yaml_setup_metadata_dump(flv_parser * parser) {
     }
 }
 
-void dump_yaml_setup_file_dump(flv_parser * parser) {
-    if (parser != NULL) {
-        parser->on_header = yaml_on_header;
-        parser->on_tag = yaml_on_tag;
-        parser->on_audio_tag = yaml_on_audio_tag;
-        parser->on_video_tag = yaml_on_video_tag;
-        parser->on_metadata_tag = yaml_on_metadata_tag;
-        parser->on_prev_tag_size = yaml_on_prev_tag_size;
-        parser->on_stream_end = yaml_on_stream_end;
-    }
+int dump_yaml_file(flv_parser * parser, const flvmeta_opts * options) {
+    yaml_emitter_t emitter;
+    yaml_event_t event;
+    int ret;
+    
+    parser->on_header = yaml_on_header;
+    parser->on_tag = yaml_on_tag;
+    parser->on_audio_tag = yaml_on_audio_tag;
+    parser->on_video_tag = yaml_on_video_tag;
+    parser->on_metadata_tag = yaml_on_metadata_tag;
+    parser->on_prev_tag_size = yaml_on_prev_tag_size;
+    parser->on_stream_end = yaml_on_stream_end;
+
+    yaml_emitter_initialize(&emitter);
+    yaml_emitter_set_output_file(&emitter, stdout);
+    yaml_emitter_open(&emitter);
+
+    yaml_document_start_event_initialize(&event, NULL, NULL, NULL, 0);
+    yaml_emitter_emit(&emitter, &event);
+    
+    parser->user_data = &emitter;
+
+    ret = flv_parse(options->input_file, parser);
+
+    yaml_document_end_event_initialize(&event, 1);
+    yaml_emitter_emit(&emitter, &event);
+
+    yaml_emitter_flush(&emitter);
+    yaml_emitter_close(&emitter);
+    yaml_emitter_delete(&emitter);
+
+    return ret;
 }
 
 int dump_yaml_amf_data(const amf_data * data) {

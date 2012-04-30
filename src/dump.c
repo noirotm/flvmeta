@@ -145,20 +145,16 @@ int dump_flv_file(const flvmeta_opts * options) {
 
     switch (options->dump_format) {
         case FLVMETA_FORMAT_JSON:
-            dump_json_setup_file_dump(&parser);
-            break;
+            return dump_json_file(&parser, options);
         case FLVMETA_FORMAT_RAW:
-            dump_raw_setup_file_dump(&parser);
-            break;
+            return dump_raw_file(&parser, options);
         case FLVMETA_FORMAT_XML:
-            dump_xml_setup_file_dump(&parser);
-            break;
+            return dump_xml_file(&parser, options);
         case FLVMETA_FORMAT_YAML:
-            dump_yaml_setup_file_dump(&parser);
-            break;
+            return dump_yaml_file(&parser, options);
+        default:
+            return OK;
     }
-
-    return flv_parse(options->input_file, &parser);
 }
 
 /* dump AMF data directly */
