@@ -25,39 +25,83 @@
 #include <stdio.h>
 #include "json.h"
 
+static void json_print_string(const char * str, size_t bytes) {
+    size_t i;
+    printf("\"");
+    for (i = 0; i < bytes; ++i) {
+        switch (str[i]) {
+            case '\"': printf("\\\""); break;
+            case '\\': printf("\\\\"); break;
+            case '/':  printf("\\/");  break;
+            case '\b': printf("\\b");  break;
+            case '\f': printf("\\f");  break;
+            case '\n': printf("\\n");  break;
+            case '\r': printf("\\r");  break;
+            case '\t': printf("\\t");  break;
+            default: printf("%c", str[i]);
+        }
+    }
+    printf("\"");
+}
+
+static void json_print_comma(json_emitter * je) {
+    if (je->print_comma != 0) {
+        printf(",");
+        je->print_comma = 0;
+    }
+}
+
 void json_emit_init(json_emitter * je) {
-    je->comma_level = 0;
-    je->object_level = 0;
+    je->print_comma = 0;
 }
 
 void json_emit_object_start(json_emitter * je) {
-    if (je->comma_level > 0) {
-        printf(",");
-        --je->comma_level;
-    }
+    json_print_comma(je);
     printf("{");
-    ++je->object_level;
+}
+
+void json_emit_object_key(json_emitter * je, const char * str, size_t bytes) {
+    json_print_comma(je);
+    json_print_string(str, bytes);
+    printf(":");
+    je->print_comma = 0;
 }
 
 void json_emit_object_end(json_emitter * je) {
     printf("}");
-    --je->object_level;
+    je->print_comma = 1;
 }
 
 void json_emit_array_start(json_emitter * je) {
+    json_print_comma(je);
+    printf("[");
 }
 
 void json_emit_array_end(json_emitter * je) {
+    printf("]");
+    je->print_comma = 1;
 }
 
 void json_emit_boolean(json_emitter * je, byte value) {
+    json_print_comma(je);
+    printf("%s", value != 0 ? "true" : "false");
+    je->print_comma = 1;
 }
 
 void json_emit_null(json_emitter * je) {
+    json_print_comma(je);
+    printf("null");
+    je->print_comma = 1;
 }
 
 void json_emit_number(json_emitter * je, number64 value) {
+    json_print_comma(je);
+    printf("%.12g", value);
+    je->print_comma = 1;
 }
 
 void json_emit_string(json_emitter * je, const char * str, size_t bytes) {
+    json_print_comma(je);
+    json_print_string(str, bytes);
+    je->print_comma = 1;
 }

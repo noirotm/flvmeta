@@ -29,67 +29,68 @@
 #include <string.h>
 
 /* JSON metadata dumping */
-static void amf_to_json(const amf_data * data, json_t ** object) {
+static void json_amf_data_dump(const amf_data * data, json_emitter * je) {
     if (data != NULL) {
-        json_t * value;
         amf_node * node;
         time_t time;
         struct tm * t;
         char str[128];
-        char * escaped_str;
 
         switch (data->type) {
             case AMF_TYPE_NUMBER:
-                sprintf(str, "%.12g", data->number_data);
-                *object = json_new_number(str);
+                json_emit_number(je, data->number_data);
                 break;
             case AMF_TYPE_BOOLEAN:
-                *object = (data->boolean_data) ? json_new_true() : json_new_false();
+                json_emit_boolean(je, data->boolean_data);
                 break;
             case AMF_TYPE_STRING:
-                escaped_str = json_escape((char *)amf_string_get_bytes(data));
-                *object = json_new_string(escaped_str);
-                free(escaped_str);
+                json_emit_string(je, (char *)amf_string_get_bytes(data), amf_string_get_size(data));
                 break;
             case AMF_TYPE_OBJECT:
-                *object = json_new_object();
+                json_emit_object_start(je);
                 node = amf_object_first(data);
                 while (node != NULL) {
-                    amf_to_json(amf_object_get_data(node), &value);
-                    escaped_str = json_escape((char *)amf_string_get_bytes(amf_object_get_name(node)));
-                    json_insert_pair_into_object(*object, escaped_str, value);
-                    free(escaped_str);
+                    json_emit_object_key(je,
+                        (char *)amf_string_get_bytes(amf_object_get_name(node)),
+                        amf_string_get_size(amf_object_get_name(node))
+                    );
+                    json_amf_data_dump(amf_object_get_data(node), je);
                     node = amf_object_next(node);
                 }
+                json_emit_object_end(je);
                 break;
             case AMF_TYPE_NULL:
             case AMF_TYPE_UNDEFINED:
-                *object = json_new_null();
+                json_emit_null(je);
                 break;
             case AMF_TYPE_ASSOCIATIVE_ARRAY:
-                *object = json_new_object();
+                json_emit_object_start(je);
                 node = amf_associative_array_first(data);
                 while (node != NULL) {
-                    amf_to_json(amf_associative_array_get_data(node), &value);
-                    json_insert_pair_into_object(*object, (const char *)amf_string_get_bytes(amf_associative_array_get_name(node)), value);
+                    json_emit_object_key(je,
+                        (char *)amf_string_get_bytes(amf_associative_array_get_name(node)),
+                        amf_string_get_size(amf_associative_array_get_name(node))
+                    );
+                    json_amf_data_dump(amf_object_get_data(node), je);
                     node = amf_associative_array_next(node);
                 }
+                json_emit_object_end(je);
                 break;
             case AMF_TYPE_ARRAY:
-                *object = json_new_array();
+                json_emit_array_start(je);
                 node = amf_array_first(data);
                 while (node != NULL) {
-                    amf_to_json(amf_array_get(node), &value);
-                    json_insert_child(*object, value);
+                    json_amf_data_dump(amf_array_get(node), je);
                     node = amf_array_next(node);
                 }
+                json_emit_array_end(je);
                 break;
             case AMF_TYPE_DATE:
                 time = amf_date_to_time_t(data);
                 tzset();
                 t = localtime(&time);
                 strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", t);
-                *object = json_new_string(str);
+                json_emit_string(je, str, strlen(str));
                 break;
             case AMF_TYPE_XML: break;
             case AMF_TYPE_CLASS: break;
@@ -142,16 +143,11 @@ static int json_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parse
 }
 
 static int json_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
-    json_t * root;
+    json_emitter je;
+    json_emit_init(&je);
 
     printf("\"scriptDataObject\":{\"name\":\"%s\",\"metadata\":", amf_string_get_bytes(name));
-    root = NULL;
-    /* dump AMF into JSON */
-    amf_to_json(data, &root);
-    /* print data */
-    json_stream_output(stdout, root);
-    /* cleanup */
-    json_free_value(&root);
+    json_amf_data_dump(data, &je);
     printf("}");
     return OK;
 }
@@ -205,15 +201,11 @@ void dump_json_setup_file_dump(flv_parser * parser) {
 }
 
 int dump_json_amf_data(const amf_data * data) {
-    json_t * root;
+    json_emitter je;
+    json_emit_init(&je);
 
-    root = NULL;
     /* dump AMF into JSON */
-    amf_to_json(data, &root);
-    /* print data */
-    json_stream_output(stdout, root);
-    /* cleanup */
-    json_free_value(&root);
+    json_amf_data_dump(data, &je);
 
     printf("\n");
 

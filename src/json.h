@@ -35,8 +35,7 @@
 
 /* json emitter structure */
 typedef struct __json_emitter {
-    uint32 comma_level;
-    uint32 object_level;
+    byte print_comma;
 } json_emitter;
 
 
@@ -47,6 +46,8 @@ extern "C" {
 void json_emit_init(json_emitter * je);
 
 void json_emit_object_start(json_emitter * je);
+
+void json_emit_object_key(json_emitter * je, const char * str, size_t bytes);
 
 void json_emit_object_end(json_emitter * je);
 
