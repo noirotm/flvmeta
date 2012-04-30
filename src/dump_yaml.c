@@ -119,7 +119,7 @@ static void amf_data_yaml_dump(const amf_data * data, yaml_emitter_t * emitter) 
 
 /* YAML FLV file full dump callbacks */
 
-int yaml_on_header(flv_header * header, flv_parser * parser) {
+static int yaml_on_header(flv_header * header, flv_parser * parser) {
     yaml_emitter_t * emitter;
     yaml_event_t event;
     char buffer[20];
@@ -184,7 +184,7 @@ int yaml_on_header(flv_header * header, flv_parser * parser) {
     }
 }
 
-int yaml_on_tag(flv_tag * tag, flv_parser * parser) {
+static int yaml_on_tag(flv_tag * tag, flv_parser * parser) {
     const char * str;
     yaml_emitter_t * emitter;
     yaml_event_t event;
@@ -231,7 +231,7 @@ int yaml_on_tag(flv_tag * tag, flv_parser * parser) {
     return OK;
 }
 
-int yaml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
+static int yaml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
     const char * str;
     yaml_emitter_t * emitter;
     yaml_event_t event;
@@ -266,7 +266,7 @@ int yaml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
     return OK;
 }
 
-int yaml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
+static int yaml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
     const char * str;
     yaml_emitter_t * emitter;
     yaml_event_t event;
@@ -317,7 +317,7 @@ int yaml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
     return OK;
 }
 
-int yaml_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
+static int yaml_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
     yaml_emitter_t * emitter;
     yaml_event_t event;
 
@@ -331,7 +331,7 @@ int yaml_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_pa
     return OK;
 }
 
-int yaml_on_prev_tag_size(uint32 size, flv_parser * parser) {
+static int yaml_on_prev_tag_size(uint32 size, flv_parser * parser) {
     yaml_emitter_t * emitter;
     yaml_event_t event;
 
@@ -343,7 +343,7 @@ int yaml_on_prev_tag_size(uint32 size, flv_parser * parser) {
     return OK;
 }
 
-int yaml_on_stream_end(flv_parser * parser) {
+static int yaml_on_stream_end(flv_parser * parser) {
     yaml_emitter_t * emitter;
     yaml_event_t event;
 
@@ -368,7 +368,7 @@ int yaml_on_stream_end(flv_parser * parser) {
 }
 
 /* YAML FLV file metadata dump callbacks */
-int yaml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
+static int yaml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
     flvmeta_opts * options = (flvmeta_opts*) parser->user_data;
 
     if (options->metadata_event == NULL) {
