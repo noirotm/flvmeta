@@ -23,6 +23,7 @@
 */
 
 #include <stdio.h>
+#include <string.h>
 #include "json.h"
 
 static void json_print_string(const char * str, size_t bytes) {
@@ -67,6 +68,13 @@ void json_emit_object_key(json_emitter * je, const char * str, size_t bytes) {
     je->print_comma = 0;
 }
 
+void json_emit_object_key_z(json_emitter * je, const char * str) {
+    json_print_comma(je);
+    json_print_string(str, strlen(str));
+    printf(":");
+    je->print_comma = 0;
+}
+
 void json_emit_object_end(json_emitter * je) {
     printf("}");
     je->print_comma = 1;
@@ -94,6 +102,18 @@ void json_emit_null(json_emitter * je) {
     je->print_comma = 1;
 }
 
+void json_emit_integer(json_emitter * je, int value) {
+    json_print_comma(je);
+    printf("%i", value);
+    je->print_comma = 1;
+}
+
+void json_emit_file_offset(json_emitter * je, file_offset_t value) {
+    json_print_comma(je);
+    printf("%" FILE_OFFSET_PRINTF_FORMAT "i", value);
+    je->print_comma = 1;
+}
+
 void json_emit_number(json_emitter * je, number64 value) {
     json_print_comma(je);
     printf("%.12g", value);
@@ -103,5 +123,11 @@ void json_emit_number(json_emitter * je, number64 value) {
 void json_emit_string(json_emitter * je, const char * str, size_t bytes) {
     json_print_comma(je);
     json_print_string(str, bytes);
+    je->print_comma = 1;
+}
+
+void json_emit_string_z(json_emitter * je, const char * str) {
+    json_print_comma(je);
+    json_print_string(str, strlen(str));
     je->print_comma = 1;
 }

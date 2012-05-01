@@ -49,6 +49,8 @@ void json_emit_object_start(json_emitter * je);
 
 void json_emit_object_key(json_emitter * je, const char * str, size_t bytes);
 
+void json_emit_object_key_z(json_emitter * je, const char * str);
+
 void json_emit_object_end(json_emitter * je);
 
 void json_emit_array_start(json_emitter * je);
@@ -59,9 +61,15 @@ void json_emit_boolean(json_emitter * je, byte value);
 
 void json_emit_null(json_emitter * je);
 
+void json_emit_integer(json_emitter * je, int value);
+
+void json_emit_file_offset(json_emitter * je, file_offset_t value);
+
 void json_emit_number(json_emitter * je, number64 value);
 
 void json_emit_string(json_emitter * je, const char * str, size_t bytes);
+
+void json_emit_string_z(json_emitter * je, const char * str);
 
 #ifdef __cplusplus
 }

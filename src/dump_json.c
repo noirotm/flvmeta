@@ -102,63 +102,106 @@ static void json_amf_data_dump(const amf_data * data, json_emitter * je) {
 /* JSON FLV file full dump callbacks */
 
 static int json_on_header(flv_header * header, flv_parser * parser) {
-    printf("{\"magic\":\"%.3s\",\"hasVideo\":%s,\"hasAudio\":%s,\"version\":%i,\"tags\":[",
-        header->signature,
-        flv_header_has_video(*header) ? "true" : "false",
-        flv_header_has_audio(*header) ? "true" : "false",
-        header->version);
+    json_emitter * je;
+    je = (json_emitter*)parser->user_data;
+
+    json_emit_object_start(je);
+    json_emit_object_key_z(je, "magic");
+    json_emit_string(je, (char*)header->signature, 3);
+    json_emit_object_key_z(je, "hasVideo");
+    json_emit_boolean(je, flv_header_has_video(*header));
+    json_emit_object_key_z(je, "hasAudio");
+    json_emit_boolean(je, flv_header_has_audio(*header));
+    json_emit_object_key_z(je, "version");
+    json_emit_integer(je, header->version);
+    json_emit_object_key_z(je, "tags");
+    json_emit_array_start(je);
+
     return OK;
 }
 
 static int json_on_tag(flv_tag * tag, flv_parser * parser) {
-    if (parser->user_data != NULL) {
-        printf(",");
-    }
-    else {
-        parser->user_data = tag;
-    }
+    json_emitter * je;
+    je = (json_emitter*)parser->user_data;
 
-    printf("{\"type\":\"%s\",\"timestamp\":%i,\"dataSize\":%i",
-        dump_string_get_tag_type(tag),
-        flv_tag_get_timestamp(*tag),
-        flv_tag_get_body_length(*tag));
-    printf(",\"offset\":%" FILE_OFFSET_PRINTF_FORMAT "i,",
-        parser->stream->current_tag_offset);
+    json_emit_object_start(je);
+    json_emit_object_key_z(je, "type");
+    json_emit_string_z(je, dump_string_get_tag_type(tag));
+    json_emit_object_key_z(je, "timestamp");
+    json_emit_integer(je, flv_tag_get_timestamp(*tag));
+    json_emit_object_key_z(je, "dataSize");
+    json_emit_integer(je, flv_tag_get_body_length(*tag));
+    json_emit_object_key_z(je, "offset");
+    json_emit_file_offset(je, parser->stream->current_tag_offset);
 
     return OK;
 }
 
 static int json_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser) {
-    printf("\"videoData\":{\"codecID\":\"%s\"", dump_string_get_video_codec(vt));
-    printf(",\"frameType\":\"%s\"}", dump_string_get_video_frame_type(vt));
+    json_emitter * je;
+    je = (json_emitter*)parser->user_data;
+
+    json_emit_object_key_z(je, "videoData");
+    json_emit_object_start(je);
+    json_emit_object_key_z(je, "codecID");
+    json_emit_string_z(je, dump_string_get_video_codec(vt));
+    json_emit_object_key_z(je, "frameType");
+    json_emit_string_z(je, dump_string_get_video_frame_type(vt));
+    json_emit_object_end(je);
+
     return OK;
 }
 
 static int json_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser) {
-    printf("\"audioData\":{\"type\":\"%s\"", dump_string_get_sound_type(at));
-    printf(",\"size\":\"%s\"", dump_string_get_sound_size(at));
-    printf(",\"rate\":\"%s\"", dump_string_get_sound_rate(at));
-    printf(",\"format\":\"%s\"}", dump_string_get_sound_format(at));
+    json_emitter * je;
+    je = (json_emitter*)parser->user_data;
+
+    json_emit_object_key_z(je, "audioData");
+    json_emit_object_start(je);
+    json_emit_object_key_z(je, "type");
+    json_emit_string_z(je, dump_string_get_sound_type(at));
+    json_emit_object_key_z(je, "size");
+    json_emit_string_z(je, dump_string_get_sound_size(at));
+    json_emit_object_key_z(je, "rate");
+    json_emit_string_z(je, dump_string_get_sound_rate(at));
+    json_emit_object_key_z(je, "format");
+    json_emit_string_z(je, dump_string_get_sound_format(at));
+    json_emit_object_end(je);
+
     return OK;
 }
 
 static int json_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
-    json_emitter je;
-    json_emit_init(&je);
+    json_emitter * je;
+    je = (json_emitter*)parser->user_data;
 
-    printf("\"scriptDataObject\":{\"name\":\"%s\",\"metadata\":", amf_string_get_bytes(name));
-    json_amf_data_dump(data, &je);
-    printf("}");
+    json_emit_object_key_z(je, "scriptDataObject");
+    json_emit_object_start(je);
+    json_emit_object_key_z(je, "name");
+    json_emit_string(je, (char*)amf_string_get_bytes(name), amf_string_get_size(name));
+    json_emit_object_key_z(je, "metadata");
+    json_amf_data_dump(data, je);
+    json_emit_object_end(je);
+
     return OK;
 }
 
 static int json_on_prev_tag_size(uint32 size, flv_parser * parser) {
-    printf("}");
+    json_emitter * je;
+    je = (json_emitter*)parser->user_data;
+    
+    json_emit_object_end(je);
+    
     return OK;
 }
 
 static int json_on_stream_end(flv_parser * parser) {
-    printf("]}");
+    json_emitter * je;
+    je = (json_emitter*)parser->user_data;
+
+    json_emit_array_end(je);
+    json_emit_object_end(je);
+
     return OK;
 }
 
@@ -189,6 +232,8 @@ void dump_json_setup_metadata_dump(flv_parser * parser) {
 }
 
 int dump_json_file(flv_parser * parser, const flvmeta_opts * options) {
+    json_emitter je;
+    
     parser->on_header = json_on_header;
     parser->on_tag = json_on_tag;
     parser->on_audio_tag = json_on_audio_tag;
@@ -196,6 +241,9 @@ int dump_json_file(flv_parser * parser, const flvmeta_opts * options) {
     parser->on_metadata_tag = json_on_metadata_tag;
     parser->on_prev_tag_size = json_on_prev_tag_size;
     parser->on_stream_end = json_on_stream_end;
+
+    json_emit_init(&je);
+    parser->user_data = &je;
 
     return flv_parse(options->input_file, parser);
 }
