@@ -40,8 +40,6 @@ Finally, the program can analyze FLV files to detect potential problems and
 errors, and generate a textual report in a raw format, or in XML.
 It has the ability to detect more than a hundred problems, going from harmless
 to potentially unplayable, using a few real world encountered issues.
-This analysis can also determine and display the minimal Flash Player version
-which can be used to correctly play a given file, as well as codec information.
 
 **flvmeta** can operate on arbitrarily large files, and can handle FLV files
 using extended (32-bit) timestamps.

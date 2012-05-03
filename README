@@ -11,7 +11,7 @@ invalid 24-bit only timestamps to make proper use of 32-bit extended
 timestamps.
 Since version 1.0.8, it has been able to handle arbitrarily large files.
 
-The main goal of this program is to write an alternative to tools like flvtool2.
+This project was started as an alternative to tools like flvtool2.
 It is written in portable C, and should compile on most platforms (it has
 been successfully compiled and tested on Ubuntu Feisty and later, Debian Lenny,
 MacOSX 10.4, Windows XP, and Windows 7).
