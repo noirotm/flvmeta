@@ -1,4 +1,6 @@
-Version 1.2.0 (2012-04-30)
+Version 1.1.0 (2012-05-03)
+  - Beta release. All features should be considered relatively
+    stable unless explicitely stated otherwise.
   - Added proper command line handling and help.
   - Added the possibility to overwrite the input file
     when the output file is not specified or when both files
