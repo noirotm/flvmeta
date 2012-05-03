@@ -1,18 +1,21 @@
 cmake_minimum_required(VERSION 2.6)
 project(flvmeta C)
 
-set(FLVMETA_VERSION "1.1")
-set(FLVMETA_STABLE no)
-
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
 
-# check whether we're in an instable branch
-if(FLVMETA_STABLE)
-  message(STATUS "Set flvmeta version to ${FLVMETA_VERSION}")
-else(FLVMETA_STABLE)
-  # if so, check for svnversion, and retrieve current revision
+set(FLVMETA_VERSION "1.1")
+set(FLVMETA_RELEASE no)
+
+# check whether we are building a release or a git snapshot
+if(NOT FLVMETA_RELEASE)
+  # check for git
   find_program(GIT "git")
-  if(GIT)
+  mark_as_advanced(GIT)
+  # check whether we are in a git repository
+  find_file(DOT_GIT ".git" ${CMAKE_SOURCE_DIR})
+  mark_as_advanced(DOT_GIT)
+  if(GIT AND DOT_GIT)
+    # retrieve current revision
     execute_process(
       COMMAND "${GIT}" rev-parse --short HEAD
       WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
@@ -20,13 +23,8 @@ else(FLVMETA_STABLE)
       OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     set(FLVMETA_VERSION "${FLVMETA_VERSION}-g${GIT_RELEASE}")
-    message(STATUS "Set unstable flvmeta version to ${FLVMETA_VERSION}")
-    unset(GIT CACHE)
-  else(GIT)
-    message(STATUS "Git not found, set flvmeta version to ${FLVMETA_VERSION}")
-    unset(GIT-NOT_FOUND CACHE)
-  endif(GIT)
-endif(FLVMETA_STABLE)
+  endif(GIT AND DOT_GIT)
+endif(NOT FLVMETA_RELEASE)
 
 # generic variables
 set(PACKAGE           "flvmeta")
