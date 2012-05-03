@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(flvmeta C)
 
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR} ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
 set(FLVMETA_VERSION "1.1")
 set(FLVMETA_RELEASE no)
@@ -36,7 +36,7 @@ set(PACKAGE_STRING    "${PACKAGE_NAME} ${PACKAGE_VERSION}")
 # build options
 set(
   FLVMETA_USE_SYSTEM_LIBYAML FALSE
-  CACHE BOOL "Build flvmeta by linking it to the currently installed version of libyaml"
+  CACHE BOOL "Link flvmeta to the installed version of libyaml"
 )
 
 #platform tests
