@@ -56,7 +56,7 @@ add_executable(flvmeta ${flvmeta_src})
 # libyaml
 if(FLVMETA_USE_SYSTEM_LIBYAML)
   # search for libyaml on the system, link with it
-  find_package(libyaml REQUIRED)
+  find_package(LibYAML REQUIRED)
   include_directories(${LIBYAML_INCLUDE_DIR})
   target_link_libraries(flvmeta ${LIBYAML_LIBRARIES})
 else(FLVMETA_USE_SYSTEM_LIBYAML)

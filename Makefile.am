@@ -7,4 +7,4 @@ EXTRA_DIST = autogen.sh \
              CMakeLists.txt \
              .gitignore \
              config-cmake.h.in \
-             cmake/modules/FindLibYaml.cmake
+             cmake/modules/FindLibYAML.cmake
