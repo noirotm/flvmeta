@@ -22,9 +22,9 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 
+#include "json.h"
 #include <stdio.h>
 #include <string.h>
-#include "json.h"
 
 static void json_print_string(const char * str, size_t bytes) {
     size_t i;
