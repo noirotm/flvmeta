@@ -30,7 +30,7 @@
 */
 typedef struct __bit_buffer {
     byte * start;
-    size_t size;
+    /*size_t size;*/
     byte * current;
     uint8 read_bits;
 } bit_buffer;
@@ -140,7 +140,7 @@ static void parse_sps(byte * sps, size_t sps_size, uint32 * width, uint32 * heig
     uint8 frame_mbs_only_flag;
 
     bb.start = sps;
-    bb.size = sps_size;
+    /*bb.size = sps_size;*/
     bb.current = sps;
     bb.read_bits = 0;
 
@@ -148,7 +148,7 @@ static void parse_sps(byte * sps, size_t sps_size, uint32 * width, uint32 * heig
     skip_bits(&bb, 8);
     /* get profile */
     profile = get_bits(&bb, 8);
-    /* skip 4 bits + 4 zeroed bits + 8 bits = 32 bits = 4 bytes */
+    /* skip 4 bits + 4 zeroed bits + 8 bits = 16 bits = 2 bytes */
     skip_bits(&bb, 16);
 
     /* read sps id, first exp-golomb encoded value */
