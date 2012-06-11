@@ -113,7 +113,6 @@ static int write_flv(flv_stream * flv_in, FILE * flv_out, const flv_info * info,
     have_on_last_second = 0;
     while (flv_read_tag(flv_in, &ft) == FLV_OK) {
         file_offset_t offset;
-        size_t read_body;
         uint32 body_length;
         uint32 timestamp;
 
@@ -178,6 +177,8 @@ static int write_flv(flv_stream * flv_in, FILE * flv_out, const flv_info * info,
             }
         }
         else {
+            size_t read_body;
+            
             /* insert an onLastSecond metadata tag */
             if (opts->insert_onlastsecond && !have_on_last_second && !info->have_on_last_second && (info->last_timestamp - timestamp) <= 1000) {
                 flv_tag tag;
