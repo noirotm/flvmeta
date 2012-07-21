@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema targetNamespace="http://schemas.flvmeta.org/inject/1.0/"
+    elementFormDefault="qualified"
+    xmlns="http://schemas.flvmeta.org/inject/1.0/"
+    xmlns:amf="http://schemas.flvmeta.org/AMF0/1.0/"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+>
+    <xs:import namespace="http://schemas.flvmeta.org/AMF0/1.0/" schemaLocation="Amf0.xsd"/>
+
+    <xs:element name="inject">
+        <xs:complexType>
+            <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                <xs:choice>
+                    <xs:element name="insert" type="tInsertAction" />
+                    <xs:element name="replace" type="tUpdateAction" />
+                    <xs:element name="update" type="tUpdateAction" />
+                    <xs:element name="delete" type="tDeleteAction" />
+                    <xs:element name="append" type="tAppendAction" />
+                </xs:choice>
+            </xs:sequence>
+        </xs:complexType>    
+    </xs:element>
+
+    <xs:simpleType name="tFileOffset">
+        <xs:union>
+            <xs:simpleType>
+                <xs:restriction base="xs:unsignedLong"/>
+            </xs:simpleType>
+        </xs:union>
+    </xs:simpleType>
+
+    <xs:simpleType name="tMatchValue">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="first" />
+            <xs:enumeration value="last" />
+            <xs:enumeration value="all" />
+        </xs:restriction>
+    </xs:simpleType>
+    
+    <xs:group name="tLocation">
+        <xs:choice>
+            <xs:element name="offset" type="tFileOffset"/>
+            <xs:element name="timestamp" type="xs:unsignedInt" />
+            <xs:element name="tag">
+                <xs:complexType>
+                    <xs:attribute name="name" type="xs:string" use="required" />
+                    <xs:attribute name="match" type="tMatchValue" use="optional" default="first" />
+                </xs:complexType>
+            </xs:element>
+        </xs:choice>
+    </xs:group>
+    
+    <xs:group name="tUpdateData">
+        <xs:sequence>
+            <xs:group minOccurs="1" maxOccurs="1" ref="tLocation" />
+            <xs:group minOccurs="1" maxOccurs="1" ref="amf:tData" />
+        </xs:sequence>
+    </xs:group>
+    
+    <xs:complexType name="tInsertAction">
+        <xs:group ref="tUpdateData" />
+        <xs:attribute name="name" type="xs:string" use="required" />
+    </xs:complexType>
+
+    <xs:complexType name="tUpdateAction">
+        <xs:group ref="tUpdateData" />
+    </xs:complexType>
+
+    <xs:complexType name="tDeleteAction">
+        <xs:group minOccurs="1" maxOccurs="1" ref="tLocation" />
+    </xs:complexType>
+
+    <xs:complexType name="tAppendAction">
+        <xs:group ref="amf:tData" />
+        <xs:attribute name="name" type="xs:string" use="required" />
+    </xs:complexType>
+</xs:schema>
