@@ -1,16 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <inject xmlns="http://schemas.flvmeta.org/inject/1.0/" xmlns:amf="http://schemas.flvmeta.org/AMF0/1.0/">
-    <insert name="onRandomPoint">
+    <insertAfter>
         <offset>298125</offset>
+        <name>onRandomPoint</name>
         <amf:associativeArray>
             <amf:entry name="toto">
                 <amf:string>value</amf:string>
             </amf:entry>
         </amf:associativeArray>
-    </insert>
+    </insertAfter>
+
+    <insertBefore>
+        <metadata name="onLastSecond" match="last" />
+        <name>onBeforeLastSecond</name>
+        <amf:boolean value="1" />
+    </insertBefore>
 
     <update>
-        <tag name="onMetadata" match="first" />
+        <metadata name="onMetadata" match="first" />
         <amf:associativeArray>
             <amf:entry name="test">
                 <amf:boolean value="true"/>
@@ -19,7 +26,7 @@
     </update>
 
     <delete>
-        <tag name="onCuePoint" match="all" />
+        <metadata name="onCuePoint" match="all" />
     </delete>
 
     <replace>
@@ -30,6 +37,10 @@
             </amf:entry>
         </amf:object>
     </replace>
+
+    <rename to="onCuePoint">
+        <metadata name="onCuepoint" match="all" />
+    </rename>
 
     <append name="onFileEnd">
         <amf:array>

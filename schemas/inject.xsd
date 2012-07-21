@@ -11,11 +11,13 @@
         <xs:complexType>
             <xs:sequence minOccurs="0" maxOccurs="unbounded">
                 <xs:choice>
-                    <xs:element name="insert" type="tInsertAction" />
+                    <xs:element name="insertBefore" type="tInsertAction" />
+                    <xs:element name="insertAfter" type="tInsertAction" />
                     <xs:element name="replace" type="tUpdateAction" />
                     <xs:element name="update" type="tUpdateAction" />
                     <xs:element name="delete" type="tDeleteAction" />
                     <xs:element name="append" type="tAppendAction" />
+                    <xs:element name="rename" type="tRenameAction" />
                 </xs:choice>
             </xs:sequence>
         </xs:complexType>    
@@ -41,7 +43,7 @@
         <xs:choice>
             <xs:element name="offset" type="tFileOffset"/>
             <xs:element name="timestamp" type="xs:unsignedInt" />
-            <xs:element name="tag">
+            <xs:element name="metadata">
                 <xs:complexType>
                     <xs:attribute name="name" type="xs:string" use="required" />
                     <xs:attribute name="match" type="tMatchValue" use="optional" default="first" />
@@ -58,8 +60,11 @@
     </xs:group>
     
     <xs:complexType name="tInsertAction">
-        <xs:group ref="tUpdateData" />
-        <xs:attribute name="name" type="xs:string" use="required" />
+        <xs:sequence>
+            <xs:group minOccurs="1" maxOccurs="1" ref="tLocation" />
+            <xs:element name="name" minOccurs="1" maxOccurs="1" type="xs:string" />
+            <xs:group minOccurs="1" maxOccurs="1" ref="amf:tData" />
+        </xs:sequence>
     </xs:complexType>
 
     <xs:complexType name="tUpdateAction">
@@ -68,6 +73,11 @@
 
     <xs:complexType name="tDeleteAction">
         <xs:group minOccurs="1" maxOccurs="1" ref="tLocation" />
+    </xs:complexType>
+
+    <xs:complexType name="tRenameAction">
+        <xs:group minOccurs="1" maxOccurs="unbounded" ref="tLocation" />
+        <xs:attribute name="to" type="xs:string" use="required" />
     </xs:complexType>
 
     <xs:complexType name="tAppendAction">
