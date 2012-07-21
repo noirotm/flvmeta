@@ -1,229 +1,243 @@
-Copyright (C) 1994, 1995, 1996, 1999, 2000, 2001, 2002 Free Software
-Foundation, Inc.
+Copyright (c) 2012 Marc Noirot
 
-   This file is free documentation; the Free Software Foundation gives
-unlimited permission to copy, distribute and modify it.
+How to Build FLVmeta with CMake
 
-Basic Installation
-==================
+WHAT YOU NEED
+---------------------------------------------------------------
+CMake version 2.6 or later installed on your system.
 
-   These are generic installation instructions.
+HOW TO INSTALL:
 
-   The `configure' shell script attempts to guess correct values for
-various system-dependent variables used during compilation.  It uses
-those values to create a `Makefile' in each directory of the package.
-It may also create one or more `.h' files containing system-dependent
-definitions.  Finally, it creates a shell script `config.status' that
-you can run in the future to recreate the current configuration, and a
-file `config.log' containing compiler output (useful mainly for
-debugging `configure').
+Linux distributions:
+shell> sudo apt-get install cmake
 
-   It can also use an optional file (typically called `config.cache'
-and enabled with `--cache-file=config.cache' or simply `-C') that saves
-the results of its tests to speed up reconfiguring.  (Caching is
-disabled by default to prevent problems with accidental use of stale
-cache files.)
+The above works on Debian/Ubuntu based distributions. On others, the command
+line needs to be modified to e.g "yum install" on Fedora or "zypper install" 
+on OpenSUSE.
 
-   If you need to do unusual things to compile the package, please try
-to figure out how `configure' could check whether to do them, and mail
-diffs or instructions to the address given in the `README' so they can
-be considered for the next release.  If you are using the cache, and at
-some point `config.cache' contains results you don't want to keep, you
-may remove or edit it.
+OpenSolaris:
+shell> pfexec pkgadd install SUNWcmake
 
-   The file `configure.ac' (or `configure.in') is used to create
-`configure' by a program called `autoconf'.  You only need
-`configure.ac' if you want to change it or regenerate `configure' using
-a newer version of `autoconf'.
+Windows and Mac OSX:
+Download and install the latest distribution from 
+http://www.cmake.org/cmake/resources/software.html
+On Windows, download installer exe file and run it. On MacOS, download
+the .dmg image and open it.
 
-The simplest way to compile this package is:
+Other Unixes:
+Precompiled packages for other Unix flavors (HPUX, AIX) are available from 
+http://www.cmake.org/cmake/resources/software.html 
 
-  1. `cd' to the directory containing the package's source code and type
-     `./configure' to configure the package for your system.  If you're
-     using `csh' on an old version of System V, you might need to type
-     `sh ./configure' instead to prevent `csh' from trying to execute
-     `configure' itself.
+Alternatively, you can build from source, source package is also available on 
+CMake download page.
 
-     Running `configure' takes awhile.  While running, it prints some
-     messages telling which features it is checking for.
 
-  2. Type `make' to compile the package.
+Compiler Tools
+--------------
+You will need  a working compiler and make utility on your OS. 
+On Windows, install Visual Studio (Express editions will work too). 
+On Mac OSX, install Xcode tools.
 
-  3. Optionally, type `make check' to run any self-tests that come with
-     the package.
 
-  4. Type `make install' to install the programs and any data files and
-     documentation.
 
-  5. You can remove the program binaries and object files from the
-     source code directory by typing `make clean'.  To also remove the
-     files that `configure' created (so you can compile the package for
-     a different kind of computer), type `make distclean'.  There is
-     also a `make maintainer-clean' target, but that is intended mainly
-     for the package's developers.  If you use it, you may have to get
-     all sorts of other programs in order to regenerate files that came
-     with the distribution.
+BUILD 
+---------------------------------------------------------------
+Ensure that compiler and cmake are in PATH.
+The following description assumes that current working directory 
+is the source directory. 
 
-Compilers and Options
-=====================
 
-   Some systems require unusual options for compilation or linking that
-the `configure' script does not know about.  Run `./configure --help'
-for details on some of the pertinent environment variables.
+- Generic build on Unix, using "Unix Makefiles" generator
 
-   You can give `configure' initial values for configuration parameters
-by setting variables in the command line or in the environment.  Here
-is an example:
+shell>cmake . 
+shell>make
 
-     ./configure CC=c89 CFLAGS=-O2 LIBS=-lposix
+Note: by default, cmake build is less verbose than automake build. Use 
+"make VERBOSE=1" if you want to see add command lines for each compiled source.
 
-   *Note Defining Variables::, for more details.
+- Windows, using "Visual Studio 9 2008" generator
+shell>cmake . -G "Visual Studio 9 2008" 
+shell>devenv flvmeta.sln /build /relwithdebinfo
+(alternatively, open flvmeta.sln and build using the IDE)
 
-Compiling For Multiple Architectures
-====================================
+- Windows, using "NMake Makefiles" generator
+shell>cmake . -G "NMake Makefiles" 
+shell>nmake
 
-   You can compile the package for more than one kind of computer at the
-same time, by placing the object files for each architecture in their
-own directory.  To do this, you must use a version of `make' that
-supports the `VPATH' variable, such as GNU `make'.  `cd' to the
-directory where you want the object files and executables to go and run
-the `configure' script.  `configure' automatically checks for the
-source code in the directory that `configure' is in and in `..'.
+- Mac OSX build with Xcode
+shell>cmake . -G Xcode
+shell>xcodebuild -configuration Relwithdebinfo
+(alternatively, open flvmeta.xcodeproj and build using the IDE)
 
-   If you have to use a `make' that does not support the `VPATH'
-variable, you have to compile the package for one architecture at a
-time in the source code directory.  After you have installed the
-package for one architecture, use `make distclean' before reconfiguring
-for another architecture.
+Command line build with CMake 2.8
+After creating project with cmake -G as above, issue
+cmake . --build 
+this works with any  CMake generator.
 
-Installation Names
-==================
+For Visual Studio and Xcode you might want to add an extra 
+configuration parameter, to avoid building all configurations.
 
-   By default, `make install' will install the package's files in
-`/usr/local/bin', `/usr/local/man', etc.  You can specify an
-installation prefix other than `/usr/local' by giving `configure' the
-option `--prefix=PATH'.
+cmake . --build --config Relwithdebinfo
 
-   You can specify separate installation prefixes for
-architecture-specific files and architecture-independent files.  If you
-give `configure' the option `--exec-prefix=PATH', the package will use
-PATH as the prefix for installing programs and libraries.
-Documentation and other data files will still use the regular prefix.
 
-   In addition, if you use an unusual directory layout you can give
-options like `--bindir=PATH' to specify different values for particular
-kinds of files.  Run `configure --help' for a list of the directories
-you can set and what kinds of files go in them.
+Building "out-of-source"
+---------------------------------------------------------------
+Building out-of-source provides additional benefits. For example it allows to 
+build both Release and Debug configurations using the single source tree.Or 
+build the same source with different version of the same compiler or with 
+different compilers. Also you will prevent polluting the source tree with the
+objects and binaries produced during the make. 
 
-   If the package supports it, you can cause programs to be installed
-with an extra prefix or suffix on their names by giving `configure' the
-option `--program-prefix=PREFIX' or `--program-suffix=SUFFIX'.
+Here is an example on how to do it (generic Unix), assuming the source tree is
+in directory named src and the current working directory is source root.
 
-Optional Features
-=================
+shell>mkdir ../build # build directory is called build
+shell>cd ../build
+shell>cmake ../src
 
-   Some packages pay attention to `--enable-FEATURE' options to
-`configure', where FEATURE indicates an optional part of the package.
-They may also pay attention to `--with-PACKAGE' options, where PACKAGE
-is something like `gnu-as' or `x' (for the X Window System).  The
-`README' should mention any `--enable-' and `--with-' options that the
-package recognizes.
+Note: if a directory was used for in-source build, out-of-source will 
+not work. To reenable out-of-source build, remove <source-root>/CMakeCache.txt
+file.
 
-   For packages that use the X Window System, `configure' can usually
-find the X include and library files automatically, but if it doesn't,
-you can use the `configure' options `--x-includes=DIR' and
-`--x-libraries=DIR' to specify their locations.
 
-Specifying the System Type
-==========================
+CONFIGURATION PARAMETERS
+---------------------------------------------------------------
+The procedure above will build with default configuration.
 
-   There may be some features `configure' cannot figure out
-automatically, but needs to determine by the type of machine the package
-will run on.  Usually, assuming the package is built to be run on the
-_same_ architectures, `configure' can figure that out, but if it prints
-a message saying it cannot guess the machine type, give it the
-`--build=TYPE' option.  TYPE can either be a short name for the system
-type, such as `sun4', or a canonical name which has the form:
+Let's you want to change the  configuration parameters and have archive
+storage engine compiled into the server instead of building it as pluggable 
+module.
 
-     CPU-COMPANY-SYSTEM
+1)You can provide parameters on the command line, like
 
-where SYSTEM can have one of these forms:
+shell> cmake .  -DFLVMETA_USE_SYSTEM_LIBYAML=1
 
-     OS KERNEL-OS
+This can be done during the initial configuration or any time later.
 
-   See the file `config.sub' for the possible values of each field.  If
-`config.sub' isn't included in this package, then this package doesn't
-need to know the machine type.
+Note, that parameters are "sticky", that is they are remebered in the CMake 
+cache (CMakeCache.txt file in the build directory)
 
-   If you are _building_ compiler tools for cross-compiling, you should
-use the `--target=TYPE' option to select the type of system they will
-produce code for.
+2) Configuration using cmake-gui (Windows, OSX, or Linux with cmake-gui 
+installed)
 
-   If you want to _use_ a cross compiler, that generates code for a
-platform different from the build platform, you should specify the
-"host" platform (i.e., that on which the generated programs will
-eventually be run) with `--host=TYPE'.
+From the build directory, issue
+shell> cmake-gui .
 
-Sharing Defaults
-================
+- Check the FLVMETA_USE_SYSTEM_LIBYAML checkbox
+- Click on "Configure" button
+- Click on "Generate" button
+- Close cmake-gui
+shell> make
 
-   If you want to set default values for `configure' scripts to share,
-you can create a site shell script called `config.site' that gives
-default values for variables like `CC', `cache_file', and `prefix'.
-`configure' looks for `PREFIX/share/config.site' if it exists, then
-`PREFIX/etc/config.site' if it exists.  Or, you can set the
-`CONFIG_SITE' environment variable to the location of the site script.
-A warning: not all `configure' scripts look for a site script.
+3)Using ccmake (Unix)
+ccmake is curses-based GUI application that provides the same functionality 
+as cmake-gui. It is less user-friendly compared to cmake-gui but works also 
+on exotic Unixes like HPUX, AIX or Solaris.
 
-Defining Variables
-==================
+Besides storage engines, probably the most important parameter from a 
+developer's point of view is CMAKE_BUILD_TYPE (this allows to build server with 
+dbug tracing library and with debug compile flags).
 
-   Variables not defined in a site shell script can be set in the
-environment passed to `configure'.  However, some packages may run
-configure again during the build, and the customized values of these
-variables may be lost.  In order to avoid this problem, you should set
-them in the `configure' command line, using `VAR=value'.  For example:
+After changing the configuration, recompile using
+shell> make
 
-     ./configure CC=/usr/local2/bin/gcc
 
-will cause the specified gcc to be used as the C compiler (unless it is
-overridden in the site shell script).
+Listing configuration parameters
+---------------------------------------------------------------
+shell> cmake -L 
 
-`configure' Invocation
-======================
+Gives a brief overview of important configuration parameters (dump to stdout)
 
-   `configure' recognizes the following options to control how it
-operates.
+shell> cmake -LH
 
-`--help'
-`-h'
-     Print a summary of the options to `configure', and exit.
+Does the same but also provides a short help text for each parameter.
 
-`--version'
-`-V'
-     Print the version of Autoconf used to generate the `configure'
-     script, and exit.
+shell> cmake -LAH 
 
-`--cache-file=FILE'
-     Enable the cache: use and save the results of the tests in FILE,
-     traditionally `config.cache'.  FILE defaults to `/dev/null' to
-     disable caching.
+Dumps all config parameters (including advanced) to the stdout.
 
-`--config-cache'
-`-C'
-     Alias for `--cache-file=config.cache'.
+PACKAGING
+---------------------------------------------------------------
+-- Binary distribution --
+Packaging in form of tar.gz archives (or .zip on Windows) is also supported
+To create a tar.gz package, 
 
-`--quiet'
-`--silent'
-`-q'
-     Do not print messages saying which checks are being made.  To
-     suppress all normal output, redirect it to `/dev/null' (any error
-     messages will still be shown).
+1)If you're using "generic" Unix build with makefiles
 
-`--srcdir=DIR'
-     Look for the package's source code in directory DIR.  Usually
-     `configure' can determine that directory automatically.
+shell> make package
+this will create a tar.gz file in the top level build directory.
 
-`configure' also accepts some other, not widely useful, options.  Run
-`configure --help' for more details.
+2)On Windows, using  "NMake Makefiles" generator
 
+shell> nmake package
+
+3)On Windows, using "Visual Studio"  generator
+
+shell> devenv flvmeta.sln /build relwithdebinfo /project package
+
+Note On Windows, 7Zip or Winzip must be installed and 7z.exe rsp winzip.exe 
+need to be in the PATH.
+
+
+Another way to build packages is calling cpack executable directly like
+shell> cpack -G TGZ --config CPackConfig.cmake
+(-G TGZ is for tar.gz generator, there is also -GZIP)
+
+-- Source distribution --
+"make package_source" target is provided.
+
+ADDITIONAL MAKE TARGETS: "make install" AND "make test"
+----------------------------------------------------------------
+install target also provided for Makefile based generators. Installation 
+directory can be controlled using configure-time parameter 
+CMAKE_INSTALL_PREFIX (default is /usr/local. It is also possible to install to
+non-configured directory, using
+
+shell> make install DESTDIR="/some/absolute/path"
+
+"make test" runs unit tests (uses CTest for it)
+
+FOR PROGRAMMERS: WRITING PLATFORM CHECKS
+--------------------------------------------------------------
+If you modify FLVmeta source and want to add a new platform check,please read 
+http://www.vtk.org/Wiki/CMake_HowToDoPlatformChecks first.
+
+Bigger chunks of functionality, for example non-trivial macros are implemented 
+in files <src-root>/cmake subdirectory.
+
+For people with autotools background, it is important to remember CMake does 
+not provide autoheader functionality. That is, when you add a check
+
+CHECK_FUNCTION_EXISTS(foo HAVE_FOO)
+to config.cmake, then you will also need to add
+#cmakedefine HAVE_FOO 1
+to config.h.cmake
+
+Troubleshooting platform checks
+--------------------------------
+If you suspect that a platform check returned wrong result, examine 
+<build-root>/CMakeFiles/CMakeError.log and 
+<build-root>/CMakeFiles/CMakeOutput.log
+These files they contain compiler command line, and exact error messages.
+
+Troubleshooting CMake code
+----------------------------------
+While there are advanced flags for cmake like -debug-trycompile and --trace,
+a simple and efficient way to debug to add 
+MESSAGE("interesting variable=${some_invariable}")
+to the interesting places in CMakeLists.txt
+
+
+Tips:
+- When using Makefile generator it is easy to examine which compiler flags are 
+used to build. For example, compiler flags for flvmeta are in 
+<build-root>/src/CMakeFiles/flvmeta.dir/flags.make and the linker command line
+is in <build-root>/src/CMakeFiles/flvmeta.dir/link.txt
+
+- CMake caches results of platform checks in CMakeCache.txt. It is a nice 
+feature because tests do not rerun when reconfiguring (e.g when a new test was 
+added).The downside of caching is that when a platform test was wrong and was 
+later corrected, the cached result is still used. If you encounter this 
+situation,  which should be a rare occation, you need either to remove the 
+offending entry from CMakeCache.txt (if test was for HAVE_FOO, remove lines 
+containing HAVE_FOO from CMakeCache.txt) or just remove the cache file.
