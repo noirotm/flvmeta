@@ -39,6 +39,7 @@ static struct option long_options[] = {
     { "full-dump",          no_argument,        NULL, 'F'},
     { "check",              no_argument,        NULL, 'C'},
     { "update",             no_argument,        NULL, 'U'},
+    { "inject",             no_argument,        NULL, 'I'},
     { "dump-format",        required_argument,  NULL, 'd'},
     { "json",               no_argument,        NULL, 'j'},
     { "raw",                no_argument,        NULL, 'r'},
@@ -66,6 +67,7 @@ static struct option long_options[] = {
 #define FULL_DUMP_COMMAND           "F"
 #define CHECK_COMMAND               "C"
 #define UPDATE_COMMAND              "U"
+#define INJECT_COMMAND              "I"
 #define DUMP_FORMAT_OPTION          "d:"
 #define JSON_OPTION                 "j"
 #define RAW_OPTION                  "r"
@@ -102,12 +104,15 @@ static void help(const char * name) {
     printf("Usage: %s [COMMAND] [OPTIONS] INPUT_FILE [OUTPUT_FILE]\n", name);
     printf("\nIf OUTPUT_FILE is omitted for commands expecting it, INPUT_FILE will be overwritten instead.\n"
            "\nCommands:\n"
-           "  -D, --dump                dump onMetaData tag (default without output file)\n"
-           "  -F, --full-dump           dump all tags\n"
+           "  -D, --dump                dump onMetaData tag to standard output (default command\n"
+           "                            without output file)\n"
+           "  -F, --full-dump           dump all tags to standard output\n"
            "  -C, --check               check the validity of INPUT_FILE, returning 0 if\n"
            "                            the file is valid, or 10 if it contains errors\n"
            "  -U, --update              update computed onMetaData tag from INPUT_FILE\n"
-           "                            into OUTPUT_FILE (default with output file)\n"
+           "                            into OUTPUT_FILE (default command with output file)\n"
+           "  -I, --inject              inject metadata in an XML specification file\n"
+           "                            from INPUT_FILE into OUTPUT_FILE\n"
            /*    "  -A, --extract-audio       extract raw audio data into OUTPUT_FILE\n"*/
            /*    "  -E, --extract-video       extract raw video data into OUTPUT_FILE\n"*/
            "\nDump options:\n"
@@ -134,6 +139,9 @@ static void help(const char * name) {
            "                            (the default is to stop with an error)\n"
            "  -t, --reset-timestamps    reset timestamps so OUTPUT_FILE starts at zero\n"
            "  -k, --all-keyframes       index all keyframe tags, including duplicate timestamps\n"
+           "\nInject options:\n"
+           "  -u, --input-file          name of the XML specification file, if omitted,\n"
+           "                            data will be read from standard input\n"
            "\nCommon options:\n"
            "  -v, --verbose             display informative messages\n"
            "\nMiscellaneous:\n"
