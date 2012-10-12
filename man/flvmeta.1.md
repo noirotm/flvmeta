@@ -81,7 +81,7 @@ standard output. The default format is XML, unless specified otherwise.
 ## -C, \--check
 
 Print a report to standard output listing warnings and errors detected in
-*INPUT_FILE*, as well as potential incompatibilities, and informations about
+*INPUT_FILE*, as well as potential incompatibilities, and information about
 the codecs used in the file. The exit code will be set to a non-zero value
 if there is at least one error in the file.
 
@@ -99,8 +99,8 @@ Messages are divided into four specific levels of increasing importance:
 * **fatal**: messages that inform of errors that make further file reading
   impossible therefore ending parsing completely
 
-The **\--level** option allows to limit the display of messages to a minimum
-level among those, for example if the user is only interested in error
+The **\--level** option allows **flvmeta** to limit the display of messages to
+a minimum level among those, for example if the user is only interested in error
 messages and above.
 
 Each message or message template presented to the user is identified by a
@@ -146,7 +146,7 @@ platform, and it will be copied over the original file at the end of
 the operation. This is due to the fact that the output file is written
 while the original file is being read due to the two-pass method.
 
-The computed metadata contains among other data full keyframe informations,
+The computed metadata contains among other data full keyframe information,
 in order to allow HTTP pseudo-streaming and random-access seeking in the
 file.
 
