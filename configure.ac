@@ -3,7 +3,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
 
-AC_INIT([flvmeta], [1.1.0], [flvmeta-discussion@googlegroups.com])
+AC_INIT([flvmeta], [1.1.0.1], [flvmeta-discussion@googlegroups.com])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
