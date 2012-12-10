@@ -68,7 +68,7 @@ int flv_read_header(flv_stream * stream, flv_header * header) {
     || header->signature[2] != 'V') {
         return FLV_ERROR_NO_FLV;
     }
-    
+
     stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
     return FLV_OK;
 }
@@ -120,13 +120,13 @@ int flv_read_tag(flv_stream * stream, flv_tag * tag) {
         lfs_fseek(stream->flvin, stream->current_tag_offset + FLV_TAG_SIZE + uint24_be_to_uint32(stream->current_tag.body_length), SEEK_SET);
         stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
     }
- 
+
     /* skip previous tag size */
     if (stream->state == FLV_STREAM_STATE_PREV_TAG_SIZE) {
         lfs_fseek(stream->flvin, sizeof(uint32_be), SEEK_CUR);
         stream->state = FLV_STREAM_STATE_TAG;
     }
-    
+
     if (stream->state == FLV_STREAM_STATE_TAG) {
         stream->current_tag_offset = lfs_ftell(stream->flvin);
 
@@ -165,7 +165,7 @@ int flv_read_audio_tag(flv_stream * stream, flv_audio_tag * tag) {
     if (fread(tag, sizeof(flv_audio_tag), 1, stream->flvin) == 0) {
         return FLV_ERROR_EOF;
     }
-    
+
     if (stream->current_tag_body_length >= sizeof(flv_audio_tag)) {
         stream->current_tag_body_length -= sizeof(flv_audio_tag);
     }
@@ -233,7 +233,7 @@ int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
     if (stream->current_tag_body_length == 0) {
         return FLV_ERROR_EMPTY_TAG;
     }
-    
+
     /* read metadata name */
     d = amf_data_file_read(stream->flvin);
     *name = d;
@@ -244,7 +244,7 @@ int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
     else if (error_code != AMF_ERROR_OK) {
         return FLV_ERROR_INVALID_METADATA_NAME;
     }
-    
+
     /* if only name can be read, metadata are invalid */
     data_size = amf_data_size(d);
     if (stream->current_tag_body_length > data_size) {
@@ -261,7 +261,7 @@ int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
 
         return FLV_ERROR_INVALID_METADATA;
     }
-    
+
     /* read metadata contents */
     d = amf_data_file_read(stream->flvin);
     *data = d;
@@ -272,7 +272,7 @@ int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
     if (error_code != AMF_ERROR_OK) {
         return FLV_ERROR_INVALID_METADATA;
     }
-    
+
     data_size = amf_data_size(d);
     if (stream->current_tag_body_length >= data_size) {
         stream->current_tag_body_length -= (uint32)data_size;
@@ -304,7 +304,7 @@ size_t flv_read_tag_body(flv_stream * stream, void * buffer, size_t buffer_size)
 
     bytes_number = (buffer_size > stream->current_tag_body_length) ? stream->current_tag_body_length : buffer_size;
     bytes_number = fread(buffer, sizeof(byte), bytes_number, stream->flvin);
-    
+
     stream->current_tag_body_length -= (uint32)bytes_number;
 
     if (stream->current_tag_body_length == 0) {
@@ -340,6 +340,62 @@ void flv_close(flv_stream * stream) {
         }
         free(stream);
     }
+}
+
+/* FLV buffer copy helper functions */
+size_t flv_copy_header(void * to, const flv_header * header, size_t buffer_size) {
+    char * out = to;
+    if (buffer_size < FLV_HEADER_SIZE) {
+        return 0;
+    }
+
+    memcpy(out, &header->signature, sizeof(header->signature));
+    out += sizeof(header->signature);
+
+    memcpy(out, &header->version, sizeof(header->version));
+    out += sizeof(header->version);
+
+    memcpy(out, &header->flags, sizeof(header->flags));
+    out += sizeof(header->flags);
+
+    memcpy(out, &header->offset, sizeof(header->offset));
+
+    return FLV_HEADER_SIZE;
+}
+
+size_t flv_copy_tag(void * to, const flv_tag * tag, size_t buffer_size) {
+    char * out = to;
+    if (buffer_size < FLV_TAG_SIZE) {
+        return 0;
+    }
+
+    memcpy(out, &tag->type, sizeof(tag->type));
+    out += sizeof(tag->type);
+
+    memcpy(out, &tag->body_length, sizeof(tag->body_length));
+    out += sizeof(tag->body_length);
+
+    memcpy(out, &tag->timestamp, sizeof(tag->timestamp));
+    out += sizeof(tag->timestamp);
+
+    memcpy(out, &tag->timestamp_extended, sizeof(tag->timestamp_extended));
+    out += sizeof(tag->timestamp_extended);
+
+    memcpy(out, &tag->stream_id, sizeof(tag->stream_id));
+
+    return FLV_TAG_SIZE;
+}
+
+size_t flv_copy_prev_tag_size(void *to, uint32 prev_tag_size, size_t buffer_size) {
+    uint32_be pts = swap_uint32(prev_tag_size);
+
+    if (buffer_size < sizeof(uint32)) {
+        return 0;
+    }
+
+    memcpy(to, &pts, sizeof(uint32_be));
+
+    return sizeof(uint32_be);
 }
 
 /* FLV stdio writing helper functions */
@@ -482,7 +538,7 @@ int flv_parse(const char * file, flv_parser * parser) {
             }
         }
     }
-    
+
     if (parser->on_stream_end != NULL) {
         retval = parser->on_stream_end(parser);
         if (retval != FLV_OK) {

@@ -175,6 +175,11 @@ file_offset_t flv_get_offset(flv_stream * stream);
 void flv_reset(flv_stream * stream);
 void flv_close(flv_stream * stream);
 
+/* FLV buffer copy helper functions */
+size_t flv_copy_header(void * to, const flv_header * header, size_t buffer_size);
+size_t flv_copy_tag(void * to, const flv_tag * tag, size_t buffer_size);
+size_t flv_copy_prev_tag_size(void * to, uint32 prev_tag_size, size_t buffer_size);
+
 /* FLV stdio writing helper functions */
 size_t flv_write_header(FILE * out, const flv_header * header);
 size_t flv_write_tag(FILE * out, const flv_tag * tag);
