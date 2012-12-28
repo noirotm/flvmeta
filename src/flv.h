@@ -139,6 +139,13 @@ typedef byte flv_video_tag;
 #define flv_video_tag_codec_id(tag)     (((tag) & 0x0F) >> 0)
 #define flv_video_tag_frame_type(tag)   (((tag) & 0xF0) >> 4)
 
+/* AVC packet types */
+typedef byte flv_avc_packet_type;
+
+#define FLV_AVC_PACKET_TYPE_SEQUENCE_HEADER 0
+#define FLV_AVC_PACKET_TYPE_NALU            1
+#define FLV_AVC_PACKET_TYPE_SEQUENCE_END    2
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
