@@ -1,5 +1,5 @@
 /*
-    FLVmeta - FLV Metadata Editor
+    FLVMeta - FLV Metadata Editor
 
     Copyright (C) 2007-2013 Marc Noirot <marc.noirot AT gmail.com>
 
