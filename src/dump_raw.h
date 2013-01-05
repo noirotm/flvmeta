@@ -1,9 +1,7 @@
 /*
-    $Id: dump_raw.h 231 2011-06-27 13:46:19Z marc.noirot $
+    FLVmeta - FLV Metadata Editor
 
-    FLV Metadata updater
-
-    Copyright (C) 2007-2012 Marc Noirot <marc.noirot AT gmail.com>
+    Copyright (C) 2007-2013 Marc Noirot <marc.noirot AT gmail.com>
 
     This file is part of FLVMeta.
 
