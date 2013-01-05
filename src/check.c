@@ -1,9 +1,7 @@
 /*
-    $Id: check.c 236 2011-08-10 15:30:04Z marc.noirot@gmail.com $
+    FLVmeta - FLV Metadata Editor
 
-    FLV Metadata updater
-
-    Copyright (C) 2007-2012 Marc Noirot <marc.noirot AT gmail.com>
+    Copyright (C) 2007-2013 Marc Noirot <marc.noirot AT gmail.com>
 
     This file is part of FLVMeta.
 
