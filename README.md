@@ -1,4 +1,4 @@
-# FLVmeta - FLV Metadata Editor
+# FLVmeta - FLV Metadata Editor [![Build Status](https://api.travis-ci.org/noirotm/flvmeta.png?branch=master)](https://travis-ci.org/noirotm/flvmeta)
 
 flvmeta is a command-line utility aimed at manipulating Adobe(tm) Flash
 Video files (FLV), through several commands, only one of which can be used for
