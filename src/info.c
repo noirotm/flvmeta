@@ -228,6 +228,7 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
     info->audio_frame_duration = 0;
     info->total_prev_tags_size = 0;
     info->have_on_last_second = 0;
+    info->last_media_frame_type = 0;
     info->original_on_metadata = NULL;
     info->keyframes = NULL;
     info->times = NULL;
@@ -465,12 +466,13 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
             info->video_frames_number++;
 
             /*
-                we assume all video frames have the same size as the first one:
-                probably bogus but only used in case there's no audio in the file
+                we assume all video frames have the same size as the first one
             */
             if (info->video_frame_duration == 0) {
                 info->video_frame_duration = timestamp - info->video_first_timestamp;
             }
+
+            info->last_media_frame_type = FLV_TAG_TYPE_VIDEO;
 
             info->video_data_size += (body_length + FLV_TAG_SIZE);
             info->total_prev_tags_size += sizeof(uint32_be);
@@ -505,6 +507,8 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
                 info->real_audio_data_size += (body_length - 1);
             }
             
+            info->last_media_frame_type = FLV_TAG_TYPE_AUDIO;
+
             info->audio_data_size += (body_length + FLV_TAG_SIZE);
             info->total_prev_tags_size += sizeof(uint32_be);
         }
@@ -564,12 +568,17 @@ void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts *
     amf_associative_array_add(meta->on_metadata, "hasVideo", amf_boolean_new(info->have_video));
     amf_associative_array_add(meta->on_metadata, "hasAudio", amf_boolean_new(info->have_audio));
     
-    if (info->have_audio) {
+    if (info->last_media_frame_type == FLV_TAG_TYPE_AUDIO) {
         duration = (info->last_timestamp - (opts->reset_timestamps ? 0 : info->first_timestamp) + info->audio_frame_duration) / 1000.0;
     }
-    else {
+    else if (info->last_media_frame_type == FLV_TAG_TYPE_VIDEO) {
         duration = (info->last_timestamp - (opts->reset_timestamps ? 0 : info->first_timestamp) + info->video_frame_duration) / 1000.0;
     }
+    else {
+        /* no last frame type means no audio and no video, therefore no duration */
+        duration = 0;
+    }
+
     amf_associative_array_add(meta->on_metadata, "duration", amf_number_new(duration));
 
     amf_associative_array_add(meta->on_metadata, "lasttimestamp", amf_number_new(info->last_timestamp / 1000.0));

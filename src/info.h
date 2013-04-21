@@ -55,6 +55,7 @@ typedef struct __flv_info {
     uint32 audio_frame_duration;
     file_offset_t total_prev_tags_size;
     uint8 have_on_last_second;
+    uint8 last_media_frame_type;
     amf_data * original_on_metadata;
     amf_data * keyframes;
     amf_data * times;
