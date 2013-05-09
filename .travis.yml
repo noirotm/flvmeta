@@ -1,5 +1,11 @@
 language: c
-script: cmake . && make
 compiler:
   - clang
   - gcc
+env:
+  - BUILDTOOL=autotools
+  - BUILDTOOL=cmake
+script:
+  - if [ $BUILDTOOL = "autotools" ]; then ./autogen.sh && ./configure && make; fi
+  - if [ $BUILDTOOL = "cmake" ]; then cmake . && make; fi
+  
