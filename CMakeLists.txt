@@ -3,7 +3,7 @@ project(flvmeta C)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
-set(FLVMETA_VERSION "1.2")
+set(FLVMETA_VERSION "1.2.0")
 set(FLVMETA_RELEASE no)
 
 # check whether we are building a release or a git snapshot
@@ -22,7 +22,7 @@ if(NOT FLVMETA_RELEASE)
       OUTPUT_VARIABLE   GIT_RELEASE
       OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    set(FLVMETA_VERSION "${FLVMETA_VERSION}-g${GIT_RELEASE}")
+    set(FLVMETA_VERSION "${FLVMETA_VERSION}-dev+g${GIT_RELEASE}")
   endif(GIT AND DOT_GIT)
 endif(NOT FLVMETA_RELEASE)
 
