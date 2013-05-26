@@ -1,3 +1,12 @@
+Version 1.1.1 (2013-05-09)
+  - Improved file duration detection.
+  - Fixed FLVMeta product spelling.
+  - Updated copyright notices to 2013.
+
+Version 1.1.0.1 (2012-10-18)
+  - No change in the code.
+  - Fixed spelling errors in the man page.
+
 Version 1.1.0 (2012-05-03)
   - Beta release. All features should be considered relatively
     stable unless explicitely stated otherwise.
