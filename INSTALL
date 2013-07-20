@@ -52,7 +52,7 @@ is the source directory.
 shell>cmake . 
 shell>make
 
-Note: by default, cmake build is less verbose than automake build. Use 
+Note: by default, cmake builds are less verbose than automake builds. Use 
 "make VERBOSE=1" if you want to see add command lines for each compiled source.
 
 - Windows, using "Visual Studio 9 2008" generator
@@ -104,9 +104,8 @@ CONFIGURATION PARAMETERS
 ---------------------------------------------------------------
 The procedure above will build with default configuration.
 
-Let's you want to change the  configuration parameters and have archive
-storage engine compiled into the server instead of building it as pluggable 
-module.
+Let's say you want to change the configuration parameters and use the version
+of libyaml installed on your system instead of the one provided with FLVmeta.
 
 1)You can provide parameters on the command line, like
 
@@ -114,7 +113,7 @@ shell> cmake .  -DFLVMETA_USE_SYSTEM_LIBYAML=1
 
 This can be done during the initial configuration or any time later.
 
-Note, that parameters are "sticky", that is they are remebered in the CMake 
+Note, that parameters are "sticky", that is they are remembered in the CMake 
 cache (CMakeCache.txt file in the build directory)
 
 2) Configuration using cmake-gui (Windows, OSX, or Linux with cmake-gui 
@@ -134,9 +133,9 @@ ccmake is curses-based GUI application that provides the same functionality
 as cmake-gui. It is less user-friendly compared to cmake-gui but works also 
 on exotic Unixes like HPUX, AIX or Solaris.
 
-Besides storage engines, probably the most important parameter from a 
-developer's point of view is CMAKE_BUILD_TYPE (this allows to build server with 
-dbug tracing library and with debug compile flags).
+The most important parameter from a developer's point of view is probably
+CMAKE_BUILD_TYPE (this allows to build server with debug tracing library
+and with debug compile flags).
 
 After changing the configuration, recompile using
 shell> make
@@ -154,7 +153,7 @@ Does the same but also provides a short help text for each parameter.
 
 shell> cmake -LAH 
 
-Dumps all config parameters (including advanced) to the stdout.
+Dumps all config parameters (including advanced) to the standard output.
 
 PACKAGING
 ---------------------------------------------------------------
@@ -209,9 +208,9 @@ For people with autotools background, it is important to remember CMake does
 not provide autoheader functionality. That is, when you add a check
 
 CHECK_FUNCTION_EXISTS(foo HAVE_FOO)
-to config.cmake, then you will also need to add
+to CMakeLists.txt, then you will also need to add
 #cmakedefine HAVE_FOO 1
-to config.h.cmake
+to config-cmake.h.in
 
 Troubleshooting platform checks
 --------------------------------
@@ -238,6 +237,6 @@ is in <build-root>/src/CMakeFiles/flvmeta.dir/link.txt
 feature because tests do not rerun when reconfiguring (e.g when a new test was 
 added).The downside of caching is that when a platform test was wrong and was 
 later corrected, the cached result is still used. If you encounter this 
-situation,  which should be a rare occation, you need either to remove the 
+situation,  which should be a rare occasion, you need either to remove the 
 offending entry from CMakeCache.txt (if test was for HAVE_FOO, remove lines 
 containing HAVE_FOO from CMakeCache.txt) or just remove the cache file.
