@@ -69,7 +69,7 @@
 #define FLVMETA_CHECK_LEVEL_ERROR   2
 #define FLVMETA_CHECK_LEVEL_FATAL   3
 
-/* dump formats */
+/* dump and check formats */
 #define FLVMETA_FORMAT_XML          0
 #define FLVMETA_FORMAT_RAW          1
 #define FLVMETA_FORMAT_JSON         2
@@ -84,7 +84,7 @@ typedef struct __flvmeta_opts {
     int dump_metadata;
     int check_level;
     int quiet;
-    int check_xml_report;
+    int check_report_format;
     int insert_onlastsecond;
     int reset_timestamps;
     int all_keyframes;
