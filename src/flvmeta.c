@@ -121,6 +121,7 @@ static void help(const char * name) {
            "                            LEVEL is 'info', 'warning' (default), 'error', or 'fatal'\n"
            "  -q, --quiet               do not print messages, only return the status code\n"
            "  -x, --xml                 generate an XML report\n"
+           "  -j, --json                generate a JSON report\n"
            "\nUpdate options:\n"
            "  -m, --print-metadata      print metadata to stdout after update using\n"
            "                            the specified format\n"
@@ -246,12 +247,16 @@ static int parse_command_line(int argc, char ** argv, flvmeta_opts * options) {
                     return EXIT_FAILURE;
                 }
                 break;
-            case 'j': options->dump_format = FLVMETA_FORMAT_JSON;    break;
+            case 'j':
+                /* json dump format, or generation of json check report */
+                options->dump_format = FLVMETA_FORMAT_JSON;
+                options->check_report_format = FLVMETA_FORMAT_JSON;
+                break;
             case 'r': options->dump_format = FLVMETA_FORMAT_RAW;     break;
             case 'x':
-                /* xml dump format, or generation of xml report */
+                /* xml dump format, or generation of xml check report */
                 options->dump_format = FLVMETA_FORMAT_XML;
-                options->check_xml_report = 1;
+                options->check_report_format = FLVMETA_FORMAT_XML;
                 break;
             case 'y': options->dump_format = FLVMETA_FORMAT_YAML;    break;
             case 'e': options->metadata_event = optarg;              break;
@@ -354,7 +359,7 @@ int main(int argc, char ** argv) {
     options.metadata = NULL;
     options.check_level = FLVMETA_CHECK_LEVEL_WARNING;
     options.quiet = 0;
-    options.check_xml_report = 0;
+    options.check_report_format = FLVMETA_FORMAT_RAW;
     options.dump_metadata = 0;
     options.insert_onlastsecond = 1;
     options.reset_timestamps = 0;

@@ -22,6 +22,7 @@
 #include "check.h"
 #include "dump.h"
 #include "info.h"
+#include "json.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -33,42 +34,73 @@
 
 #define MAX_ACCEPTABLE_TAG_BODY_LENGTH 1000000
 
+typedef struct {
+    json_emitter je;
+} check_context;
+
 /* start the report */
-static void report_start(const flvmeta_opts * opts) {
+static void report_start(const flvmeta_opts * opts, check_context * ctxt) {
+    time_t now;
+    struct tm * t;
+    char datestr[128];
+    
     if (opts->quiet)
         return;
 
-    if (opts->check_xml_report) {
-        time_t now;
-        struct tm * t;
-        char datestr[128];
+    now = time(NULL);
+    tzset();
+    t = localtime(&now);
+    strftime(datestr, sizeof(datestr), "%Y-%m-%dT%H:%M:%S", t);
 
+    if (opts->check_report_format == FLVMETA_FORMAT_XML) {
         puts("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
         puts("<report xmlns=\"http://schemas.flvmeta.org/report/1.0/\">");
         puts("  <metadata>");
         printf("    <filename>%s</filename>\n", opts->input_file);
-
-        now = time(NULL);
-        tzset();
-        t = localtime(&now);
-        strftime(datestr, sizeof(datestr), "%Y-%m-%dT%H:%M:%S", t);
         printf("    <creation-date>%s</creation-date>\n", datestr);
-
         printf("    <generator>%s</generator>\n", PACKAGE_STRING);
-
         puts("  </metadata>");
         puts("  <messages>");
+    }
+    else if (opts->check_report_format == FLVMETA_FORMAT_JSON) {
+        json_emit_init(&ctxt->je);
+        json_emit_object_start(&ctxt->je);
+
+        json_emit_object_key_z(&ctxt->je, "filename");
+        json_emit_string_z(&ctxt->je, opts->input_file);
+
+        json_emit_object_key_z(&ctxt->je, "creation_date");
+        json_emit_string_z(&ctxt->je, datestr);
+
+        json_emit_object_key_z(&ctxt->je, "generator");
+        json_emit_string_z(&ctxt->je, PACKAGE_STRING);
+
+        json_emit_object_key_z(&ctxt->je, "messages");
+        json_emit_array_start(&ctxt->je);
     }
 }
 
 /* end the report */
-static void report_end(const flvmeta_opts * opts, int errors, int warnings) {
+static void report_end(const flvmeta_opts * opts, check_context * ctxt, int errors, int warnings) {
     if (opts->quiet)
         return;
 
-    if (opts->check_xml_report) {
+    if (opts->check_report_format == FLVMETA_FORMAT_XML) {
         puts("  </messages>");
         puts("</report>");
+    }
+    else if (opts->check_report_format == FLVMETA_FORMAT_JSON) {
+        json_emit_array_end(&ctxt->je);
+
+        json_emit_object_key_z(&ctxt->je, "errors");
+        json_emit_integer(&ctxt->je, errors);
+
+        json_emit_object_key_z(&ctxt->je, "warnings");
+        json_emit_integer(&ctxt->je, warnings);
+
+        json_emit_object_end(&ctxt->je);
+
+        printf("\n");
     }
     else {
         printf("%d error(s), %d warning(s)\n", errors, warnings);
@@ -81,7 +113,8 @@ static void report_print_message(
     const char * code,
     file_offset_t offset,
     const char * message,
-    const flvmeta_opts * opts
+    const flvmeta_opts * opts,
+    check_context * ctxt
 ) {
     if (opts->quiet)
         return;
@@ -97,11 +130,29 @@ static void report_print_message(
             default: levelstr = "unknown";
         }
 
-        if (opts->check_xml_report) {
+        if (opts->check_report_format == FLVMETA_FORMAT_XML) {
             /* XML report entry */
             printf("    <message level=\"%s\" code=\"%s\"", levelstr, code);
             printf(" offset=\"%" FILE_OFFSET_PRINTF_FORMAT  "i\">", offset);
             printf("%s</message>\n", message);
+        }
+        else if (opts->check_report_format == FLVMETA_FORMAT_JSON) {
+            /* JSON report entry */
+            json_emit_object_start(&ctxt->je);
+
+            json_emit_object_key_z(&ctxt->je, "level");
+            json_emit_string_z(&ctxt->je, levelstr);
+
+            json_emit_object_key_z(&ctxt->je, "code");
+            json_emit_string_z(&ctxt->je, code);
+
+            json_emit_object_key_z(&ctxt->je, "offset");
+            json_emit_file_offset(&ctxt->je, offset);
+
+            json_emit_object_key_z(&ctxt->je, "message");
+            json_emit_string_z(&ctxt->je, message);
+
+            json_emit_object_end(&ctxt->je);
         }
         else {
             /* raw report entry */
@@ -114,19 +165,19 @@ static void report_print_message(
 
 /* convenience macros */
 #define print_info(code, offset, message) \
-    report_print_message(FLVMETA_CHECK_LEVEL_INFO, code, offset, message, opts)
+    report_print_message(FLVMETA_CHECK_LEVEL_INFO, code, offset, message, opts, &ctxt)
 #define print_warning(code, offset, message) \
     if (opts->check_level <= FLVMETA_CHECK_LEVEL_WARNING) ++warnings; \
-    report_print_message(FLVMETA_CHECK_LEVEL_WARNING, code, offset, message, opts)
+    report_print_message(FLVMETA_CHECK_LEVEL_WARNING, code, offset, message, opts, &ctxt)
 #define print_error(code, offset, message) \
     if (opts->check_level <= FLVMETA_CHECK_LEVEL_ERROR) ++errors; \
-    report_print_message(FLVMETA_CHECK_LEVEL_ERROR, code, offset, message, opts)
+    report_print_message(FLVMETA_CHECK_LEVEL_ERROR, code, offset, message, opts, &ctxt)
 #define print_fatal(code, offset, message) \
     if (opts->check_level <= FLVMETA_CHECK_LEVEL_FATAL) ++errors; \
-    report_print_message(FLVMETA_CHECK_LEVEL_FATAL, code, offset, message, opts)
+    report_print_message(FLVMETA_CHECK_LEVEL_FATAL, code, offset, message, opts, &ctxt)
 
 /* get string representing given AMF type */
-const char * get_amf_type_string(byte type) {
+static const char * get_amf_type_string(byte type) {
     switch (type) {
         case AMF_TYPE_NUMBER: return "Number";
         case AMF_TYPE_BOOLEAN: return "Boolean";
@@ -149,6 +200,7 @@ const char * get_amf_type_string(byte type) {
 int check_flv_file(const flvmeta_opts * opts) {
     flv_stream * flv_in;
     flv_header header;
+    check_context ctxt;
     int errors, warnings;
     int result;
     char message[256];
@@ -200,7 +252,7 @@ int check_flv_file(const flvmeta_opts * opts) {
     
     errors = warnings = 0;
 
-    report_start(opts);
+    report_start(opts, &ctxt);
 
     /** check header **/
 
@@ -1393,7 +1445,7 @@ int check_flv_file(const flvmeta_opts * opts) {
     }
 
 end:
-    report_end(opts, errors, warnings);
+    report_end(opts, &ctxt, errors, warnings);
     
     amf_data_free(on_metadata);
     amf_data_free(on_metadata_name);
