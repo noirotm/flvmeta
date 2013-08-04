@@ -1,6 +1,6 @@
 % flvmeta(1) flvmeta user manual
 % 
-% April 2012
+% August 2013
 
 # NAME
 
@@ -37,7 +37,7 @@ standard output, in a variety of textual output formats, including XML, YAML,
 and JSON.
 
 Finally, the program can analyze FLV files to detect potential problems and
-errors, and generate a textual report in a raw format, or in XML.
+errors, and generate a textual report as a raw format, as JSON, or as XML.
 It has the ability to detect more than a hundred problems, going from harmless
 to potentially unplayable, using a few real world encountered issues.
 
@@ -85,7 +85,8 @@ Print a report to standard output listing warnings and errors detected in
 the codecs used in the file. The exit code will be set to a non-zero value
 if there is at least one error in the file.
 
-The output format can either be plain text or XML using the **\--xml** option.
+The output format can either be plain text, XML using the **\--xml** option,
+or JSON using the **\--json** option.
 It can also be disabled altogether using the **\--quiet** option if you are
 only interested in the exit status.
 
@@ -198,6 +199,9 @@ print the newly written metadata to the standard output.
 
 -x, \--xml
 :   generate an XML report instead of the default 'compiler-friendly' text
+
+-j, \--json
+:   generate a JSON report instead of the default 'compiler-friendly' text
 
 ## UPDATE
 
