@@ -1,3 +1,11 @@
+Version 1.2.0 (unreleased)
+  - Removed support for the autotools build system.
+  - Added JSON as output format for check reports.
+  - Fixed installation instructions for CMake.
+  - Fixed inconsistencies in FLVMeta product spelling.
+  - Added support for the Travis continuous integration platform.
+  - Switched to Semver 2.0 as versioning scheme.
+
 Version 1.1.1 (2013-05-09)
   - Improved file duration detection.
   - Fixed FLVMeta product spelling.
