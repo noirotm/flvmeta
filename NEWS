@@ -1,3 +1,10 @@
+Version 1.1.2 (2013-08-04)
+  - Added JSON as output format for check reports.
+  - Fixed automake distribution of the CmakeLists.txt file used
+    to build the man page.
+  - Added support for the Travis continuous integration platform.
+  - Fixed inconsistencies in FLVMeta product spelling.
+
 Version 1.1.1 (2013-05-09)
   - Improved file duration detection.
   - Fixed FLVMeta product spelling.
