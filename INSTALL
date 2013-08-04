@@ -1,6 +1,6 @@
 Copyright (c) 2012-2013 Marc Noirot
 
-How to Build FLVmeta with CMake
+How to Build FLVMeta with CMake
 
 WHAT YOU NEED
 ---------------------------------------------------------------
@@ -105,7 +105,7 @@ CONFIGURATION PARAMETERS
 The procedure above will build with default configuration.
 
 Let's say you want to change the configuration parameters and use the version
-of libyaml installed on your system instead of the one provided with FLVmeta.
+of libyaml installed on your system instead of the one provided with FLVMeta.
 
 1)You can provide parameters on the command line, like
 
@@ -198,7 +198,7 @@ shell> make install DESTDIR="/some/absolute/path"
 
 FOR PROGRAMMERS: WRITING PLATFORM CHECKS
 --------------------------------------------------------------
-If you modify FLVmeta source and want to add a new platform check,please read 
+If you modify FLVMeta source and want to add a new platform check,please read 
 http://www.vtk.org/Wiki/CMake_HowToDoPlatformChecks first.
 
 Bigger chunks of functionality, for example non-trivial macros are implemented 

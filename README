@@ -1,4 +1,4 @@
-This is FLVmeta, a metadata injection and manipulation tool for Adobe(r) FLV video files.
+This is FLVMeta, a metadata injection and manipulation tool for Adobe(r) FLV video files.
 
 The package contains an utility, flvmeta, to be used to inject the onMetaData event
 in FLV files as well as the onLastSecond event, to print all informations about
@@ -16,13 +16,13 @@ It is written in portable C, and should compile on most platforms (it has
 been successfully compiled and tested on Ubuntu Feisty and later, Debian Lenny,
 MacOSX 10.4, Windows XP, and Windows 7).
 It also cleanly compiles as a 64-bit binary without alteration.
-FLVmeta is fast (only bound by I/O speed) and has a very small memory footprint.
+FLVMeta is fast (only bound by I/O speed) and has a very small memory footprint.
 
-The FLVmeta source package includes and uses the following software:
+The FLVMeta source package includes and uses the following software:
 - the libyaml YAML parser and emitter (http://pyyaml.org/wiki/LibYAML)
 
 
-FLVmeta is provided "as is" with no warranty.  The exact terms
+FLVMeta is provided "as is" with no warranty.  The exact terms
 under which you may use and (re)distribute this program are detailed
 in the GNU General Public License, in the file COPYING.
 
@@ -32,6 +32,6 @@ See the file INSTALL for compilation and installation instructions.
 
 See the file NEWS for a description of major changes in this release.
 
-See the file TODO for ideas on how you could help us improve FLVmeta.
+See the file TODO for ideas on how you could help us improve FLVMeta.
 
 Send bug reports to flvmeta-discussion@googlegroups.com.
