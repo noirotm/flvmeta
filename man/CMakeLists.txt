@@ -31,9 +31,9 @@ if(PANDOC)
   
   # install man file on systems having a manual directory
   include(GNUInstallDirs)
-  if(CMAKE_INSTALL_MANDIR)
+  if(CMAKE_INSTALL_MANDIR AND NOT WIN32)
     install(DIRECTORY ${MAN_OUTPUT_DIR}
       DESTINATION ${CMAKE_INSTALL_MANDIR}
     )
-  endif(CMAKE_INSTALL_MANDIR)
+  endif(CMAKE_INSTALL_MANDIR AND NOT WIN32)
 endif(PANDOC)
