@@ -43,7 +43,7 @@ static void report_start(const flvmeta_opts * opts, check_context * ctxt) {
     time_t now;
     struct tm * t;
     char datestr[128];
-    
+
     if (opts->quiet)
         return;
 
@@ -81,7 +81,7 @@ static void report_start(const flvmeta_opts * opts, check_context * ctxt) {
 }
 
 /* end the report */
-static void report_end(const flvmeta_opts * opts, check_context * ctxt, int errors, int warnings) {
+static void report_end(const flvmeta_opts * opts, check_context * ctxt, uint32 errors, uint32 warnings) {
     if (opts->quiet)
         return;
 
@@ -103,7 +103,7 @@ static void report_end(const flvmeta_opts * opts, check_context * ctxt, int erro
         printf("\n");
     }
     else {
-        printf("%d error(s), %d warning(s)\n", errors, warnings);
+        printf("%u error(s), %u warning(s)\n", errors, warnings);
     }
 }
 
@@ -201,7 +201,7 @@ int check_flv_file(const flvmeta_opts * opts) {
     flv_stream * flv_in;
     flv_header header;
     check_context ctxt;
-    int errors, warnings;
+    uint32 errors, warnings;
     int result;
     char message[256];
     uint32 prev_tag_size, tag_number;
@@ -226,7 +226,7 @@ int check_flv_file(const flvmeta_opts * opts) {
 
     prev_audio_tag = 0;
     prev_video_tag = 0;
-    
+
     have_audio = have_video = 0;
     tag_number = 0;
     last_timestamp = last_video_timestamp = last_audio_timestamp = 0;
@@ -249,7 +249,7 @@ int check_flv_file(const flvmeta_opts * opts) {
     if (flv_in == NULL) {
         return ERROR_OPEN_READ;
     }
-    
+
     errors = warnings = 0;
 
     report_start(opts, &ctxt);
@@ -269,7 +269,7 @@ int check_flv_file(const flvmeta_opts * opts) {
 
     /* version */
     if (header.version != FLV_VERSION) {
-        sprintf(message, "header version should be 1, %d found instead", header.version);
+        sprintf(message, "header version should be 1, %u found instead", header.version);
         print_error(ERROR_HEADER_BAD_VERSION, 3, message);
     }
 
@@ -291,7 +291,7 @@ int check_flv_file(const flvmeta_opts * opts) {
 
     /* offset */
     if (flv_header_get_offset(header) != 9) {
-        sprintf(message, "header offset should be 9, %d found instead", flv_header_get_offset(header));
+        sprintf(message, "header offset should be 9, %u found instead", flv_header_get_offset(header));
         print_error(ERROR_HEADER_BAD_OFFSET, 5, message);
     }
 
@@ -303,7 +303,7 @@ int check_flv_file(const flvmeta_opts * opts) {
         goto end;
     }
     else if (prev_tag_size != 0) {
-        sprintf(message, "first previous tag size should be 0, %d found instead", prev_tag_size);
+        sprintf(message, "first previous tag size should be 0, %u found instead", prev_tag_size);
         print_error(ERROR_PREV_TAG_SIZE_BAD_FIRST, 9, message);
     }
 
@@ -358,12 +358,12 @@ int check_flv_file(const flvmeta_opts * opts) {
 
         /* check body length */
         if (body_length > (file_stats.st_size - flv_get_offset(flv_in))) {
-            sprintf(message, "tag body length (%d bytes) exceeds file size", body_length);
+            sprintf(message, "tag body length (%u bytes) exceeds file size", body_length);
             print_fatal(FATAL_TAG_BODY_LENGTH_OVERFLOW, offset + 1, message);
             goto end;
         }
         else if (body_length > MAX_ACCEPTABLE_TAG_BODY_LENGTH) {
-            sprintf(message, "tag body length (%d bytes) is abnormally large", body_length);
+            sprintf(message, "tag body length (%u bytes) is abnormally large", body_length);
             print_warning(WARNING_TAG_BODY_LENGTH_LARGE, offset + 1, message);
         }
         else if (body_length == 0) {
@@ -375,14 +375,14 @@ int check_flv_file(const flvmeta_opts * opts) {
 
         /* check whether first timestamp is zero */
         if (tag_number == 1 && timestamp != 0) {
-            sprintf(message, "first timestamp should be zero, %d found instead", timestamp);
+            sprintf(message, "first timestamp should be zero, %u found instead", timestamp);
             print_error(ERROR_TIMESTAMP_FIRST_NON_ZERO, offset + 4, message);
         }
 
         /* check whether timestamps decrease in a given stream */
         if (tag.type == FLV_TAG_TYPE_AUDIO) {
             if (last_audio_timestamp > timestamp) {
-                sprintf(message, "audio tag timestamps are decreasing from %d to %d", last_audio_timestamp, timestamp);
+                sprintf(message, "audio tag timestamps are decreasing from %u to %u", last_audio_timestamp, timestamp);
                 print_error(ERROR_TIMESTAMP_AUDIO_DECREASE, offset + 4, message);
             }
             last_audio_timestamp = timestamp;
@@ -390,7 +390,7 @@ int check_flv_file(const flvmeta_opts * opts) {
         }
         if (tag.type == FLV_TAG_TYPE_VIDEO) {
             if (last_video_timestamp > timestamp) {
-                sprintf(message, "video tag timestamps are decreasing from %d to %d", last_video_timestamp, timestamp);
+                sprintf(message, "video tag timestamps are decreasing from %u to %u", last_video_timestamp, timestamp);
                 print_error(ERROR_TIMESTAMP_VIDEO_DECREASE, offset + 4, message);
             }
             last_video_timestamp = timestamp;
@@ -404,7 +404,7 @@ int check_flv_file(const flvmeta_opts * opts) {
 
         /* check whether timestamps decrease globally */
         else if (!decr_timestamp_signaled && last_timestamp > timestamp && last_timestamp - timestamp >= 1000) {
-            sprintf(message, "timestamps are decreasing from %d to %d", last_timestamp, timestamp);
+            sprintf(message, "timestamps are decreasing from %u to %u", last_timestamp, timestamp);
             print_error(ERROR_TIMESTAMP_DECREASE, offset + 4, message);
         }
 
@@ -420,7 +420,7 @@ int check_flv_file(const flvmeta_opts * opts) {
 
         /** stream id must be zero **/
         if (stream_id != 0) {
-            sprintf(message, "tag stream id must be zero, %d found instead", stream_id);
+            sprintf(message, "tag stream id must be zero, %u found instead", stream_id);
             print_error(ERROR_TAG_STREAM_ID_NON_ZERO, offset + 8, message);
         }
 
@@ -446,7 +446,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                 /* check format */
                 audio_format = flv_audio_tag_sound_format(at);
                 if (audio_format == 12 || audio_format == 13) {
-                    sprintf(message, "unknown audio format %d", audio_format);
+                    sprintf(message, "unknown audio format %u", audio_format);
                     print_warning(WARNING_AUDIO_CODEC_UNKNOWN, offset + 11, message);
                 }
                 else if (audio_format == FLV_AUDIO_TAG_SOUND_FORMAT_G711_A
@@ -455,7 +455,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     || audio_format == FLV_AUDIO_TAG_SOUND_FORMAT_MP3_8
                     || audio_format == FLV_AUDIO_TAG_SOUND_FORMAT_DEVICE_SPECIFIC
                 ) {
-                    sprintf(message, "audio format %d is reserved for internal use", audio_format);
+                    sprintf(message, "audio format %u is reserved for internal use", audio_format);
                     print_warning(WARNING_AUDIO_CODEC_RESERVED, offset + 11, message);
                 }
 
@@ -513,7 +513,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     && video_frame_type != FLV_VIDEO_TAG_FRAME_TYPE_GENERATED_KEYFRAME
                     && video_frame_type != FLV_VIDEO_TAG_FRAME_TYPE_COMMAND_FRAME
                 ) {
-                    sprintf(message, "unknown video frame type %d", video_frame_type);
+                    sprintf(message, "unknown video frame type %u", video_frame_type);
                     print_error(ERROR_VIDEO_FRAME_TYPE_UNKNOWN, offset + 11, message);
                 }
 
@@ -536,7 +536,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                     && video_codec != FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2
                     && video_codec != FLV_VIDEO_TAG_CODEC_AVC
                 ) {
-                    sprintf(message, "unknown video codec id %d", video_codec);
+                    sprintf(message, "unknown video codec id %u", video_codec);
                     print_error(ERROR_VIDEO_CODEC_UNKNOWN, offset + 11, message);
                 }
 
@@ -574,7 +574,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                 }
                 else if (amf_data_get_type(name) != AMF_TYPE_STRING) {
                     /* name type checking */
-                    sprintf(message, "invalid metadata name type: %d, should be a string (2)", amf_data_get_type(name));
+                    sprintf(message, "invalid metadata name type: %u, should be a string (2)", amf_data_get_type(name));
                     print_error(ERROR_METADATA_NAME_INVALID_TYPE, offset, message);
                 }
                 else {
@@ -585,11 +585,11 @@ int check_flv_file(const flvmeta_opts * opts) {
 
                     /* check whether all body size has been read */
                     if (flv_in->current_tag_body_length > 0) {
-                        sprintf(message, "%d bytes not read in tag body after metadata end", body_length - flv_in->current_tag_body_length);
+                        sprintf(message, "%u bytes not read in tag body after metadata end", body_length - flv_in->current_tag_body_length);
                         print_warning(WARNING_METADATA_DATA_REMAINING, flv_get_offset(flv_in), message);
                     }
                     else if (flv_in->current_tag_body_overflow > 0) {
-                        sprintf(message, "%d bytes missing from tag body after metadata end", flv_in->current_tag_body_overflow);
+                        sprintf(message, "%u bytes missing from tag body after metadata end", flv_in->current_tag_body_overflow);
                         print_warning(WARNING_METADATA_DATA_MISSING, flv_get_offset(flv_in), message);
                     }
 
@@ -614,7 +614,7 @@ int check_flv_file(const flvmeta_opts * opts) {
 
                             /* check onMetadata type */
                             if (amf_data_get_type(on_metadata) != AMF_TYPE_ASSOCIATIVE_ARRAY) {
-                                sprintf(message, "invalid onMetaData data type: %d, should be an associative array (8)", amf_data_get_type(on_metadata));
+                                sprintf(message, "invalid onMetaData data type: %u, should be an associative array (8)", amf_data_get_type(on_metadata));
                                 print_error(ERROR_METADATA_DATA_INVALID_TYPE, offset, message);
                             }
 
@@ -653,7 +653,7 @@ int check_flv_file(const flvmeta_opts * opts) {
         }
 
         if (prev_tag_size != FLV_TAG_SIZE + body_length) {
-            sprintf(message, "previous tag size should be %d, %d found instead", FLV_TAG_SIZE + body_length, prev_tag_size);
+            sprintf(message, "previous tag size should be %u, %u found instead", FLV_TAG_SIZE + body_length, prev_tag_size);
             print_error(ERROR_PREV_TAG_SIZE_BAD, flv_get_offset(flv_in), message);
         }
     }
@@ -671,11 +671,11 @@ int check_flv_file(const flvmeta_opts * opts) {
     /* check last timestamps */
     if (have_video && have_audio && abs(last_audio_timestamp - last_video_timestamp) >= 1000) {
         if (last_audio_timestamp > last_video_timestamp) {
-            sprintf(message, "video stops %d ms before audio", last_audio_timestamp - last_video_timestamp);
+            sprintf(message, "video stops %u ms before audio", last_audio_timestamp - last_video_timestamp);
             print_warning(WARNING_TIMESTAMP_VIDEO_ENDS_FIRST, file_stats.st_size, message);
         }
         else {
-            sprintf(message, "audio stops %d ms before video", last_video_timestamp - last_audio_timestamp);
+            sprintf(message, "audio stops %u ms before video", last_video_timestamp - last_audio_timestamp);
             print_warning(WARNING_TIMESTAMP_AUDIO_ENDS_FIRST, file_stats.st_size, message);
         }
     }
@@ -695,7 +695,7 @@ int check_flv_file(const flvmeta_opts * opts) {
 
     /* check onLastSecond timestamp */
     if (have_on_last_second && (last_timestamp - on_last_second_timestamp) >= 2000) {
-        sprintf(message, "onLastSecond event located %d ms before the last tag", last_timestamp - on_last_second_timestamp);
+        sprintf(message, "onLastSecond event located %u ms before the last tag", last_timestamp - on_last_second_timestamp);
         print_warning(WARNING_METADATA_LAST_SECOND_BAD, file_stats.st_size, message);
     }
 
@@ -1144,7 +1144,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                 if (type == AMF_TYPE_NUMBER) {
                     number64 datasize, file_datasize;
                     uint32 on_metadata_size;
-                    
+
                     on_metadata_size = FLV_TAG_SIZE +
                         (uint32)(amf_data_size(on_metadata_name) + amf_data_size(on_metadata));
                     datasize = (number64)(info.meta_data_size + on_metadata_size);
@@ -1274,7 +1274,7 @@ int check_flv_file(const flvmeta_opts * opts) {
             if (!strcmp((char*)name, "keyframes")) {
                 if (type == AMF_TYPE_OBJECT) {
                     amf_data * file_times, * file_filepositions;
-                    
+
                     file_times = amf_object_get(data, "times");
                     file_filepositions = amf_object_get(data, "filepositions");
 
@@ -1347,7 +1347,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                                                 time, f_time);
                                             print_warning(WARNING_KEYFRAMES_TIME_BAD, on_metadata_offset, message);
                                         }
-                                        
+
                                         /* check for duplicate time, can happen in H.264 files */
                                         if (have_last_time && last_file_time == f_time) {
                                             sprintf(message, "Duplicate keyframe time: %.12g", f_time);
@@ -1446,10 +1446,10 @@ int check_flv_file(const flvmeta_opts * opts) {
 
 end:
     report_end(opts, &ctxt, errors, warnings);
-    
+
     amf_data_free(on_metadata);
     amf_data_free(on_metadata_name);
     flv_close(flv_in);
-    
+
     return (errors > 0) ? ERROR_INVALID_FLV_FILE : OK;
 }
