@@ -133,7 +133,7 @@ static void report_print_message(
         if (opts->check_report_format == FLVMETA_FORMAT_XML) {
             /* XML report entry */
             printf("    <message level=\"%s\" code=\"%s\"", levelstr, code);
-            printf(" offset=\"%" FILE_OFFSET_PRINTF_FORMAT  "i\">", offset);
+            printf(" offset=\"%" FILE_OFFSET_PRINTF_FORMAT  "u\">", offset);
             printf("%s</message>\n", message);
         }
         else if (opts->check_report_format == FLVMETA_FORMAT_JSON) {

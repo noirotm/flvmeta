@@ -209,7 +209,7 @@ static int yaml_on_tag(flv_tag * tag, flv_parser * parser) {
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"offset", 6, 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
 
-    sprintf(buffer, "%" FILE_OFFSET_PRINTF_FORMAT "i", parser->stream->current_tag_offset);
+    sprintf(buffer, "%" FILE_OFFSET_PRINTF_FORMAT "u", parser->stream->current_tag_offset);
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)buffer, (int)strlen(buffer), 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
 
@@ -372,7 +372,7 @@ int dump_yaml_file(flv_parser * parser, const flvmeta_opts * options) {
     yaml_emitter_t emitter;
     yaml_event_t event;
     int ret;
-    
+
     parser->on_header = yaml_on_header;
     parser->on_tag = yaml_on_tag;
     parser->on_audio_tag = yaml_on_audio_tag;
@@ -387,7 +387,7 @@ int dump_yaml_file(flv_parser * parser, const flvmeta_opts * options) {
 
     yaml_document_start_event_initialize(&event, NULL, NULL, NULL, 0);
     yaml_emitter_emit(&emitter, &event);
-    
+
     parser->user_data = &emitter;
 
     ret = flv_parse(options->input_file, parser);

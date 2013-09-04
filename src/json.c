@@ -108,7 +108,7 @@ void json_emit_integer(json_emitter * je, int value) {
 
 void json_emit_file_offset(json_emitter * je, file_offset_t value) {
     json_print_comma(je);
-    printf("%" FILE_OFFSET_PRINTF_FORMAT "i", value);
+    printf("%" FILE_OFFSET_PRINTF_FORMAT "u", value);
     je->print_comma = 1;
 }
 
