@@ -29,7 +29,7 @@
 
 static int raw_on_header(flv_header * header, flv_parser * parser) {
     int * n;
-    
+
     n = (int*) malloc(sizeof(uint32));
     if (n == NULL) {
         return ERROR_MEMORY;
@@ -39,7 +39,7 @@ static int raw_on_header(flv_header * header, flv_parser * parser) {
     *n = 0;
 
     printf("Magic: %.3s\n", header->signature);
-    printf("Version: %d\n", header->version);
+    printf("Version: %hhu\n", header->version);
     printf("Has audio: %s\n", flv_header_has_audio(*header) ? "yes" : "no");
     printf("Has video: %s\n", flv_header_has_video(*header) ? "yes" : "no");
     printf("Offset: %u\n", swap_uint32(header->offset));
@@ -128,7 +128,7 @@ int dump_raw_file(flv_parser * parser, const flvmeta_opts * options) {
     parser->on_metadata_tag = raw_on_metadata_tag;
     parser->on_prev_tag_size = raw_on_prev_tag_size;
     parser->on_stream_end = raw_on_stream_end;
-    
+
     return flv_parse(options->input_file, parser);
 }
 

@@ -162,7 +162,7 @@ static void xml_amf_data_dump(const amf_data * data, int qualified, int indent_l
 
 static int xml_on_header(flv_header * header, flv_parser * parser) {
     puts("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>");
-    printf("<flv xmlns=\"http://schemas.flvmeta.org/FLV/1.0/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/1.0/\" hasVideo=\"%s\" hasAudio=\"%s\" version=\"%i\">\n",
+    printf("<flv xmlns=\"http://schemas.flvmeta.org/FLV/1.0/\" xmlns:amf=\"http://schemas.flvmeta.org/AMF0/1.0/\" hasVideo=\"%s\" hasAudio=\"%s\" version=\"%hhu\">\n",
         flv_header_has_video(*header) ? "true" : "false",
         flv_header_has_audio(*header) ? "true" : "false",
         header->version);
