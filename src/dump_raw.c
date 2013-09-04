@@ -39,7 +39,7 @@ static int raw_on_header(flv_header * header, flv_parser * parser) {
     *n = 0;
 
     printf("Magic: %.3s\n", header->signature);
-    printf("Version: %hhu\n", header->version);
+    printf("Version: %" PRI_BYTE "u\n", header->version);
     printf("Has audio: %s\n", flv_header_has_audio(*header) ? "yes" : "no");
     printf("Has video: %s\n", flv_header_has_video(*header) ? "yes" : "no");
     printf("Offset: %u\n", swap_uint32(header->offset));

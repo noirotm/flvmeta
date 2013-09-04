@@ -53,10 +53,8 @@ check_include_file(inttypes.h   HAVE_INTTYPES_H)
 check_type_size("double"      SIZEOF_DOUBLE)
 check_type_size("float"       SIZEOF_FLOAT)
 check_type_size("long double" SIZEOF_LONG_DOUBLE)
-
-if(WIN32)
-  add_definitions(-D_FILE_OFFSET_BITS=64)
-endif(WIN32)
+check_type_size("long"        SIZEOF_LONG)
+check_type_size("long long"   SIZEOF_LONG_LONG)
 
 # MSVC before VS 2010 did not have stdint.h
 if(MSVC AND NOT HAVE_STDINT_H)
@@ -82,10 +80,20 @@ if(HAVE_FSEEKO)
     COMMAND getconf LFS_CFLAGS
     OUTPUT_VARIABLE LFS_CFLAGS
     ERROR_QUIET
+    OUTPUT_STRIP_TRAILING_WHITESPACE
   )
+
   if(LFS_CFLAGS)
     add_definitions(${LFS_CFLAGS})
+    set(CMAKE_REQUIRED_FLAGS ${LFS_CFLAGS})
   endif(LFS_CFLAGS)
+
+  if(WIN32)
+    add_definitions(-D_FILE_OFFSET_BITS=64)
+    set(CMAKE_REQUIRED_FLAGS -D_FILE_OFFSET_BITS=64)
+  endif(WIN32)
+
+  check_type_size("off_t" SIZEOF_OFF_T)
 endif(HAVE_FSEEKO)
 
 # configuration file
@@ -97,7 +105,7 @@ add_definitions(-DHAVE_CONFIG_H)
 if(MSVC)
   # use static library
   set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
-  
+
   # C runtime deprecation in Visual C++ 2005 and later
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
 endif(MSVC)

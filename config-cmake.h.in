@@ -25,6 +25,12 @@
 /* The size of `long double', as computed by sizeof. */
 #define SIZEOF_LONG_DOUBLE @SIZEOF_LONG_DOUBLE@
 
+/* The size of `long', as computed by sizeof. */
+#define SIZEOF_LONG @SIZEOF_LONG@
+
+/* The size of `long long', as computed by sizeof. */
+#define SIZEOF_LONG_LONG @SIZEOF_LONG_LONG@
+
 /* Version number of package */
 #define VERSION "@PACKAGE_VERSION@"
 
@@ -42,6 +48,11 @@
 
 /* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
 #cmakedefine HAVE_FSEEKO
+
+/* The size of `off_t', as computed by sizeof. */
+#ifdef HAVE_FSEEKO
+# define SIZEOF_OFF_T @SIZEOF_OFF_T@
+#endif
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

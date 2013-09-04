@@ -108,42 +108,57 @@ number64 swap_number64(number64);
 /* convert native integers into 24 bits big endian integers */
 uint24_be uint32_to_uint24_be(uint32);
 
+/* portable printf format prefixes */
+#ifdef WIN32
+# define PRI_BYTE  "h"
+# define PRI_LL    "I64"
+# define PRI_L     "I32"
+#else
+# define PRI_BYTE  "hh"
+# define PRI_LL    "ll"
+# define PRI_L     "l"
+#endif
+
 /* large file support */
 #ifdef HAVE_FSEEKO
 # define lfs_ftell ftello
 # define lfs_fseek fseeko
 
-# define FILE_OFFSET_T_64_BITS 1
 typedef off_t file_offset_t;
+
+/* file offset printf specifier */
+# if SIZEOF_OFF_T == SIZEOF_LONG_LONG
+#  define FILE_OFFSET_PRINTF_FORMAT PRI_LL
+# elif SIZEOF_OFF_T == SIZEOF_LONG
+#  define FILE_OFFSET_PRINTF_FORMAT PRI_L
+# else
+#  error("unknown off_t variant")
+# endif
 
 #else /* !HAVE_SEEKO */
 
 # ifdef WIN32
 
-# define FILE_OFFSET_T_64_BITS 1
 typedef long long int file_offset_t;
 
 /* Win32 large file support */
 file_offset_t lfs_ftell(FILE * stream);
 int lfs_fseek(FILE * stream, file_offset_t offset, int whence);
 
+#  define FILE_OFFSET_PRINTF_FORMAT "I64"
+
 # else /* !defined WIN32 */
 
-# define lfs_ftell ftell
-# define lfs_fseek fseek
+#  define lfs_ftell ftell
+#  define lfs_fseek fseek
 
 typedef long file_offset_t;
+
+#  define FILE_OFFSET_PRINTF_FORMAT "l"
 
 # endif /* WIN32 */
 
 #endif /* HAVE_FSEEKO */
-
-/* file offset printf specifier */
-#ifdef FILE_OFFSET_T_64_BITS
-# define FILE_OFFSET_PRINTF_FORMAT "ll"
-#else
-# define FILE_OFFSET_PRINTF_FORMAT "l"
-#endif
 
 #ifdef __cplusplus
 }

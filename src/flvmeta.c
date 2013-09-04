@@ -146,7 +146,7 @@ static int parse_command_line(int argc, char ** argv, flvmeta_opts * options) {
 
     option_index = 0;
     do {
-        option = getopt_long(argc, argv, 
+        option = getopt_long(argc, argv,
             DUMP_COMMAND
             FULL_DUMP_COMMAND
             CHECK_COMMAND
@@ -285,7 +285,7 @@ static int parse_command_line(int argc, char ** argv, flvmeta_opts * options) {
             case 'i': options->error_handling = FLVMETA_IGNORE_ERRORS;   break;
             case 't': options->reset_timestamps = 1;                     break;
             case 'k': options->all_keyframes = 1;                        break;
-            
+
             /*
                 common options
             */

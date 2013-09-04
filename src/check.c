@@ -338,7 +338,7 @@ int check_flv_file(const flvmeta_opts * opts) {
             && tag.type != FLV_TAG_TYPE_VIDEO
             && tag.type != FLV_TAG_TYPE_META
         ) {
-            sprintf(message, "unknown tag type %hhd", tag.type);
+            sprintf(message, "unknown tag type %" PRI_BYTE "d", tag.type);
             print_error(ERROR_TAG_TYPE_UNKNOWN, offset, message);
         }
 
