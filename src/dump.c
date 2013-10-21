@@ -51,11 +51,32 @@ const char * dump_string_get_video_codec(flv_video_tag tag) {
 
 const char * dump_string_get_video_frame_type(flv_video_tag tag) {
     switch (flv_video_tag_frame_type(tag)) {
-        case FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME: return "keyframe";
-        case FLV_VIDEO_TAG_FRAME_TYPE_INTERFRAME: return "inter frame";
+        case FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME:
+            if (flv_video_tag_codec_id(tag) == FLV_VIDEO_TAG_CODEC_AVC) {
+                return "seekable frame";
+            }
+            else {
+                return "keyframe";
+            }
+        case FLV_VIDEO_TAG_FRAME_TYPE_INTERFRAME:
+            if (flv_video_tag_codec_id(tag) == FLV_VIDEO_TAG_CODEC_AVC) {
+                return "non-seekable frame";
+            }
+            else {
+                return "inter frame";
+            }
         case FLV_VIDEO_TAG_FRAME_TYPE_DISPOSABLE_INTERFRAME: return "disposable inter frame";
         case FLV_VIDEO_TAG_FRAME_TYPE_GENERATED_KEYFRAME: return "generated keyframe";
         case FLV_VIDEO_TAG_FRAME_TYPE_COMMAND_FRAME: return "video info/command frame";
+        default: return "Unknown";
+    }
+}
+
+const char * dump_string_get_avc_packet_type(flv_avc_packet_type type) {
+    switch (type) {
+        case FLV_AVC_PACKET_TYPE_SEQUENCE_HEADER: return "AVC sequence header";
+        case FLV_AVC_PACKET_TYPE_NALU: return "AVC NALU";
+        case FLV_AVC_PACKET_TYPE_SEQUENCE_END: return "AVC sequence end";
         default: return "Unknown";
     }
 }
@@ -102,6 +123,14 @@ const char * dump_string_get_sound_format(flv_audio_tag tag) {
         case FLV_AUDIO_TAG_SOUND_FORMAT_SPEEX: return "Speex";
         case FLV_AUDIO_TAG_SOUND_FORMAT_MP3_8: return "MP3 8-Khz";
         case FLV_AUDIO_TAG_SOUND_FORMAT_DEVICE_SPECIFIC: return "Device-specific sound";
+        default: return "Unknown";
+    }
+}
+
+const char * dump_string_get_aac_packet_type(flv_aac_packet_type type) {
+    switch (type) {
+        case FLV_AAC_PACKET_TYPE_SEQUENCE_HEADER: return "AVC sequence header";
+        case FLV_AAC_PACKET_TYPE_RAW: return "AVC raw";
         default: return "Unknown";
     }
 }

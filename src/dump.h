@@ -32,10 +32,12 @@ extern "C" {
 const char * dump_string_get_tag_type(flv_tag * tag);
 const char * dump_string_get_video_codec(flv_video_tag tag);
 const char * dump_string_get_video_frame_type(flv_video_tag tag);
+const char * dump_string_get_avc_packet_type(flv_avc_packet_type type);
 const char * dump_string_get_sound_type(flv_audio_tag tag);
 const char * dump_string_get_sound_size(flv_audio_tag tag);
 const char * dump_string_get_sound_rate(flv_audio_tag tag);
 const char * dump_string_get_sound_format(flv_audio_tag tag);
+const char * dump_string_get_aac_packet_type(flv_aac_packet_type type);
 
 /* dump metadata from a FLV file */
 int dump_metadata(const flvmeta_opts * options);

@@ -144,6 +144,12 @@ typedef byte flv_avc_packet_type;
 #define FLV_AVC_PACKET_TYPE_NALU            1
 #define FLV_AVC_PACKET_TYPE_SEQUENCE_END    2
 
+/* AAC packet types */
+typedef byte flv_aac_packet_type;
+
+#define FLV_AAC_PACKET_TYPE_SEQUENCE_HEADER 0
+#define FLV_AAC_PACKET_TYPE_RAW             1
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
