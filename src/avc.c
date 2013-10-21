@@ -97,7 +97,7 @@ typedef struct __AVCDecoderConfigurationRecord {
     uint8 numOfSequenceParameterSets;
 } AVCDecoderConfigurationRecord;
 
-int read_avc_decoder_configuration_record(flv_stream * f, AVCDecoderConfigurationRecord * adcr) {
+static int read_avc_decoder_configuration_record(flv_stream * f, AVCDecoderConfigurationRecord * adcr) {
     if (flv_read_tag_body(f, &adcr->configurationVersion, 1) == 1
     && flv_read_tag_body(f, &adcr->AVCProfileIndication, 1) == 1
     && flv_read_tag_body(f, &adcr->profile_compatibility, 1) == 1
@@ -277,7 +277,7 @@ int read_avc_resolution(flv_stream * f, uint32 body_length, uint32 * width, uint
         return FLV_ERROR_EOF;
     }
     sps_size = swap_uint16(sps_size);
-    
+
     /* read the SPS entirely */
     sps_buffer = (byte *) malloc((size_t)sps_size);
     if (sps_buffer == NULL) {
@@ -290,7 +290,7 @@ int read_avc_resolution(flv_stream * f, uint32 body_length, uint32 * width, uint
 
     /* parse SPS to determine video resolution */
     parse_sps(sps_buffer, (size_t)sps_size, width, height);
-    
+
     free(sps_buffer);
     return FLV_OK;
 }
