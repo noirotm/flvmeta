@@ -224,6 +224,7 @@ static int xml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser
     printf(" rate=\"%s\"", dump_string_get_sound_rate(at));
     printf(" format=\"%s\"", dump_string_get_sound_format(at));
 
+    /* if AAC, detect packet type */
     if (flv_audio_tag_sound_format(at) == FLV_AUDIO_TAG_SOUND_FORMAT_AAC) {
         flv_aac_packet_type type;
 
