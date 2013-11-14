@@ -220,6 +220,7 @@ static int yaml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parse
     const char * str;
     yaml_emitter_t * emitter;
     yaml_event_t event;
+    char buffer[20];
 
     emitter = (yaml_emitter_t *)parser->user_data;
 
@@ -244,6 +245,49 @@ static int yaml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parse
 
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)str, (int)strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
+
+    /* if AVC, detect frame type and composition time */
+    if (flv_video_tag_codec_id(vt) == FLV_VIDEO_TAG_CODEC_AVC) {
+        flv_avc_packet_type type;
+
+        /* packet type */
+        if (flv_read_tag_body(parser->stream, &type, sizeof(flv_avc_packet_type)) < sizeof(flv_avc_packet_type)) {
+            return ERROR_INVALID_TAG;
+        }
+
+        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"AVCData", 7, 1, 1, YAML_ANY_SCALAR_STYLE);
+        yaml_emitter_emit(emitter, &event);
+
+        yaml_mapping_start_event_initialize(&event, NULL, NULL, 1, YAML_ANY_MAPPING_STYLE);
+        yaml_emitter_emit(emitter, &event);
+
+        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"packetType", 10, 1, 1, YAML_ANY_SCALAR_STYLE);
+        yaml_emitter_emit(emitter, &event);
+
+        str = dump_string_get_avc_packet_type(type);
+
+        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)str, (int)strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
+        yaml_emitter_emit(emitter, &event);
+
+        /* composition time */
+        if (type == FLV_AVC_PACKET_TYPE_NALU) {
+            uint24_be composition_time;
+
+            if (flv_read_tag_body(parser->stream, &composition_time, sizeof(uint24_be)) < sizeof(uint24_be)) {
+                return ERROR_INVALID_TAG;
+            }
+
+            yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"compositionTimeOffset", 21, 1, 1, YAML_ANY_SCALAR_STYLE);
+            yaml_emitter_emit(emitter, &event);
+
+            sprintf(buffer, "%i", uint24_be_to_uint32(composition_time));
+            yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)buffer, (int)strlen(buffer), 1, 1, YAML_ANY_SCALAR_STYLE);
+            yaml_emitter_emit(emitter, &event);
+        }
+
+        yaml_mapping_end_event_initialize(&event);
+        yaml_emitter_emit(emitter, &event);
+    }
 
     yaml_mapping_end_event_initialize(&event);
     yaml_emitter_emit(emitter, &event);
@@ -295,6 +339,33 @@ static int yaml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parse
 
     yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)str, (int)strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
     yaml_emitter_emit(emitter, &event);
+
+    /* if AAC, detect packet type */
+    if (flv_audio_tag_sound_format(at) == FLV_AUDIO_TAG_SOUND_FORMAT_AAC) {
+        flv_aac_packet_type type;
+
+        /* packet type */
+        if (flv_read_tag_body(parser->stream, &type, sizeof(flv_aac_packet_type)) < sizeof(flv_aac_packet_type)) {
+            return ERROR_INVALID_TAG;
+        }
+
+        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"AACData", 7, 1, 1, YAML_ANY_SCALAR_STYLE);
+        yaml_emitter_emit(emitter, &event);
+
+        yaml_mapping_start_event_initialize(&event, NULL, NULL, 1, YAML_ANY_MAPPING_STYLE);
+        yaml_emitter_emit(emitter, &event);
+
+        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)"packetType", 10, 1, 1, YAML_ANY_SCALAR_STYLE);
+        yaml_emitter_emit(emitter, &event);
+
+        str = dump_string_get_aac_packet_type(type);
+
+        yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)str, (int)strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
+        yaml_emitter_emit(emitter, &event);
+
+        yaml_mapping_end_event_initialize(&event);
+        yaml_emitter_emit(emitter, &event);
+    }
 
     yaml_mapping_end_event_initialize(&event);
     yaml_emitter_emit(emitter, &event);
