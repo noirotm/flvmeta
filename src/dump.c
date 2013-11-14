@@ -129,8 +129,8 @@ const char * dump_string_get_sound_format(flv_audio_tag tag) {
 
 const char * dump_string_get_aac_packet_type(flv_aac_packet_type type) {
     switch (type) {
-        case FLV_AAC_PACKET_TYPE_SEQUENCE_HEADER: return "AVC sequence header";
-        case FLV_AAC_PACKET_TYPE_RAW: return "AVC raw";
+        case FLV_AAC_PACKET_TYPE_SEQUENCE_HEADER: return "AAC sequence header";
+        case FLV_AAC_PACKET_TYPE_RAW: return "AAC raw";
         default: return "Unknown";
     }
 }
