@@ -85,7 +85,7 @@ static int raw_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser
                 return ERROR_INVALID_TAG;
             }
 
-            printf("* Composition time offset: %u\n", uint24_be_to_uint32(composition_time));
+            printf("* Composition time offset: %i\n", uint24_be_to_uint32(composition_time));
         }
     }
 

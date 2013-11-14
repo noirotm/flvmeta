@@ -1,61 +1,72 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<flv xmlns="http://schemas.flvmeta.org/FLV/1.0/" xmlns:amf="http://schemas.flvmeta.org/AMF0/1.0/" hasAudio="1" hasVideo="1">
-  <tag type="scriptData" dataSize="8974" timestamp="0" offset="21">
-    <scriptDataObject name="onMetadata">
-      <amf:associativeArray>
-        <amf:entry name="encodingDate">
-          <amf:date value="2009-05-07T12:23:45"/>
-        </amf:entry>
-        <amf:entry name="hasMetadata">
-          <amf:boolean value="true"/>
-        </amf:entry>
-        <amf:entry name="hasVideo">
-          <amf:boolean value="true"/>
-        </amf:entry>
-        <amf:entry name="hasAudio">
-          <amf:boolean value="true"/>
-        </amf:entry>
-        <amf:entry name="duration">
-          <amf:number value="597.56"/>
-        </amf:entry>
-        <amf:entry name="metadatacreator">
-          <amf:string>flvmeta 1.0.8</amf:string>
-        </amf:entry>
-        <amf:entry name="hascuepoints">
-          <amf:boolean value="false"/>
-        </amf:entry>
-        <amf:entry name="test">
-          <amf:null/>
-        </amf:entry>
-        <amf:entry name="test2">
-          <amf:undefined/>
-        </amf:entry>
-        <amf:entry name="cuepoints">
-          <amf:array/>
-        </amf:entry>
-        <amf:entry name="keyframes">
-          <amf:associativeArray>
-            <amf:entry name="times">
-              <amf:array>
-                <amf:number value="0.0"/>
-                <amf:number value="0.2"/>
-              </amf:array>
-            </amf:entry>
-            <amf:entry name="filepositions">
-              <amf:array>
-                <amf:number value="3142.0"/>
-                <amf:number value="3221.0"/>
-              </amf:array>
-            </amf:entry>
-          </amf:associativeArray>
-        </amf:entry>
-      </amf:associativeArray>
-    </scriptDataObject>
-  </tag>
-  <tag type="audio" dataSize="56450" timestamp="0" offset="222">
-    <audioData format="MP3" rate="44" size="8" type="stereo"/>
-  </tag>
-  <tag type="video" dataSize="34789" timestamp="0" offset="345">
-    <videoData frameType="keyframe" codecID="Sorenson H.263"/>
-  </tag>
+<flv xmlns="http://schemas.flvmeta.org/FLV/1.2/" xmlns:amf="http://schemas.flvmeta.org/AMF0/1.0/" hasAudio="1" hasVideo="1">
+    <tag type="scriptData" dataSize="8974" timestamp="0" offset="21">
+        <scriptDataObject name="onMetadata">
+            <amf:associativeArray>
+                <amf:entry name="encodingDate">
+                    <amf:date value="2009-05-07T12:23:45"/>
+                </amf:entry>
+                <amf:entry name="hasMetadata">
+                    <amf:boolean value="true"/>
+                </amf:entry>
+                <amf:entry name="hasVideo">
+                    <amf:boolean value="true"/>
+                </amf:entry>
+                <amf:entry name="hasAudio">
+                    <amf:boolean value="true"/>
+                </amf:entry>
+                <amf:entry name="duration">
+                    <amf:number value="597.56"/>
+                </amf:entry>
+                <amf:entry name="metadatacreator">
+                    <amf:string>flvmeta 1.0.8</amf:string>
+                </amf:entry>
+                <amf:entry name="hascuepoints">
+                    <amf:boolean value="false"/>
+                </amf:entry>
+                <amf:entry name="test">
+                    <amf:null/>
+                </amf:entry>
+                <amf:entry name="test2">
+                    <amf:undefined/>
+                </amf:entry>
+                <amf:entry name="cuepoints">
+                    <amf:array/>
+                </amf:entry>
+                <amf:entry name="keyframes">
+                    <amf:associativeArray>
+                        <amf:entry name="times">
+                            <amf:array>
+                                <amf:number value="0.0"/>
+                                <amf:number value="0.2"/>
+                            </amf:array>
+                        </amf:entry>
+                        <amf:entry name="filepositions">
+                            <amf:array>
+                                <amf:number value="3142.0"/>
+                                <amf:number value="3221.0"/>
+                            </amf:array>
+                        </amf:entry>
+                    </amf:associativeArray>
+                </amf:entry>
+            </amf:associativeArray>
+        </scriptDataObject>
+    </tag>
+    <tag type="audio" dataSize="56450" timestamp="0" offset="222">
+        <audioData format="MP3" rate="44" size="8" type="stereo"/>
+    </tag>
+    <tag type="video" dataSize="34789" timestamp="0" offset="345">
+        <videoData frameType="keyframe" codecID="Sorenson H.263"/>
+    </tag>
+    <tag type="video" dataSize="65478" timestamp="5" offset="478">
+        <videoData codecID="AVC" frameType="seekable frame">
+            <AVCData packetType="AVC sequence header" compositionTimeOffset="0"/>
+        </videoData>
+    </tag>
+
+    <tag type="audio" dataSize="64123" timestamp="12" offset="9876">
+        <audioData format="AAC" rate="44" size="16" type="stereo">
+            <AACData packetType="AAC raw"/>
+        </audioData>
+    </tag>
 </flv>
