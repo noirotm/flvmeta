@@ -21,6 +21,8 @@
 */
 
 #include "json.h"
+
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -37,7 +39,14 @@ static void json_print_string(const char * str, size_t bytes) {
             case '\n': printf("\\n");  break;
             case '\r': printf("\\r");  break;
             case '\t': printf("\\t");  break;
-            default: printf("%c", str[i]);
+
+            default: 
+                if (iscntrl(str[i])) {
+                    printf("\\u%.4u", str[i]);
+                }
+                else {
+                    printf("%c", str[i]);
+                }
         }
     }
     printf("\"");
