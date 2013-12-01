@@ -864,7 +864,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         width = info.video_width;
                         file_width = amf_number_get_value(data);
 
-                        if (fabs(file_width - width) >= 1.0) {
+                        if (fabs(file_width - width) >= 1.0 && width != 0) {
                             sprintf(message, "width should be %.12g, got %.12g", width, file_width);
                             print_warning(WARNING_AMF_DATA_INVALID_VALUE, on_metadata_offset, message);
                         }
@@ -890,7 +890,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                         height = info.video_height;
                         file_height = amf_number_get_value(data);
 
-                        if (fabs(file_height - height) >= 1.0) {
+                        if (fabs(file_height - height) >= 1.0 && height != 0) {
                             sprintf(message, "height should be %.12g, got %.12g", height, file_height);
                             print_warning(WARNING_AMF_DATA_INVALID_VALUE, on_metadata_offset, message);
                         }
