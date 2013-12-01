@@ -23,6 +23,7 @@
 #include "dump.h"
 #include "info.h"
 #include "json.h"
+#include "util.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -206,7 +207,7 @@ int check_flv_file(const flvmeta_opts * opts) {
     char message[256];
     uint32 prev_tag_size, tag_number;
     uint32 last_timestamp, last_video_timestamp, last_audio_timestamp;
-    struct stat file_stats;
+    file_offset_t filesize;
     int have_audio, have_video;
     flvmeta_opts opts_loc;
     flv_info info;
@@ -240,7 +241,7 @@ int check_flv_file(const flvmeta_opts * opts) {
     on_last_second_timestamp = 0;
 
     /* file stats */
-    if (stat(opts->input_file, &file_stats) != 0) {
+    if (flvmeta_filesize(opts->input_file, &filesize) == 0) {
         return ERROR_OPEN_READ;
     }
 
@@ -308,13 +309,13 @@ int check_flv_file(const flvmeta_opts * opts) {
     }
 
     /* we reached the end of file: no tags in file */
-    if (flv_get_offset(flv_in) == file_stats.st_size) {
+    if (flv_get_offset(flv_in) == filesize) {
         print_fatal(FATAL_GENERAL_NO_TAG, 13, "file does not contain tags");
         goto end;
     }
 
     /** read tags **/
-    while (flv_get_offset(flv_in) < file_stats.st_size) {
+    while (flv_get_offset(flv_in) < filesize) {
         flv_tag tag;
         file_offset_t offset;
         uint32 body_length, timestamp, stream_id;
@@ -357,7 +358,7 @@ int check_flv_file(const flvmeta_opts * opts) {
         }
 
         /* check body length */
-        if (body_length > (file_stats.st_size - flv_get_offset(flv_in))) {
+        if (body_length > (filesize - flv_get_offset(flv_in))) {
             sprintf(message, "tag body length (%u bytes) exceeds file size", body_length);
             print_fatal(FATAL_TAG_BODY_LENGTH_OVERFLOW, offset + 1, message);
             goto end;
@@ -672,36 +673,36 @@ int check_flv_file(const flvmeta_opts * opts) {
     if (have_video && have_audio && abs(last_audio_timestamp - last_video_timestamp) >= 1000) {
         if (last_audio_timestamp > last_video_timestamp) {
             sprintf(message, "video stops %u ms before audio", last_audio_timestamp - last_video_timestamp);
-            print_warning(WARNING_TIMESTAMP_VIDEO_ENDS_FIRST, file_stats.st_size, message);
+            print_warning(WARNING_TIMESTAMP_VIDEO_ENDS_FIRST, filesize, message);
         }
         else {
             sprintf(message, "audio stops %u ms before video", last_video_timestamp - last_audio_timestamp);
-            print_warning(WARNING_TIMESTAMP_AUDIO_ENDS_FIRST, file_stats.st_size, message);
+            print_warning(WARNING_TIMESTAMP_AUDIO_ENDS_FIRST, filesize, message);
         }
     }
 
     /* check video keyframes */
     if (have_video && keyframes_number == 0) {
-        print_warning(WARNING_VIDEO_NO_KEYFRAME, file_stats.st_size, "no keyframe detected, file is probably broken or incomplete");
+        print_warning(WARNING_VIDEO_NO_KEYFRAME, filesize, "no keyframe detected, file is probably broken or incomplete");
     }
     if (have_video && keyframes_number == video_frames_number) {
-        print_warning(WARNING_VIDEO_ONLY_KEYFRAMES, file_stats.st_size, "only keyframes detected, probably inefficient compression scheme used");
+        print_warning(WARNING_VIDEO_ONLY_KEYFRAMES, filesize, "only keyframes detected, probably inefficient compression scheme used");
     }
 
     /* only keyframes + onLastSecond bug */
     if (have_video && have_on_last_second && keyframes_number == video_frames_number) {
-        print_warning(WARNING_VIDEO_ONLY_KF_LAST_SEC, file_stats.st_size, "only keyframes detected and onLastSecond event present, file is probably not playable");
+        print_warning(WARNING_VIDEO_ONLY_KF_LAST_SEC, filesize, "only keyframes detected and onLastSecond event present, file is probably not playable");
     }
 
     /* check onLastSecond timestamp */
     if (have_on_last_second && (last_timestamp - on_last_second_timestamp) >= 2000) {
         sprintf(message, "onLastSecond event located %u ms before the last tag", last_timestamp - on_last_second_timestamp);
-        print_warning(WARNING_METADATA_LAST_SECOND_BAD, file_stats.st_size, message);
+        print_warning(WARNING_METADATA_LAST_SECOND_BAD, filesize, message);
     }
 
     /* check onMetaData presence */
     if (!have_on_metadata) {
-        print_warning(WARNING_METADATA_NOT_PRESENT, file_stats.st_size, "onMetaData event not found, file might not be playable");
+        print_warning(WARNING_METADATA_NOT_PRESENT, filesize, "onMetaData event not found, file might not be playable");
     }
     else {
         amf_node * n;
@@ -1071,13 +1072,13 @@ int check_flv_file(const flvmeta_opts * opts) {
             /* filesize: (number) */
             if (!strcmp((char*)name, "filesize")) {
                 if (type == AMF_TYPE_NUMBER) {
-                    number64 filesize, file_filesize;
+                    number64 real_filesize, file_filesize;
 
-                    filesize = (number64)(file_stats.st_size);
+                    real_filesize = (number64)(filesize);
                     file_filesize = amf_number_get_value(data);
 
-                    if (fabs(file_filesize - filesize) >= 1.0) {
-                        sprintf(message, "filesize should be %.12g, got %.12g", filesize, file_filesize);
+                    if (fabs(file_filesize - real_filesize) >= 1.0) {
+                        sprintf(message, "filesize should be %.12g, got %.12g", real_filesize, file_filesize);
                         print_warning(WARNING_AMF_DATA_INVALID_VALUE, on_metadata_offset, message);
                     }
                 }
@@ -1411,7 +1412,7 @@ int check_flv_file(const flvmeta_opts * opts) {
 
     /* could we compute video resolution ? */
     if (info.video_width == 0 && info.video_height == 0) {
-        print_warning(WARNING_VIDEO_SIZE_ERROR, file_stats.st_size, "unable to determine video resolution");
+        print_warning(WARNING_VIDEO_SIZE_ERROR, filesize, "unable to determine video resolution");
     }
 
     /* global info */
@@ -1440,7 +1441,7 @@ int check_flv_file(const flvmeta_opts * opts) {
     }
 
     /* is the file larger than 4GB ? */
-    if (file_stats.st_size > 0xFFFFFFFFULL) {
+    if (filesize > 0xFFFFFFFFULL) {
         print_info(INFO_GENERAL_LARGE_FILE, 0, "file is larger than 4 GB");
     }
 

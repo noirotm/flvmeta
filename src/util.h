@@ -24,6 +24,8 @@
 
 #include <stdio.h>
 
+#include "types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -43,6 +45,11 @@ FILE * flvmeta_tmpfile(void);
 # define flvmeta_tmpfile tmpfile
 #endif /* WIN32 */
 
+/*
+    File size (LFS compatible).
+    Returns a non-zero value if successful, zero otherwise.
+*/
+int flvmeta_filesize(const char * filename, file_offset_t * filesize);
 
 #ifdef __cplusplus
 }

@@ -113,3 +113,31 @@ FILE * flvmeta_tmpfile(void) {
     return fp;
 }
 #endif /* WIN32 */
+
+int flvmeta_filesize(const char *filename, file_offset_t *filesize) {
+#ifdef WIN32
+    BOOL result;
+    WIN32_FILE_ATTRIBUTE_DATA fad;
+
+    result = GetFileAttributesEx(filename, GetFileExInfoStandard, &fad);
+    if (result) {
+        *filesize = ((file_offset_t)fad.nFileSizeHigh << 32) + fad.nFileSizeLow;
+        return 1;
+    }
+    else {
+        return 0;
+    }
+#else /* !WIN32 */
+    struct stat fs;
+    int result;
+
+    result = stat(filename, &fs);
+    if (result == 0) {
+        *filesize = fs.st_size;
+        return 1;
+    }
+    else {
+        return 0;
+    }
+#endif /* WIN32 */
+}
