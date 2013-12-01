@@ -40,8 +40,6 @@ if(WIN32)
     compat/getopt.c
     compat/getopt.h
     compat/gettext.h
-    compat/win32_tmpfile.c
-    compat/win32_tmpfile.h
   )
   include_directories(compat)
 endif(WIN32)

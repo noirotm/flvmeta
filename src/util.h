@@ -22,12 +22,27 @@
 #ifndef __UTIL_H__
 #define __UTIL_H__
 
+#include <stdio.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
 /* determine whether two paths physically point to the same file */
-int same_file(const char * file1, const char * file2);
+int flvmeta_same_file(const char * file1, const char * file2);
+
+#ifdef WIN32
+/*
+    Returns a descriptor to a temporary file.
+    This function is meant as a Windows replacement
+    to the broken standard tmpfile() function.
+*/
+FILE * flvmeta_tmpfile(void);
+
+#else /* WIN32 */
+# define flvmeta_tmpfile tmpfile
+#endif /* WIN32 */
+
 
 #ifdef __cplusplus
 }

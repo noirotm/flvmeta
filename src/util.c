@@ -22,6 +22,7 @@
 #ifdef WIN32
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>
+# include <io.h>
 #else /* !WIN32 */
 # include <sys/types.h>
 # include <sys/stat.h>
@@ -30,7 +31,7 @@
 
 #include "util.h"
 
-int same_file(const char * file1, const char * file2) {
+int flvmeta_same_file(const char * file1, const char * file2) {
 #ifdef WIN32
     /* in Windows, we have to open the files and use GetFileInformationByHandle */
     HANDLE h1, h2;
@@ -66,3 +67,49 @@ int same_file(const char * file1, const char * file2) {
 
 #endif /* WIN32 */
 }
+
+#ifdef WIN32
+FILE * flvmeta_tmpfile(void) {
+    DWORD path_len;
+    TCHAR path_name[MAX_PATH + 1];
+    TCHAR file_name[MAX_PATH + 1];
+    HANDLE handle;
+    int fd;
+    FILE *fp;
+
+    path_len = GetTempPath(MAX_PATH, path_name);
+    if (path_len <= 0 || path_len >= MAX_PATH) {
+        return NULL;
+    }
+
+    if (GetTempFileName(path_name, TEXT("flv"), 0, file_name) == 0) {
+        return NULL;
+    }
+
+    handle = CreateFile(file_name,
+        GENERIC_READ | GENERIC_WRITE,
+        0,
+        NULL,
+        CREATE_ALWAYS,
+        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE,
+        NULL
+    );
+    if (handle == INVALID_HANDLE_VALUE) {
+        return NULL;
+    }
+
+    fd = _open_osfhandle((intptr_t)handle, 0);
+    if (fd == -1) {
+        CloseHandle(handle);
+        return NULL;
+    }
+
+    fp = _fdopen(fd, "w+b");
+    if (fp == NULL) {
+        _close(fd);
+        return NULL;
+    }
+
+    return fp;
+}
+#endif /* WIN32 */

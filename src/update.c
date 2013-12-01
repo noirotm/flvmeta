@@ -33,13 +33,6 @@
 
 #define COPY_BUFFER_SIZE 4096
 
-#ifdef WIN32
-# include "win32_tmpfile.h"
-# define flvmeta_tmpfile win32_tmpfile
-#else /* WIN32 */
-# define flvmeta_tmpfile tmpfile
-#endif /* WIN32 */
-
 /*
     Write the flv output file
 */
@@ -289,7 +282,7 @@ int update_metadata(const flvmeta_opts * opts) {
         open output file
     */
     /* detect whether we have to overwrite the input file */
-    if (same_file(opts->input_file, opts->output_file)) {
+    if (flvmeta_same_file(opts->input_file, opts->output_file)) {
         in_place_update = 1;
         flv_out = flvmeta_tmpfile();
     }
