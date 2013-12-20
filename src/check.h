@@ -130,6 +130,7 @@
 #define INFO_AUDIO_FORMAT                   LEVEL_INFO      TOPIC_AUDIO_CODECS      "081"
 #define INFO_TIMESTAMP_USE_EXTENDED         LEVEL_INFO      TOPIC_TIMESTAMPS        "082"
 #define INFO_GENERAL_LARGE_FILE             LEVEL_INFO      TOPIC_GENERAL_FORMAT    "083"
+#define FATAL_CONSECUTIVE_UNKNOWN_TAGS      LEVEL_FATAL     TOPIC_TAG_TYPES         "084"
 
 #ifdef __cplusplus
 extern "C" {

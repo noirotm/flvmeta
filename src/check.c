@@ -222,6 +222,8 @@ int check_flv_file(const flvmeta_opts * opts) {
     flv_audio_tag prev_audio_tag;
     int have_prev_video_tag;
     flv_video_tag prev_video_tag;
+    
+    int consecutive_unknown_tags;
 
     int video_frames_number, keyframes_number;
 
@@ -239,6 +241,7 @@ int check_flv_file(const flvmeta_opts * opts) {
     on_metadata = on_metadata_name = NULL;
     have_on_last_second = 0;
     on_last_second_timestamp = 0;
+    consecutive_unknown_tags = 0;
 
     /* file stats */
     if (flvmeta_filesize(opts->input_file, &filesize) == 0) {
@@ -341,6 +344,15 @@ int check_flv_file(const flvmeta_opts * opts) {
         ) {
             sprintf(message, "unknown tag type %" PRI_BYTE "d", tag.type);
             print_error(ERROR_TAG_TYPE_UNKNOWN, offset, message);
+            ++consecutive_unknown_tags;
+
+            if (consecutive_unknown_tags >= 2) {
+                print_fatal(FATAL_CONSECUTIVE_UNKNOWN_TAGS, offset, "consecutive tags with unknown type found, aborting");
+                goto end;
+            }
+        }
+        else {
+            consecutive_unknown_tags = 0;
         }
 
         /* check consistency with global header */
