@@ -1,6 +1,6 @@
 % flvmeta(1) flvmeta user manual
 % 
-% August 2013
+% January 2014
 
 # NAME
 
@@ -307,7 +307,7 @@ Marc Noirot \<marc.noirot@gmail.com\>
 
 # COPYRIGHT
 
-Copyright 2007-2013 Marc Noirot
+Copyright 2007-2014 Marc Noirot
 
 This is free software; see the source for copying conditions.
 There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
