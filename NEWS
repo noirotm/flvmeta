@@ -2,6 +2,9 @@ Version 1.2.0 (unreleased)
   - Removed support for the autotools build system.
   - Fixed installation instructions for CMake.
   - Switched to Semver 2.0 as versioning scheme.
+  - Improved 64-bit and file handling compatibility.
+  - Added dumping of AVC and AAC packet information.
+  - Improved FLV file checking.  
 
 Version 1.1.2 (2013-08-04)
   - Added JSON as output format for check reports.
