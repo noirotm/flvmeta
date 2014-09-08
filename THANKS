@@ -1,9 +1,0 @@
-I would like to thank the following contributors:
-
-Neutron Soutmun <neo.neutron@gmail.com> - spelling fixes, patches and Debian package maintenance
-Eric Priou <erixtekila@gmail.com> - support and MacOSX builds
-Zou Guangxian <zouguangxian@gmail.com> - VP60 related bug fix
-nicmail777@yahoo.com - malformed metadata related bug fix
-Robert M. Hall, II <rhall@impossibilities.com> - sample files to implement extended timestamp support
-podawan@gmail.com - extended timestamp related bug report
-Anton Gorodchanin <anton.gorodchanin@gmail.com> - command line and AVC bugfixes
