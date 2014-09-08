@@ -69,11 +69,7 @@ The FLVMeta source package includes and uses the following software:
 
 FLVMeta is provided "as is" with no warranty.  The exact terms
 under which you may use and (re)distribute this program are detailed
-in the GNU General Public License, in the file COPYING.
-
-See the files AUTHORS and THANKS for a list of authors and other contributors.
-
-See the file INSTALL for compilation and installation instructions.
+in the GNU General Public License, in the file [LICENSE.md](LICENSE.md).
 
 See the file NEWS for a description of major changes in this release.
 
