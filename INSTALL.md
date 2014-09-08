@@ -1,87 +1,93 @@
+# How to Build FLVMeta with CMake
+
 Copyright (c) 2012-2014 Marc Noirot
 
-How to Build FLVMeta with CMake
+## WHAT YOU NEED
 
-WHAT YOU NEED
----------------------------------------------------------------
 CMake version 2.6 or later installed on your system.
 
-HOW TO INSTALL:
+### HOW TO INSTALL:
 
 Linux distributions:
-shell> sudo apt-get install cmake
+
+    shell> sudo apt-get install cmake
 
 The above works on Debian/Ubuntu based distributions. On others, the command
-line needs to be modified to e.g "yum install" on Fedora or "zypper install" 
+line needs to be modified to e.g `yum install` on Fedora or `zypper install` 
 on OpenSUSE.
 
 OpenSolaris:
-shell> pfexec pkgadd install SUNWcmake
 
-Windows and Mac OSX:
+    shell> pfexec pkgadd install SUNWcmake
+
+Windows and Mac OSX:  
 Download and install the latest distribution from 
-http://www.cmake.org/cmake/resources/software.html
-On Windows, download installer exe file and run it. On MacOS, download
-the .dmg image and open it.
+[http://www.cmake.org/cmake/resources/software.html](http://www.cmake.org/cmake/resources/software.html).
+On Windows, download installer exe file and run it.  
+On MacOS, download the .dmg image and open it.
 
-Other Unixes:
+Other Unixes:  
 Precompiled packages for other Unix flavors (HPUX, AIX) are available from 
-http://www.cmake.org/cmake/resources/software.html 
+[http://www.cmake.org/cmake/resources/software.html](http://www.cmake.org/cmake/resources/software.html).
 
 Alternatively, you can build from source, source package is also available on 
 CMake download page.
 
 
-Compiler Tools
---------------
-You will need  a working compiler and make utility on your OS. 
-On Windows, install Visual Studio (Express editions will work too). 
+## Compiler Tools
+
+You will need  a working compiler and make utility on your OS.  
+On Windows, install Visual Studio (Express editions will work too).  
 On Mac OSX, install Xcode tools.
 
+## Build 
 
-
-BUILD 
----------------------------------------------------------------
 Ensure that compiler and cmake are in PATH.
 The following description assumes that current working directory 
 is the source directory. 
 
+Generic build on Unix, using "Unix Makefiles" generator:
 
-- Generic build on Unix, using "Unix Makefiles" generator
-
-shell>cmake . 
-shell>make
+    shell>cmake . 
+    shell>make
 
 Note: by default, cmake builds are less verbose than automake builds. Use 
-"make VERBOSE=1" if you want to see add command lines for each compiled source.
+`make VERBOSE=1` if you want to see add command lines for each compiled source.
 
-- Windows, using "Visual Studio 9 2008" generator
-shell>cmake . -G "Visual Studio 9 2008" 
-shell>devenv flvmeta.sln /build /relwithdebinfo
+Windows, using "Visual Studio 9 2008" generator:
+
+    shell>cmake . -G "Visual Studio 9 2008" 
+    shell>devenv flvmeta.sln /build /relwithdebinfo
+
 (alternatively, open flvmeta.sln and build using the IDE)
 
-- Windows, using "NMake Makefiles" generator
-shell>cmake . -G "NMake Makefiles" 
-shell>nmake
+Windows, using "NMake Makefiles" generator:
 
-- Mac OSX build with Xcode
-shell>cmake . -G Xcode
-shell>xcodebuild -configuration Relwithdebinfo
+    shell>cmake . -G "NMake Makefiles" 
+    shell>nmake
+
+Mac OSX build with Xcode:
+
+    shell>cmake . -G Xcode
+    shell>xcodebuild -configuration Relwithdebinfo
+
 (alternatively, open flvmeta.xcodeproj and build using the IDE)
 
-Command line build with CMake 2.8
-After creating project with cmake -G as above, issue
-cmake . --build 
+Command line build with CMake 2.8:  
+After creating project with `cmake -G` as above, issue
+
+    cmake . --build 
+
 this works with any  CMake generator.
 
 For Visual Studio and Xcode you might want to add an extra 
 configuration parameter, to avoid building all configurations.
 
-cmake . --build --config Relwithdebinfo
+    cmake . --build --config Relwithdebinfo
 
 
-Building "out-of-source"
----------------------------------------------------------------
+## Building "out-of-source"
+
 Building out-of-source provides additional benefits. For example it allows to 
 build both Release and Debug configurations using the single source tree.Or 
 build the same source with different version of the same compiler or with 
@@ -91,25 +97,26 @@ objects and binaries produced during the make.
 Here is an example on how to do it (generic Unix), assuming the source tree is
 in directory named src and the current working directory is source root.
 
-shell>mkdir ../build # build directory is called build
-shell>cd ../build
-shell>cmake ../src
+    shell>mkdir ../build # build directory is called build
+    shell>cd ../build
+    shell>cmake ../src
 
 Note: if a directory was used for in-source build, out-of-source will 
-not work. To reenable out-of-source build, remove <source-root>/CMakeCache.txt
+not work. To reenable out-of-source build, remove `<source-root>/CMakeCache.txt`
 file.
 
 
-CONFIGURATION PARAMETERS
----------------------------------------------------------------
+## Configuration parameters
+
 The procedure above will build with default configuration.
 
 Let's say you want to change the configuration parameters and use the version
 of libyaml installed on your system instead of the one provided with FLVMeta.
 
+
 1)You can provide parameters on the command line, like
 
-shell> cmake .  -DFLVMETA_USE_SYSTEM_LIBYAML=1
+    shell> cmake . -DFLVMETA_USE_SYSTEM_LIBYAML=1
 
 This can be done during the initial configuration or any time later.
 
@@ -120,13 +127,17 @@ cache (CMakeCache.txt file in the build directory)
 installed)
 
 From the build directory, issue
-shell> cmake-gui .
 
-- Check the FLVMETA_USE_SYSTEM_LIBYAML checkbox
+    shell> cmake-gui .
+
+- Check the `FLVMETA_USE_SYSTEM_LIBYAML` checkbox
 - Click on "Configure" button
 - Click on "Generate" button
 - Close cmake-gui
-shell> make
+
+Then type:
+
+    shell> make
 
 3)Using ccmake (Unix)
 ccmake is curses-based GUI application that provides the same functionality 
@@ -134,72 +145,77 @@ as cmake-gui. It is less user-friendly compared to cmake-gui but works also
 on exotic Unixes like HPUX, AIX or Solaris.
 
 The most important parameter from a developer's point of view is probably
-CMAKE_BUILD_TYPE (this allows to build server with debug tracing library
+`CMAKE_BUILD_TYPE` (this allows to build server with debug tracing library
 and with debug compile flags).
 
 After changing the configuration, recompile using
-shell> make
+
+    shell> make
 
 
-Listing configuration parameters
----------------------------------------------------------------
-shell> cmake -L 
+## Listing configuration parameters
+
+    shell> cmake -L 
 
 Gives a brief overview of important configuration parameters (dump to stdout)
 
-shell> cmake -LH
+    shell> cmake -LH
 
 Does the same but also provides a short help text for each parameter.
 
-shell> cmake -LAH 
+    shell> cmake -LAH 
 
 Dumps all config parameters (including advanced) to the standard output.
 
-PACKAGING
----------------------------------------------------------------
--- Binary distribution --
+## Packaging
+
+### Binary distribution
+
 Packaging in form of tar.gz archives (or .zip on Windows) is also supported
 To create a tar.gz package, 
 
-1)If you're using "generic" Unix build with makefiles
+1) If you're using "generic" Unix build with makefiles
 
-shell> make package
+    shell> make package
+
 this will create a tar.gz file in the top level build directory.
 
-2)On Windows, using  "NMake Makefiles" generator
+2) On Windows, using  "NMake Makefiles" generator
 
-shell> nmake package
+    shell> nmake package
 
-3)On Windows, using "Visual Studio"  generator
+3) On Windows, using "Visual Studio"  generator
 
-shell> devenv flvmeta.sln /build relwithdebinfo /project package
+    shell> devenv flvmeta.sln /build relwithdebinfo /project package
 
-Note On Windows, 7Zip or Winzip must be installed and 7z.exe rsp winzip.exe 
-need to be in the PATH.
-
+Note On Windows, 7Zip or Winzip must be installed and 7z.exe, rsp,
+or winzip.exe need to be in the PATH.
 
 Another way to build packages is calling cpack executable directly like
-shell> cpack -G TGZ --config CPackConfig.cmake
+
+    shell> cpack -G TGZ --config CPackConfig.cmake
+
 (-G TGZ is for tar.gz generator, there is also -GZIP)
 
--- Source distribution --
-"make package_source" target is provided.
+### Source distribution
 
-ADDITIONAL MAKE TARGETS: "make install" AND "make test"
-----------------------------------------------------------------
+`make package_source` target is provided.
+
+## Additional Make targets: "make install" AND "make test"
+
 install target also provided for Makefile based generators. Installation 
 directory can be controlled using configure-time parameter 
-CMAKE_INSTALL_PREFIX (default is /usr/local. It is also possible to install to
+`CMAKE_INSTALL_PREFIX` (default is /usr/local. It is also possible to install to
 non-configured directory, using
 
-shell> make install DESTDIR="/some/absolute/path"
+    shell> make install DESTDIR="/some/absolute/path"
 
 "make test" runs unit tests (uses CTest for it)
 
-FOR PROGRAMMERS: WRITING PLATFORM CHECKS
---------------------------------------------------------------
+## For Programmers: writing platform checks 
+
 If you modify FLVMeta source and want to add a new platform check,please read 
-http://www.vtk.org/Wiki/CMake_HowToDoPlatformChecks first.
+[http://www.vtk.org/Wiki/CMake_HowToDoPlatformChecks](http://www.vtk.org/Wiki/CMake_HowToDoPlatformChecks) first.
 
 Bigger chunks of functionality, for example non-trivial macros are implemented 
 in files <src-root>/cmake subdirectory.
@@ -207,36 +223,40 @@ in files <src-root>/cmake subdirectory.
 For people with autotools background, it is important to remember CMake does 
 not provide autoheader functionality. That is, when you add a check
 
-CHECK_FUNCTION_EXISTS(foo HAVE_FOO)
-to CMakeLists.txt, then you will also need to add
-#cmakedefine HAVE_FOO 1
-to config-cmake.h.in
+    CHECK_FUNCTION_EXISTS(foo HAVE_FOO)
 
-Troubleshooting platform checks
---------------------------------
+to CMakeLists.txt, then you will also need to add
+
+    #cmakedefine HAVE_FOO 1
+
+to config-cmake.h.in.
+
+## Troubleshooting platform checks
+
 If you suspect that a platform check returned wrong result, examine 
-<build-root>/CMakeFiles/CMakeError.log and 
-<build-root>/CMakeFiles/CMakeOutput.log
+`<build-root>/CMakeFiles/CMakeError.log` and `<build-root>/CMakeFiles/CMakeOutput.log`.
 These files they contain compiler command line, and exact error messages.
 
-Troubleshooting CMake code
-----------------------------------
-While there are advanced flags for cmake like -debug-trycompile and --trace,
-a simple and efficient way to debug to add 
-MESSAGE("interesting variable=${some_invariable}")
+## Troubleshooting CMake code
+
+While there are advanced flags for cmake like `-debug-trycompile` and `--trace`,
+a simple and efficient way to debug to add
+
+    MESSAGE("interesting variable=${some_invariable}")
+
 to the interesting places in CMakeLists.txt
 
-
 Tips:
+
 - When using Makefile generator it is easy to examine which compiler flags are 
 used to build. For example, compiler flags for flvmeta are in 
-<build-root>/src/CMakeFiles/flvmeta.dir/flags.make and the linker command line
-is in <build-root>/src/CMakeFiles/flvmeta.dir/link.txt
+`<build-root>/src/CMakeFiles/flvmeta.dir/flags.make` and the linker command line
+is in `<build-root>/src/CMakeFiles/flvmeta.dir/link.txt`
 
 - CMake caches results of platform checks in CMakeCache.txt. It is a nice 
 feature because tests do not rerun when reconfiguring (e.g when a new test was 
 added).The downside of caching is that when a platform test was wrong and was 
 later corrected, the cached result is still used. If you encounter this 
 situation,  which should be a rare occasion, you need either to remove the 
-offending entry from CMakeCache.txt (if test was for HAVE_FOO, remove lines 
-containing HAVE_FOO from CMakeCache.txt) or just remove the cache file.
+offending entry from CMakeCache.txt (if test was for `HAVE_FOO`, remove lines 
+containing `HAVE_FOO` from CMakeCache.txt) or just remove the cache file.
