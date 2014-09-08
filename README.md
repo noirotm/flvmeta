@@ -1,6 +1,7 @@
 # FLVMeta - FLV Metadata Editor
 
-[![Build Status](https://api.travis-ci.org/noirotm/flvmeta.png?branch=master)](https://travis-ci.org/noirotm/flvmeta) [![Gitter chat](https://badges.gitter.im/noirotm/flvmeta.png)](https://gitter.im/noirotm/flvmeta)
+[![Build Status](https://api.travis-ci.org/noirotm/flvmeta.svg?branch=master)](https://travis-ci.org/noirotm/flvmeta)
+[![Gitter chat](https://badges.gitter.im/noirotm/flvmeta.svg)](https://gitter.im/noirotm/flvmeta)
 
 ## About
 
