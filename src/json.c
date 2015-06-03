@@ -23,6 +23,7 @@
 #include "json.h"
 
 #include <ctype.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -122,6 +123,15 @@ void json_emit_file_offset(json_emitter * je, file_offset_t value) {
 }
 
 void json_emit_number(json_emitter * je, number64 value) {
+    /*
+        http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-262.pdf
+        (page 208) states that NaN and Infinity are represented as null.
+    */
+    if (!isfinite(value)) {
+        json_emit_null(je);
+        return;
+    }
+
     json_print_comma(je);
     printf("%.12g", value);
     je->print_comma = 1;
