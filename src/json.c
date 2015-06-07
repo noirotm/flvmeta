@@ -23,9 +23,15 @@
 #include "json.h"
 
 #include <ctype.h>
-#include <math.h>
 #include <stdio.h>
 #include <string.h>
+
+#ifdef HAVE_ISFINITE
+# include <math.h>
+#else
+# include "util.h"
+# define isfinite flvmeta_isfinite
+#endif
 
 static void json_print_string(const char * str, size_t bytes) {
     size_t i;

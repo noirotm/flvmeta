@@ -141,3 +141,14 @@ int flvmeta_filesize(const char *filename, file_offset_t *filesize) {
     }
 #endif /* WIN32 */
 }
+
+#ifndef HAVE_ISFINITE
+int flvmeta_isfinite(double d) {
+    /*
+     * This trick is mandated by the IEEE 754 standard.
+     * Can be broken by specific optimizations such as
+     * --ffast-math, but we don't use any.
+     */
+    return !(d != d);
+}
+#endif /* HAVE_ISFINITE */

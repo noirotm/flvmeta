@@ -51,6 +51,13 @@ FILE * flvmeta_tmpfile(void);
 */
 int flvmeta_filesize(const char * filename, file_offset_t * filesize);
 
+#ifndef HAVE_ISFINITE
+/*
+    Check whether a double is finite (not infinity or NaN)
+*/
+int flvmeta_isfinite(double d);
+#endif /* HAVE_ISFINITE */
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

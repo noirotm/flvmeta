@@ -41,6 +41,7 @@ set(
 
 #platform tests
 include(CheckFunctionExists)
+include(CheckSymbolExists)
 include(CheckIncludeFile)
 include(CheckTypeSize)
 include(TestBigEndian)
@@ -72,6 +73,9 @@ test_big_endian(IS_BIGENDIAN)
 if(IS_BIGENDIAN)
   set(WORDS_BIGENDIAN 1)
 endif(IS_BIGENDIAN)
+
+# C99 isfinite support
+check_symbol_exists("isfinite" math.h HAVE_ISFINITE)
 
 # large file support
 check_function_exists("fseeko" HAVE_FSEEKO)
