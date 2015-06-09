@@ -13,10 +13,10 @@ each invocation of the program.
 
 ### Metadata injection
 
-It has the ability to compute and inject a variety of values in the onMetaData event tag, including keyframe indices used by most video players to allow random-access seeking, notably for HTTP pseudo-streamed files via a server-side module, by having the client send the file offset looked up for the nearest desired keyframe.
+This program has the ability to compute and inject a variety of values in the `onMetaData` event tag, including keyframe indices used by most video players to allow random-access seeking, notably for HTTP pseudo-streamed files via a server-side module, by having the client send the file offset looked up for the nearest desired keyframe.
 Tools such as flvmeta must be used in the case the initial encoding process is unable to inject those metadata.
 
-It can also optionnally inject the onLastSecond event, used to signal the end of playback, for example to revert the player software to a 'stopped' state.
+It can also optionally inject the `onLastSecond` event, used to signal the end of playback, for example to revert the player software to a 'stopped' state.
 
 ### File information and metadata dumping
 
@@ -26,7 +26,7 @@ flvmeta also has the ability to dump metadata and full file information to stand
 
 Finally, the program can analyze FLV files to detect potential problems and errors, and generate a textual report in a raw format, or in XML. It has the ability to detect more than a hundred problems, going from harmless to potentially unplayable, using real world encountered issues.
 
-### Performance
+## Performance
 
 flvmeta can operate on arbitrarily large files, and can handle FLV files using extended (32-bit) timestamps. It can guess video frame dimensions for all known video codecs supported by the official FLV specification.
 
@@ -44,12 +44,6 @@ See the [INSTALL.md](INSTALL.md) file for build and installation instructions.
 
 ### Contributors
 
-- Eric Priou <erixtekila@gmail.com>
-- Anton Gorodchanin <anton.gorodchanin@gmail.com>
-- Neutron Soutmun <neo.neutron@gmail.com>
-
-## Thanks
-
 I would like to thank the following contributors:
 
 - Neutron Soutmun <neo.neutron@gmail.com> - spelling fixes, patches and Debian package maintenance
@@ -59,6 +53,8 @@ I would like to thank the following contributors:
 - Robert M. Hall, II <rhall@impossibilities.com> - sample files to implement extended timestamp support
 - podawan@gmail.com - extended timestamp related bug report
 - Anton Gorodchanin <anton.gorodchanin@gmail.com> - command line and AVC bugfixes
+
+## Acknowledgements
 
 The FLVMeta source package includes and uses the following software:
 
