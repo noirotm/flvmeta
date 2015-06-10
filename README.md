@@ -58,7 +58,7 @@ I would like to thank the following contributors:
 
 The FLVMeta source package includes and uses the following software:
 
-* the libyaml YAML parser and emitter ([http://pyyaml.org/wiki/LibYAML](http://pyyaml.org/wiki/LibYAML "LibYAML")).
+- the libyaml YAML parser and emitter ([http://pyyaml.org/wiki/LibYAML](http://pyyaml.org/wiki/LibYAML "LibYAML")).
 
 
 ## License
@@ -67,6 +67,6 @@ FLVMeta is provided "as is" with no warranty.  The exact terms
 under which you may use and (re)distribute this program are detailed
 in the GNU General Public License, in the file [LICENSE.md](LICENSE.md).
 
-See the file NEWS for a description of major changes in this release.
+See the [CHANGELOG.md](CHANGELOG.md) file for a description of major changes in this release.
 
 See the file TODO for ideas on how you could help us improve FLVMeta.
