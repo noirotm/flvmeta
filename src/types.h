@@ -127,10 +127,10 @@ uint24_be uint32_to_uint24_be(uint32);
 typedef off_t file_offset_t;
 
 /* file offset printf specifier */
-# if SIZEOF_OFF_T == SIZEOF_LONG
-#  define FILE_OFFSET_PRINTF_FORMAT PRI_L
-# elif SIZEOF_OFF_T == SIZEOF_LONG_LONG
+# if SIZEOF_OFF_T == SIZEOF_LONG_LONG
 #  define FILE_OFFSET_PRINTF_FORMAT PRI_LL
+# elif SIZEOF_OFF_T == SIZEOF_LONG
+#  define FILE_OFFSET_PRINTF_FORMAT PRI_L
 # else
 #  error("unknown off_t variant")
 # endif
