@@ -164,6 +164,9 @@ static void report_print_message(
     }
 }
 
+/* timestamp distance */
+#define timestamp_distance(t1, t2) ((t1)>(t2)?(t1)-(t2):(t2)-(t1))
+
 /* convenience macros */
 #define print_info(code, offset, message) \
     report_print_message(FLVMETA_CHECK_LEVEL_INFO, code, offset, message, opts, &ctxt)
@@ -424,9 +427,9 @@ int check_flv_file(const flvmeta_opts * opts) {
         last_timestamp = timestamp;
 
         /* check for desyncs between audio and video: one second or more is suspicious */
-        if (have_video && have_audio && !have_desync && abs(last_video_timestamp - last_audio_timestamp) >= 1000) {
+        if (have_video && have_audio && !have_desync && timestamp_distance(last_video_timestamp, last_audio_timestamp) >= 1000) {
             sprintf(message, "audio and video streams are desynchronized by %d ms",
-                abs(last_video_timestamp - last_audio_timestamp));
+                timestamp_distance(last_video_timestamp, last_audio_timestamp));
             print_warning(WARNING_TIMESTAMP_DESYNC, offset + 4, message);
             have_desync = 1; /* do not repeat */
         }
@@ -682,7 +685,7 @@ int check_flv_file(const flvmeta_opts * opts) {
     }
 
     /* check last timestamps */
-    if (have_video && have_audio && abs(last_audio_timestamp - last_video_timestamp) >= 1000) {
+    if (have_video && have_audio && timestamp_distance(last_audio_timestamp, last_video_timestamp) >= 1000) {
         if (last_audio_timestamp > last_video_timestamp) {
             sprintf(message, "video stops %u ms before audio", last_audio_timestamp - last_video_timestamp);
             print_warning(WARNING_TIMESTAMP_VIDEO_ENDS_FIRST, filesize, message);
