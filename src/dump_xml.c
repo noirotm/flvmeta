@@ -175,7 +175,7 @@ static int xml_on_tag(flv_tag * tag, flv_parser * parser) {
         flv_tag_get_timestamp(*tag),
         flv_tag_get_body_length(*tag));
     printf(" offset=\"%" FILE_OFFSET_PRINTF_FORMAT "u\">\n",
-        parser->stream->current_tag_offset);
+        FILE_OFFSET_PRINTF_TYPE(parser->stream->current_tag_offset));
 
     return OK;
 }

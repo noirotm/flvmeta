@@ -335,7 +335,7 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
 
             if (body_length == 0) {
                 if (opts->verbose) {
-                    fprintf(stdout, "Warning: empty metadata tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
+                    fprintf(stdout, "Warning: empty metadata tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", FILE_OFFSET_PRINTF_TYPE(offset));
                 }
             }
             else {
@@ -347,12 +347,12 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
                 }
                 else if (retval == FLV_ERROR_INVALID_METADATA_NAME) {
                     if (opts->verbose) {
-                        fprintf(stdout, "Warning: invalid metadata name at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
+                        fprintf(stdout, "Warning: invalid metadata name at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", FILE_OFFSET_PRINTF_TYPE(offset));
                     }
                 }
                 else if (retval == FLV_ERROR_INVALID_METADATA) {
                     if (opts->verbose) {
-                        fprintf(stdout, "Warning: invalid metadata at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
+                        fprintf(stdout, "Warning: invalid metadata at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", FILE_OFFSET_PRINTF_TYPE(offset));
                     }
                     if (opts->error_handling == FLVMETA_EXIT_ON_ERROR) {
                         amf_data_free(tag_name);
@@ -413,7 +413,7 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
             /* do not take video frame into account if body length is zero and we ignore errors */
             if (body_length == 0) {
                 if (opts->verbose) {
-                    fprintf(stdout, "Warning: empty video tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
+                    fprintf(stdout, "Warning: empty video tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", FILE_OFFSET_PRINTF_TYPE(offset));
                 }
             }
             else {
@@ -483,7 +483,7 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
             /* do not take audio frame into account if body length is zero and we ignore errors */
             if (body_length == 0) {
                 if (opts->verbose) {
-                    fprintf(stdout, "Warning: empty audio tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
+                    fprintf(stdout, "Warning: empty audio tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", FILE_OFFSET_PRINTF_TYPE(offset));
                 }
             }
             else {
@@ -519,7 +519,7 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
             else if (opts->error_handling == FLVMETA_IGNORE_ERRORS) {
                 /* let's continue the parsing */
                 if (opts->verbose) {
-                    fprintf(stdout, "Warning: invalid tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", offset);
+                    fprintf(stdout, "Warning: invalid tag at 0x%" FILE_OFFSET_PRINTF_FORMAT "X\n", FILE_OFFSET_PRINTF_TYPE(offset));
                 }
                 info->total_prev_tags_size += sizeof(uint32_be);
             }

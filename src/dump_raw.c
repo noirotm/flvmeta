@@ -53,8 +53,8 @@ static int raw_on_tag(flv_tag * tag, flv_parser * parser) {
     n = ((int*)parser->user_data);
     ++(*n);
 
-    printf("--- Tag #%u at 0x%" FILE_OFFSET_PRINTF_FORMAT "X", *n, parser->stream->current_tag_offset);
-    printf(" (%" FILE_OFFSET_PRINTF_FORMAT "u) ---\n", parser->stream->current_tag_offset);
+    printf("--- Tag #%u at 0x%" FILE_OFFSET_PRINTF_FORMAT "X", *n, FILE_OFFSET_PRINTF_TYPE(parser->stream->current_tag_offset));
+    printf(" (%" FILE_OFFSET_PRINTF_FORMAT "u) ---\n", FILE_OFFSET_PRINTF_TYPE(parser->stream->current_tag_offset));
     printf("Tag type: %s\n", dump_string_get_tag_type(tag));
     printf("Body length: %u\n", flv_tag_get_body_length(*tag));
     printf("Timestamp: %u\n", flv_tag_get_timestamp(*tag));

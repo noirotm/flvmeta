@@ -134,7 +134,7 @@ static void report_print_message(
         if (opts->check_report_format == FLVMETA_FORMAT_XML) {
             /* XML report entry */
             printf("    <message level=\"%s\" code=\"%s\"", levelstr, code);
-            printf(" offset=\"%" FILE_OFFSET_PRINTF_FORMAT  "u\">", offset);
+            printf(" offset=\"%" FILE_OFFSET_PRINTF_FORMAT  "u\">", FILE_OFFSET_PRINTF_TYPE(offset));
             printf("%s</message>\n", message);
         }
         else if (opts->check_report_format == FLVMETA_FORMAT_JSON) {
@@ -158,7 +158,7 @@ static void report_print_message(
         else {
             /* raw report entry */
             /*printf("%s:", opts->input_file);*/
-            printf("0x%.8" FILE_OFFSET_PRINTF_FORMAT "x: ", offset);
+            printf("0x%.8" FILE_OFFSET_PRINTF_FORMAT "x: ", FILE_OFFSET_PRINTF_TYPE(offset));
             printf("%s %s: %s\n", levelstr, code, message);
         }
     }

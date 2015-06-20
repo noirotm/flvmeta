@@ -129,8 +129,10 @@ typedef off_t file_offset_t;
 /* file offset printf specifier */
 # if SIZEOF_OFF_T == SIZEOF_LONG_LONG
 #  define FILE_OFFSET_PRINTF_FORMAT PRI_LL
+#  define FILE_OFFSET_PRINTF_TYPE(v) ((long long)(v))
 # elif SIZEOF_OFF_T == SIZEOF_LONG
 #  define FILE_OFFSET_PRINTF_FORMAT PRI_L
+#  define FILE_OFFSET_PRINTF_TYPE(v) ((long)(v))
 # else
 #  error("unknown off_t variant")
 # endif
@@ -146,6 +148,7 @@ file_offset_t lfs_ftell(FILE * stream);
 int lfs_fseek(FILE * stream, file_offset_t offset, int whence);
 
 #  define FILE_OFFSET_PRINTF_FORMAT "I64"
+#  define FILE_OFFSET_PRINTF_TYPE(v) ((long long)(v))
 
 # else /* !defined WIN32 */
 
@@ -155,6 +158,7 @@ int lfs_fseek(FILE * stream, file_offset_t offset, int whence);
 typedef long file_offset_t;
 
 #  define FILE_OFFSET_PRINTF_FORMAT "l"
+#  define FILE_OFFSET_PRINTF_TYPE(v) ((long)(v))
 
 # endif /* WIN32 */
 
