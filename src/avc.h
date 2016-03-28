@@ -1,7 +1,7 @@
 /*
     FLVMeta - FLV Metadata Editor
 
-    Copyright (C) 2007-2014 Marc Noirot <marc.noirot AT gmail.com>
+    Copyright (C) 2007-2016 Marc Noirot <marc.noirot AT gmail.com>
 
     This file is part of FLVMeta.
 
