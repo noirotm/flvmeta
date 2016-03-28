@@ -64,7 +64,7 @@ static amf_data * amf_list_insert_before(amf_list * list, amf_node * node, amf_d
                 node->prev->next = new_node;
                 node->prev = new_node;
             }
-            if (node == list->first_element) {
+            else {
                 list->first_element = new_node;
             }
             ++(list->size);
@@ -86,7 +86,7 @@ static amf_data * amf_list_insert_after(amf_list * list, amf_node * node, amf_da
                 node->next->prev = new_node;
                 node->next = new_node;
             }
-            if (node == list->last_element) {
+            else {
                 list->last_element = new_node;
             }
             ++(list->size);
