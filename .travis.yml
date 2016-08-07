@@ -9,7 +9,7 @@ before_install:
   - if [ $TRAVIS_OS_NAME == osx ]; then brew update && brew install check; fi
 
 script:
-  - cmake . -G $CMAKE_GENERATOR
+  - cmake .
   - make
   - make test
 
