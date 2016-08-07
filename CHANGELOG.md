@@ -196,7 +196,7 @@ has no audio data.
 ## [1.0] - 2007-09-21
 This is the first public release.
 
-[unreleased]: https://github.com/noirotm/flvmeta/compare/v1.1.2...HEAD
+[1.2.0]: https://github.com/noirotm/flvmeta/releases/tag/v1.2.0
 [1.1.2]: https://github.com/noirotm/flvmeta/releases/tag/v1.1.2
 [1.1.1]: https://github.com/noirotm/flvmeta/releases/tag/v1.1.1
 [1.1.0.1]: https://github.com/noirotm/flvmeta/releases/tag/v1.1.0.1
