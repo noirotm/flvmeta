@@ -14,5 +14,5 @@ script:
   - make test
 
 compiler:
-- clang
-- gcc
+  - clang
+  - gcc
