@@ -143,6 +143,13 @@ include(CPack)
 add_subdirectory(src)
 add_subdirectory(man)
 
-# tests
-#enable_testing()
-#add_subdirectory(tests)
+# check unit testing framework
+find_package(Check)
+
+# Enable unit testing if Check has been found
+if(CHECK_FOUND)
+  # tests
+  enable_testing()
+
+  add_subdirectory(tests)
+endif(CHECK_FOUND)
