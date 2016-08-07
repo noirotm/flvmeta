@@ -1,5 +1,18 @@
 language: c
-script: cmake . && make
+
+os:
+  - linux
+  - osx
+
+before_install:
+  - if [ $TRAVIS_OS_NAME == linux ]; then sudo apt-get -qq update && sudo apt-get install -y check; fi
+  - if [ $TRAVIS_OS_NAME == osx ]; then brew update && brew install check; fi
+
+script:
+  - cmake . -G $CMAKE_GENERATOR
+  - make
+  - make test
+
 compiler:
-  - clang
-  - gcc
+- clang
+- gcc
