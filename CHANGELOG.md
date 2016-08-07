@@ -2,9 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased][unreleased]
+## [1.2.0] - 2016-08-08
 ### Added
 - Added dumping of AVC and AAC packet information.
+- Added unit tests to the continuous integration system.
 
 ### Changed
 - Switched to Semver 2.0 as versioning scheme.
@@ -15,9 +16,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Removed support for the autotools build system.
 
 ### Fixed
+- Fixed timestamp distance computation in check.
 - Fixed installation instructions for CMake.
 - Fixed JSON output of non-finite numbers.
-
+- Fixed number printing.
 
 ## [1.1.2] - 2013-08-04
 ### Added

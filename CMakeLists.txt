@@ -4,7 +4,7 @@ project(flvmeta C)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
 set(FLVMETA_VERSION "1.2.0")
-set(FLVMETA_RELEASE no)
+set(FLVMETA_RELEASE yes)
 
 # check whether we are building a release or a git snapshot
 if(NOT FLVMETA_RELEASE)
