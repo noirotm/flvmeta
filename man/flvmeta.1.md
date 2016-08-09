@@ -55,7 +55,7 @@ the file's tags headers in memory.
 Only one command can be specified for an invocation of **flvmeta**. The chosen
 command determines the mode of execution of the program.
 
-By default, if no command is specified, **flvmeta** will implicitely choose the
+By default, if no command is specified, **flvmeta** will implicitly choose the
 command to use according to the presence of *INPUT_FILE* and *OUTPUT_FILE*.
 
 If only *INPUT_FILE* is present, the **\--dump** command will be executed.
@@ -287,12 +287,12 @@ as JSON.
 # EXIT STATUS
 
 * **0** flvmeta exited without error  
-* **1** an error occured when trying to open an input file  
+* **1** an error occurred when trying to open an input file
 * **2** the input file was not recognized as an FLV file  
 * **3** an end-of-file condition was encountered unexpectedly  
-* **4** a memory allocation error occured during the run of the program  
+* **4** a memory allocation error occurred during the run of the program
 * **5** an empty tag was encountered in an input file  
-* **6** an error occured when trying to open an output file  
+* **6** an error occurred when trying to open an output file
 * **7** an invalid tag was encountered in an input file  
 * **8** an error was encountered while writing an output file  
 * **9** the **\--check** command reported an invalid file (one or more errors)
