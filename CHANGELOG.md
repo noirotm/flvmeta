@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.1] - 2016-08-09
+### Fixed
+- Fixed spelling in documentation.
+- Fixed changelog.
+
 ## [1.2.0] - 2016-08-08
 ### Added
 - Added dumping of AVC and AAC packet information.
@@ -196,6 +201,7 @@ has no audio data.
 ## [1.0] - 2007-09-21
 This is the first public release.
 
+[1.2.1]: https://github.com/noirotm/flvmeta/releases/tag/v1.2.1
 [1.2.0]: https://github.com/noirotm/flvmeta/releases/tag/v1.2.0
 [1.1.2]: https://github.com/noirotm/flvmeta/releases/tag/v1.1.2
 [1.1.1]: https://github.com/noirotm/flvmeta/releases/tag/v1.1.1
