@@ -1,5 +1,6 @@
 # unit tests
-include_directories(BEFORE ${CHECK_INCLUDE_DIR} ${CMAKE_SOURCE_DIR})
+include_directories(BEFORE ${CHECK_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR})
+link_directories(${CHECK_LIBRARY_DIRS})
 
 add_executable(check_flvmeta
   check_flvmeta.c
