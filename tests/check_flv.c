@@ -34,10 +34,11 @@ START_TEST(test_swap_uint16) {
     
     ile = 0x1122U;
     ibe = swap_uint16(ile);
+
 #ifndef WORDS_BIGENDIAN
-    fail_if(ibe != 0x2211U);
+    ck_assert_int_eq(ibe, 0x2211U);
 #endif
-    fail_if(swap_uint16(ibe) != ile);
+    ck_assert_int_eq(swap_uint16(ibe), ile);
 }
 END_TEST
 
@@ -47,10 +48,11 @@ START_TEST(test_swap_uint16_neg) {
     
     ile = 0xFFFEU;
     ibe = swap_uint16(ile);
+
 #ifndef WORDS_BIGENDIAN
-    fail_if(ibe != 0xFEFFU);
+    ck_assert_int_eq(ibe, 0xFEFFU);
 #endif
-    fail_if(swap_uint16(ibe) != ile);
+    ck_assert_int_eq(swap_uint16(ibe), ile);
 }
 END_TEST
 
@@ -60,10 +62,11 @@ START_TEST(test_swap_sint16) {
     
     ile = 0x1122;
     ibe = swap_sint16(ile);
+
 #ifndef WORDS_BIGENDIAN
-    fail_if(ibe != 0x2211);
+    ck_assert_int_eq(ibe, 0x2211);
 #endif
-    fail_if(swap_sint16(ibe) != ile);
+    ck_assert_int_eq(swap_sint16(ibe), ile);
 }
 END_TEST
 
@@ -73,10 +76,11 @@ START_TEST(test_swap_sint16_neg) {
     
     ile = 0xFF00;
     ibe = swap_sint16(ile);
+
 #ifndef WORDS_BIGENDIAN
-    fail_if(ibe != (0x00FF));
+    ck_assert_int_eq(ibe, (0x00FF));
 #endif
-    fail_if(swap_sint16(ibe) != ile);
+    ck_assert_int_eq(swap_sint16(ibe), ile);
 }
 END_TEST
 
@@ -86,10 +90,11 @@ START_TEST(test_swap_uint32) {
     
     ile = 0x11223344U;
     ibe = swap_uint32(ile);
+
 #ifndef WORDS_BIGENDIAN
-    fail_if(ibe != 0x44332211U);
+    ck_assert_int_eq(ibe, 0x44332211U);
 #endif
-    fail_if(swap_uint32(ibe) != ile);
+    ck_assert_int_eq(swap_uint32(ibe), ile);
 }
 END_TEST
 
@@ -99,10 +104,11 @@ START_TEST(test_swap_uint32_neg) {
     
     ile = 0xFFFEFDFCU;
     ibe = swap_uint32(ile);
+
 #ifndef WORDS_BIGENDIAN
-    fail_if(ibe != 0xFCFDFEFFU);
+    ck_assert_int_eq(ibe, 0xFCFDFEFFU);
 #endif
-    fail_if(swap_uint32(ibe) != ile);
+    ck_assert_int_eq(swap_uint32(ibe), ile);
 }
 END_TEST
 
@@ -112,7 +118,8 @@ START_TEST(test_swap_number64) {
     
     ile = 3.14159;
     ibe = swap_number64(ile);
-    fail_if(swap_number64(ibe) != ile);
+
+    ck_assert_double_eq(swap_number64(ibe), ile);
 }
 END_TEST
 
@@ -122,7 +129,8 @@ START_TEST(test_swap_number64_neg) {
     
     ile = -3.14159;
     ibe = swap_number64(ile);
-    fail_if(swap_number64(ibe) != ile);
+
+    ck_assert_double_eq(swap_number64(ibe), ile);
 }
 END_TEST
 
@@ -134,7 +142,8 @@ START_TEST(test_uint24_be_to_uint32) {
     ile.b[1] = 0x22;
     ile.b[0] = 0x11;
     ibe = uint24_be_to_uint32(ile);
-    fail_if(ibe != 0x00112233);
+
+    ck_assert_int_eq(ibe, 0x00112233);
 }
 END_TEST
 
@@ -145,9 +154,9 @@ START_TEST(test_uint32_to_uint24_be) {
     ile = 0x00112233;
     ibe = uint32_to_uint24_be(ile);
 
-    fail_if(ibe.b[0] != 0x11);
-    fail_if(ibe.b[1] != 0x22);
-    fail_if(ibe.b[2] != 0x33);
+    ck_assert_int_eq(ibe.b[0], 0x11);
+    ck_assert_int_eq(ibe.b[1], 0x22);
+    ck_assert_int_eq(ibe.b[2], 0x33);
 }
 END_TEST
 
@@ -158,9 +167,9 @@ START_TEST(test_uint32_to_uint24_be_truncate) {
     ile = 0x11223344;
     ibe = uint32_to_uint24_be(ile);
 
-    fail_if(ibe.b[0] != 0x22);
-    fail_if(ibe.b[1] != 0x33);
-    fail_if(ibe.b[2] != 0x44);
+    ck_assert_int_eq(ibe.b[0], 0x22);
+    ck_assert_int_eq(ibe.b[1], 0x33);
+    ck_assert_int_eq(ibe.b[2], 0x44);
 }
 END_TEST
 
@@ -174,7 +183,8 @@ START_TEST(test_flv_tag_get_timestamp_short) {
     tag.timestamp = uint32_to_uint24_be(0x00332211);
     tag.timestamp_extended = 0x00;
     val = flv_tag_get_timestamp(tag);
-    fail_if(val != 0x00332211, "expected 0x00332211, got 0x%X", val);
+    
+    ck_assert_int_eq(val, 0x00332211);
 }
 END_TEST
 
@@ -185,7 +195,8 @@ START_TEST(test_flv_tag_get_timestamp_extended) {
     tag.timestamp = uint32_to_uint24_be(0x00332211);
     tag.timestamp_extended = 0x44;
     val = flv_tag_get_timestamp(tag);
-    fail_if(val != 0x44332211, "expected 0x%X, got 0x%X", 0x44332211, val);
+
+    ck_assert_int_eq(val, 0x44332211);
 }
 END_TEST
 
@@ -195,10 +206,9 @@ START_TEST(test_flv_tag_set_timestamp_short) {
 
     flv_tag_set_timestamp(&tag, 0x00112233);
     val = uint24_be_to_uint32(tag.timestamp);
-    fail_if(val != 0x00112233,
-        "expected 0x00112233, got 0x%X", val);
-    fail_if(tag.timestamp_extended != 0x00,
-        "expected 0x00, got 0x%hhX", tag.timestamp_extended);
+
+    ck_assert_int_eq(val, 0x00112233);
+    ck_assert_int_eq(tag.timestamp_extended, 0x00);
 }
 END_TEST
 
@@ -208,10 +218,9 @@ START_TEST(test_flv_tag_set_timestamp_extended) {
 
     flv_tag_set_timestamp(&tag, 0x44332211);
     val = uint24_be_to_uint32(tag.timestamp);
-    fail_if(val != 0x00332211,
-        "expected 0x00332211, got 0x%X", val);
-    fail_if(tag.timestamp_extended != 0x44,
-        "expected 0x44, got 0x%hhX", tag.timestamp_extended);
+
+    ck_assert_int_eq(val, 0x00332211);
+    ck_assert_int_eq(tag.timestamp_extended, 0x44);
 }
 END_TEST
 

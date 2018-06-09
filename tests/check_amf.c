@@ -38,33 +38,22 @@ void setup_amf_number(void) {
 }
 
 START_TEST(test_amf_number_new) {
-    fail_if(data == NULL,
-        "data should not be NULL");
-
-    fail_unless(amf_data_get_type(data) == AMF_TYPE_NUMBER,
-        "invalid data type: expected %d, got %d", AMF_TYPE_NUMBER, amf_data_get_type(data));
-
+    ck_assert_ptr_nonnull(data);
+    ck_assert_int_eq(amf_data_get_type(data), AMF_TYPE_NUMBER);
     /* AMF number size == 1(header) + 8(data) -> 9 bytes */
-    fail_unless(amf_data_size(data) == 9,
-        "invalid data size: expected 9, got %d", amf_data_size(data));
-
-    fail_unless(amf_number_get_value(data) == 0,
-        "invalid data value: expected 0, got %f", amf_number_get_value(data));
+    ck_assert_int_eq(amf_data_size(data), 9);
+    ck_assert_int_eq(amf_number_get_value(data), 0);
 }
 END_TEST
 
 START_TEST(test_amf_number_set_value) {
     amf_number_set_value(data, -512.78);
-
-    fail_unless(amf_number_get_value(data) == -512.78,
-        "invalid data value: expected -512.78, got %f", amf_number_get_value(data));
+    ck_assert_double_eq(amf_number_get_value(data), -512.78);
 }
 END_TEST
 
 START_TEST(test_amf_number_null) {
-    fail_unless(amf_number_get_value(NULL) == 0,
-        "invalid data value: expected 0, got %f", amf_number_get_value(NULL));
-
+    ck_assert_int_eq(amf_number_get_value(NULL), 0);
     /* just making sure we don't core dump */
     amf_number_set_value(NULL, 12);
 }
@@ -78,32 +67,22 @@ void setup_amf_boolean(void) {
 }
 
 START_TEST(test_amf_boolean_new) {
-    fail_if(data == NULL,
-        "data should not be NULL");
-
-    fail_unless(amf_data_get_type(data) == AMF_TYPE_BOOLEAN,
-        "invalid data type: expected %d, got %d", AMF_TYPE_BOOLEAN, amf_data_get_type(data));
-
+    ck_assert_ptr_nonnull(data);
+    ck_assert_int_eq(amf_data_get_type(data), AMF_TYPE_BOOLEAN);
     /* AMF boolean size == 1(header) + 1(data) -> 2 bytes */
-    fail_unless(amf_data_size(data) == 2,
-        "invalid data size: expected 2, got %d", amf_data_size(data));
-
-    fail_unless(amf_boolean_get_value(data) == 1,
-        "invalid data value: expected 1, got %d", amf_boolean_get_value(data));
+    ck_assert_int_eq(amf_data_size(data), 2);
+    ck_assert_int_eq(amf_boolean_get_value(data), 1);
 }
 END_TEST
 
 START_TEST(test_amf_boolean_set_value) {
     amf_boolean_set_value(data, 0);
-    fail_unless(amf_boolean_get_value(data) == 0,
-        "invalid data value: expected 0, got %d", amf_boolean_get_value(data));
+    ck_assert_int_eq(amf_boolean_get_value(data), 0);
 }
 END_TEST
 
 START_TEST(test_amf_boolean_null) {
-    fail_unless(amf_boolean_get_value(NULL) == 0,
-        "invalid data value: expected 0, got %d", amf_boolean_get_value(data));
-
+    ck_assert_int_eq(amf_boolean_get_value(NULL), 0);
     /* just making sure we don't core dump */
     amf_boolean_set_value(NULL, 12);
 }
@@ -117,32 +96,20 @@ START_TEST(test_amf_str) {
     int length = strlen(str);
     data = amf_str(str);
 
-    fail_if(data == NULL,
-        "data should not be NULL");
-
-    fail_unless(amf_data_get_type(data) == AMF_TYPE_STRING,
-        "invalid data type: expected %d, got %d", AMF_TYPE_STRING, amf_data_get_type(data));
-
+    ck_assert_ptr_nonnull(data);
+    ck_assert_int_eq(amf_data_get_type(data), AMF_TYPE_STRING);
     /* AMF string size == 1(header) + 2(string length) + length */
-    fail_unless(amf_data_size(data) == 3 + length,
-        "invalid data size: expected %d, got %d", 3 + length, amf_data_size(data));
-
-    fail_unless(amf_string_get_size(data) == length,
-        "invalid string length: expected %d, got %f", length, amf_string_get_size(data));
-
-    fail_unless(strcmp(amf_string_get_bytes(data), str) == 0,
-        "invalid string contents");
+    ck_assert_int_eq(amf_data_size(data), 3 + length);
+    ck_assert_int_eq(amf_string_get_size(data), length);
+    ck_assert_str_eq(amf_string_get_bytes(data), str);
 }
 END_TEST
 
 START_TEST(test_amf_str_null) {
     data = amf_str(NULL);
 
-    fail_unless(amf_string_get_size(data) == 0,
-        "invalid string length: expected 0, got %f", amf_string_get_size(data));
-
-    fail_unless(!strcmp(amf_string_get_bytes(data), ""),
-        "string data should be an empty string");
+    ck_assert_int_eq(amf_string_get_size(data), 0);
+    ck_assert_str_eq(amf_string_get_bytes(data), "");
 
     amf_data_free(data);
 }
@@ -152,11 +119,8 @@ START_TEST(test_amf_string_new) {
     char * str = "hello world";
     data = amf_string_new(str, 5);
 
-    fail_unless(amf_string_get_size(data) == 5,
-        "invalid string length: expected 5, got %f", amf_string_get_size(data));
-
-    fail_unless(strncmp(amf_string_get_bytes(data), str, 5) == 0,
-        "invalid string contents");
+    ck_assert_int_eq(amf_string_get_size(data), 5);
+    ck_assert_str_eq(amf_string_get_bytes(data), "hello");
 
     amf_data_free(data);
 }
@@ -165,22 +129,17 @@ END_TEST
 START_TEST(test_amf_string_new_null) {
     data = amf_string_new(NULL, 12);
 
-    fail_unless(amf_string_get_size(data) == 0,
-        "invalid string length: expected 0, got %f", amf_string_get_size(data));
-
-    fail_unless(!strcmp(amf_string_get_bytes(data),""),
-        "string data should be an empty string");
+    ck_assert_ptr_nonnull(data);
+    ck_assert_int_eq(amf_string_get_size(data), 0);
+    ck_assert_str_eq(amf_string_get_bytes(data), "");
 
     amf_data_free(data);
 }
 END_TEST
 
 START_TEST(test_amf_string_null) {
-    fail_unless(amf_string_get_size(NULL) == 0,
-        "invalid string length: expected 0, got %f", amf_string_get_size(data));
-
-    fail_unless(amf_string_get_bytes(NULL) == NULL,
-        "string data should be NULL");
+    ck_assert_int_eq(amf_string_get_size(NULL), 0);
+    ck_assert_ptr_null(amf_string_get_bytes(NULL));
 }
 END_TEST
 
