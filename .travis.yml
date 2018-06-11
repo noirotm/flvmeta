@@ -4,14 +4,21 @@ os:
   - linux
   - osx
 
+addons:
+  apt:
+    packages:
+      - check
+      - pandoc
+
 before_install:
-  - if [ $TRAVIS_OS_NAME == linux ]; then sudo apt-get -qq update && sudo apt-get install -y check; fi
   - if [ $TRAVIS_OS_NAME == osx ]; then brew update && brew install check; fi
 
 script:
-  - cmake .
+  - mkdir build
+  - cd build
+  - cmake ..
   - make
-  - make test
+  - ctest -V
 
 compiler:
   - clang
