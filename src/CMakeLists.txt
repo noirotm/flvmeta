@@ -55,11 +55,11 @@ add_executable(flvmeta ${flvmeta_src})
 if(FLVMETA_USE_SYSTEM_LIBYAML)
   # search for libyaml on the system, link with it
   find_package(LibYAML REQUIRED)
-  include_directories(${LIBYAML_INCLUDE_DIR})
+  target_include_directories(flvmeta PRIVATE ${LIBYAML_INCLUDE_DIR})
   target_link_libraries(flvmeta ${LIBYAML_LIBRARIES})
 else(FLVMETA_USE_SYSTEM_LIBYAML)
   # use bundled version of libyaml
-  include_directories(libyaml)
+  target_include_directories(flvmeta PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/libyaml)
   add_subdirectory(libyaml)
   target_link_libraries(flvmeta yaml)
 endif(FLVMETA_USE_SYSTEM_LIBYAML)
