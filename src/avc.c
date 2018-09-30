@@ -28,18 +28,23 @@
 */
 typedef struct __bit_buffer {
     byte * start;
-    /*size_t size;*/
+    size_t size;
     byte * current;
     uint8 read_bits;
 } bit_buffer;
 
 static void skip_bits(bit_buffer * bb, size_t nbits) {
-    bb->current = bb->current + ((nbits + bb->read_bits) / 8);
+    bb->current = bb->current + (nbits + bb->read_bits) / 8;
     bb->read_bits = (uint8)((bb->read_bits + nbits) % 8);
 }
 
-static uint8 get_bit(bit_buffer * bb) {
-    uint8 ret;
+static sint8 get_bit(bit_buffer * bb) {
+    sint8 ret;
+
+    if (bb->current - bb->start > (ptrdiff_t)(bb->size - 1)) {
+        return -1;
+    }
+
     ret = (*(bb->current) >> (7 - bb->read_bits)) & 0x1;
     if (bb->read_bits == 7) {
         bb->read_bits = 0;
@@ -51,24 +56,47 @@ static uint8 get_bit(bit_buffer * bb) {
     return ret;
 }
 
-static uint32 get_bits(bit_buffer * bb, size_t nbits) {
-    uint32 i, ret;
-    ret = 0;
+static uint8 get_bits(bit_buffer * bb, size_t nbits, uint32 * ret) {
+    uint32 i;
+    sint8 bit;
+
+	if (nbits > sizeof(uint32) * 8) {
+        nbits = sizeof(uint32) * 8;
+	}
+
+    *ret = 0;
     for (i = 0; i < nbits; i++) {
-        ret = (ret << 1) + get_bit(bb);
+        bit = get_bit(bb);
+        if (bit == -1) {
+            return 0;
+        }
+
+        *ret = (*ret << 1) + bit;
     }
-    return ret;
+    return 1;
 }
 
 static uint32 exp_golomb_ue(bit_buffer * bb) {
-    uint8 bit, significant_bits;
+    sint8 bit;
+    uint8 significant_bits;
+    uint32 bits;
+
     significant_bits = 0;
-    bit = get_bit(bb);
-    while (bit == 0) {
-        significant_bits++;
+
+    do {
         bit = get_bit(bb);
-    }
-    return (1 << significant_bits) + get_bits(bb, significant_bits) - 1;
+        if (bit == -1) {
+            return 0;
+        }
+        if (bit == 0) {
+            significant_bits++;
+        }
+    } while (bit == 0);
+
+    if (!get_bits(bb, significant_bits, &bits))
+        return 0;
+
+    return (1 << significant_bits) + bits - 1;
 }
 
 static sint32 exp_golomb_se(bit_buffer * bb) {
@@ -77,9 +105,8 @@ static sint32 exp_golomb_se(bit_buffer * bb) {
     if ((ret & 0x1) == 0) {
         return -(ret >> 1);
     }
-    else {
-        return (ret + 1) >> 1;
-    }
+    
+    return (ret + 1) >> 1;
 }
 
 /* AVC type definitions */
@@ -106,11 +133,9 @@ static int read_avc_decoder_configuration_record(flv_stream * f, AVCDecoderConfi
     && flv_read_tag_body(f, &adcr->numOfSequenceParameterSets, 1) == 1) {
         return FLV_OK;
     }
-    else {
-        return FLV_ERROR_EOF;
-    }
+    
+    return FLV_ERROR_EOF;
 }
-
 
 static void parse_scaling_list(uint32 size, bit_buffer * bb) {
     uint32 last_scale, next_scale, i;
@@ -135,17 +160,21 @@ static void parse_sps(byte * sps, size_t sps_size, uint32 * width, uint32 * heig
     bit_buffer bb;
     uint32 profile, pic_order_cnt_type, width_in_mbs, height_in_map_units;
     uint32 i, size, left, right, top, bottom;
-    uint8 frame_mbs_only_flag;
+    sint8 frame_mbs_only_flag;
+    sint8 bit;
 
     bb.start = sps;
-    /*bb.size = sps_size;*/
+    bb.size = sps_size;
     bb.current = sps;
     bb.read_bits = 0;
 
     /* skip first byte, since we already know we're parsing a SPS */
     skip_bits(&bb, 8);
     /* get profile */
-    profile = get_bits(&bb, 8);
+    if (!get_bits(&bb, 8, &profile)) {
+        return;
+    }
+
     /* skip 4 bits + 4 zeroed bits + 8 bits = 16 bits = 2 bytes */
     skip_bits(&bb, 16);
 
@@ -164,10 +193,18 @@ static void parse_sps(byte * sps, size_t sps_size, uint32 * width, uint32 * heig
         /* Qpprime Y Zero Transform Bypass flag */
         skip_bits(&bb, 1);
         /* Seq Scaling Matrix Present Flag */
-        if (get_bit(&bb)) {
+        bit = get_bit(&bb);
+        if (bit == -1) {
+            return;
+        }
+        if (bit) {
             for (i = 0; i < 8; i++) {
                 /* Seq Scaling List Present Flag */
-                if (get_bit(&bb)) {
+                bit = get_bit(&bb);
+                if (bit == -1) {
+                    return;
+                }
+                if (bit) {
                     parse_scaling_list(i < 6 ? 16 : 64, &bb);
                 }
             }
@@ -204,6 +241,9 @@ static void parse_sps(byte * sps, size_t sps_size, uint32 * width, uint32 * heig
     height_in_map_units = exp_golomb_ue(&bb) + 1;
     /* frame_mbs_only_flag */
     frame_mbs_only_flag = get_bit(&bb);
+    if (frame_mbs_only_flag == -1) {
+        return;
+    }
     if (!frame_mbs_only_flag) {
         /* mb_adaptive_frame_field */
         skip_bits(&bb, 1);
@@ -212,7 +252,11 @@ static void parse_sps(byte * sps, size_t sps_size, uint32 * width, uint32 * heig
     skip_bits(&bb, 1);
     /* frame_cropping */
     left = right = top = bottom = 0;
-    if (get_bit(&bb)) {
+    bit = get_bit(&bb);
+    if (bit == -1) {
+        return;
+    }
+    if (bit) {
         left = exp_golomb_ue(&bb) * 2;
         right = exp_golomb_ue(&bb) * 2;
         top = exp_golomb_ue(&bb) * 2;
@@ -277,6 +321,12 @@ int read_avc_resolution(flv_stream * f, uint32 body_length, uint32 * width, uint
         return FLV_ERROR_EOF;
     }
     sps_size = swap_uint16(sps_size);
+
+    /* SPS size should not be zero or more than the remaining bytes in the tag body */
+    if (sps_size == 0
+    || sps_size > body_length - (sizeof(AVCDecoderConfigurationRecord) + 1 + sizeof(uint24) + sizeof(uint16))) {
+        return FLV_ERROR_EOF;
+    }
 
     /* read the SPS entirely */
     sps_buffer = (byte *) malloc((size_t)sps_size);

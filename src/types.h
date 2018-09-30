@@ -43,6 +43,8 @@
 
 typedef uint8_t byte, uint8, uint8_bitmask;
 
+typedef int8_t sint8;
+
 typedef uint16_t uint16, uint16_be, uint16_le;
 
 typedef int16_t sint16, sint16_be, sint16_le;
