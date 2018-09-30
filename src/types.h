@@ -31,6 +31,10 @@
 # include <stdint.h>
 #endif
 
+#ifdef HAVE_STDDEF_H
+# include <stddef.h> /* ptrdiff_t */
+#endif
+
 #ifdef HAVE_SYS_TYPES_H
 #  include <sys/types.h> /* off_t */
 #endif
