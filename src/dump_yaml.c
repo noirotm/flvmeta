@@ -373,7 +373,7 @@ static int yaml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parse
     return OK;
 }
 
-static int yaml_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
+static int yaml_on_metadata_tag(flv_tag * tag, char * name, amf_data * data, flv_parser * parser) {
     yaml_emitter_t * emitter;
     yaml_event_t event;
 
@@ -415,17 +415,17 @@ static int yaml_on_stream_end(flv_parser * parser) {
 }
 
 /* YAML FLV file metadata dump callbacks */
-static int yaml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
+static int yaml_on_metadata_tag_only(flv_tag * tag, char * name, amf_data * data, flv_parser * parser) {
     flvmeta_opts * options = (flvmeta_opts*) parser->user_data;
 
     if (options->metadata_event == NULL) {
-        if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
+        if (!strcmp(name, "onMetaData")) {
             dump_yaml_amf_data(data);
             return FLVMETA_DUMP_STOP_OK;
         }
     }
     else {
-        if (!strcmp((char*)amf_string_get_bytes(name), options->metadata_event)) {
+        if (!strcmp(name, options->metadata_event)) {
             dump_yaml_amf_data(data);
         }
     }

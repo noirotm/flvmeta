@@ -201,7 +201,7 @@ typedef struct __flv_parser {
     void * user_data;
     int (* on_header)(flv_header * header, struct __flv_parser * parser);
     int (* on_tag)(flv_tag * tag, struct __flv_parser * parser);
-    int (* on_metadata_tag)(flv_tag * tag, amf_data * name, amf_data * data, struct __flv_parser * parser);
+    int (* on_metadata_tag)(flv_tag * tag, char * name, amf_data * data, struct __flv_parser * parser);
     int (* on_audio_tag)(flv_tag * tag, flv_audio_tag audio_tag, struct __flv_parser * parser);
     int (* on_video_tag)(flv_tag * tag, flv_video_tag audio_tag, struct __flv_parser * parser);
     int (* on_unknown_tag)(flv_tag * tag, struct __flv_parser * parser);

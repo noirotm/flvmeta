@@ -245,8 +245,8 @@ static int xml_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parser
     return OK;
 }
 
-static int xml_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
-    printf("    <scriptDataObject name=\"%s\">\n", amf_string_get_bytes(name));
+static int xml_on_metadata_tag(flv_tag * tag, char * name, amf_data * data, flv_parser * parser) {
+    printf("    <scriptDataObject name=\"%s\">\n", name);
     /* dump AMF data as XML, we start from level 3, meaning 6 indentations characters */
     xml_amf_data_dump(data, 1, 3);
     puts("    </scriptDataObject>");
@@ -264,17 +264,17 @@ static int xml_on_stream_end(flv_parser * parser) {
 }
 
 /* XML FLV file metadata dump callbacks */
-static int xml_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
+static int xml_on_metadata_tag_only(flv_tag * tag, char * name, amf_data * data, flv_parser * parser) {
     flvmeta_opts * options = (flvmeta_opts*) parser->user_data;
 
     if (options->metadata_event == NULL) {
-        if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
+        if (!strcmp(name, "onMetaData")) {
             dump_xml_amf_data(data);
             return FLVMETA_DUMP_STOP_OK;
         }
     }
     else {
-        if (!strcmp((char*)amf_string_get_bytes(name), options->metadata_event)) {
+        if (!strcmp(name, options->metadata_event)) {
             dump_xml_amf_data(data);
         }
     }

@@ -430,6 +430,7 @@ int flv_parse(const char * file, flv_parser * parser) {
     flv_audio_tag at;
     flv_video_tag vt;
     amf_data * name, * data;
+    char * name_str;
     uint32 prev_tag_size;
     int retval;
 
@@ -502,8 +503,13 @@ int flv_parse(const char * file, flv_parser * parser) {
                 flv_close(parser->stream);
                 return retval;
             }
-            else if (retval == FLV_OK && parser->on_metadata_tag != NULL) {
-                retval = parser->on_metadata_tag(&tag, name, data, parser);
+            
+            if (retval == FLV_OK
+            && parser->on_metadata_tag != NULL
+            && amf_data_get_type(name) == AMF_TYPE_STRING) {
+                name_str = (char *)amf_string_get_bytes(name);
+
+                retval = parser->on_metadata_tag(&tag, name_str, data, parser);
                 if (retval != FLV_OK) {
                     amf_data_free(name);
                     amf_data_free(data);
@@ -511,6 +517,7 @@ int flv_parse(const char * file, flv_parser * parser) {
                     return retval;
                 }
             }
+
             amf_data_free(name);
             amf_data_free(data);
         }

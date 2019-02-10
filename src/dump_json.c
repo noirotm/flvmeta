@@ -220,14 +220,14 @@ static int json_on_audio_tag(flv_tag * tag, flv_audio_tag at, flv_parser * parse
     return OK;
 }
 
-static int json_on_metadata_tag(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
+static int json_on_metadata_tag(flv_tag * tag, char * name, amf_data * data, flv_parser * parser) {
     json_emitter * je;
     je = (json_emitter*)parser->user_data;
 
     json_emit_object_key_z(je, "scriptDataObject");
     json_emit_object_start(je);
     json_emit_object_key_z(je, "name");
-    json_emit_string(je, (char*)amf_string_get_bytes(name), amf_string_get_size(name));
+    json_emit_string_z(je, name);
     json_emit_object_key_z(je, "metadata");
     json_amf_data_dump(data, je);
     json_emit_object_end(je);
@@ -255,17 +255,17 @@ static int json_on_stream_end(flv_parser * parser) {
 }
 
 /* JSON FLV file metadata dump callback */
-static int json_on_metadata_tag_only(flv_tag * tag, amf_data * name, amf_data * data, flv_parser * parser) {
+static int json_on_metadata_tag_only(flv_tag * tag, char * name, amf_data * data, flv_parser * parser) {
     flvmeta_opts * options = (flvmeta_opts*) parser->user_data;
 
     if (options->metadata_event == NULL) {
-        if (!strcmp((char*)amf_string_get_bytes(name), "onMetaData")) {
+        if (!strcmp(name, "onMetaData")) {
             dump_json_amf_data(data);
             return FLVMETA_DUMP_STOP_OK;
         }
     }
     else {
-        if (!strcmp((char*)amf_string_get_bytes(name), options->metadata_event)) {
+        if (!strcmp(name, options->metadata_event)) {
             dump_json_amf_data(data);
         }
     }
