@@ -785,8 +785,6 @@ void amf_data_free(amf_data * data) {
 void amf_data_dump(FILE * stream, const amf_data * data, int indent_level) {
     if (data != NULL) {
         amf_node * node;
-        time_t time;
-        struct tm * t;
         char datestr[128];
         switch (data->type) {
             case AMF_TYPE_NUMBER:
@@ -843,10 +841,7 @@ void amf_data_dump(FILE * stream, const amf_data * data, int indent_level) {
                 fprintf(stream, "%*s", indent_level*4 + 1, "]");
                 break;
             case AMF_TYPE_DATE:
-                time = amf_date_to_time_t(data);
-                tzset();
-                t = localtime(&time);
-                strftime(datestr, sizeof(datestr), "%a, %d %b %Y %H:%M:%S %z", t);
+                amf_date_to_iso8601(data, datestr, sizeof(datestr));
                 fprintf(stream, "%s", datestr);
                 break;
             /*case AMF_TYPE_SIMPLEOBJECT:*/
@@ -1153,4 +1148,21 @@ sint16 amf_date_get_timezone(const amf_data * data) {
 
 time_t amf_date_to_time_t(const amf_data * data) {
     return (time_t)((data != NULL) ? data->date_data.milliseconds / 1000 : 0);
+}
+
+size_t amf_date_to_iso8601(const amf_data * data, char * buffer, size_t bufsize) {
+    struct tm * t;
+    time_t time;
+    
+    time = amf_date_to_time_t(data);
+    
+    tzset();
+    t = localtime(&time);
+    if (t != NULL) {
+        return strftime(buffer, bufsize, "%Y-%m-%dT%H:%M:%S", t);
+    }
+    else {
+        /* if we couldn't parse the date, use a default value */
+        return snprintf(buffer, bufsize, "0000-00-00T00:00:00");
+    }
 }

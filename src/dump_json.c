@@ -30,8 +30,6 @@
 static void json_amf_data_dump(const amf_data * data, json_emitter * je) {
     if (data != NULL) {
         amf_node * node;
-        time_t time;
-        struct tm * t;
         char str[128];
 
         switch (data->type) {
@@ -84,10 +82,7 @@ static void json_amf_data_dump(const amf_data * data, json_emitter * je) {
                 json_emit_array_end(je);
                 break;
             case AMF_TYPE_DATE:
-                time = amf_date_to_time_t(data);
-                tzset();
-                t = localtime(&time);
-                strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", t);
+                amf_date_to_iso8601(data, str, sizeof(str));
                 json_emit_string(je, str, strlen(str));
                 break;
             case AMF_TYPE_XML: break;

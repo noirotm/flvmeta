@@ -40,8 +40,6 @@ static int has_xml_markers(const char * str, int len) {
 static void xml_amf_data_dump(const amf_data * data, int qualified, int indent_level) {
     if (data != NULL) {
         amf_node * node;
-        time_t time;
-        struct tm * t;
         char datestr[128];
         int markers;
         char * ns;
@@ -145,10 +143,7 @@ static void xml_amf_data_dump(const amf_data * data, int qualified, int indent_l
                 }
                 break;
             case AMF_TYPE_DATE:
-                time = amf_date_to_time_t(data);
-                tzset();
-                t = localtime(&time);
-                strftime(datestr, sizeof(datestr), "%Y-%m-%dT%H:%M:%S", t);
+                amf_date_to_iso8601(data, datestr, sizeof(datestr));
                 printf("<%sdate%s value=\"%s\"/>\n", ns, ns_decl, datestr);
                 break;
             case AMF_TYPE_XML: break;

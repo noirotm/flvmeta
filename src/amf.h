@@ -220,6 +220,7 @@ amf_data * amf_date_new(number64 milliseconds, sint16 timezone);
 number64   amf_date_get_milliseconds(const amf_data * data);
 sint16     amf_date_get_timezone(const amf_data * data);
 time_t     amf_date_to_time_t(const amf_data * data);
+size_t     amf_date_to_iso8601(const amf_data * data, char * buffer, size_t bufsize);
 
 #ifdef __cplusplus
 }

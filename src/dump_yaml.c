@@ -31,8 +31,6 @@ static void amf_data_yaml_dump(const amf_data * data, yaml_emitter_t * emitter) 
     if (data != NULL) {
         amf_node * node;
         yaml_event_t event;
-        time_t time;
-        struct tm * t;
         char str[128];
 
         switch (data->type) {
@@ -101,10 +99,7 @@ static void amf_data_yaml_dump(const amf_data * data, yaml_emitter_t * emitter) 
                 yaml_emitter_emit(emitter, &event);
                 break;
             case AMF_TYPE_DATE:
-                time = amf_date_to_time_t(data);
-                tzset();
-                t = localtime(&time);
-                strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", t);
+                amf_date_to_iso8601(data, str, sizeof(str));
                 yaml_scalar_event_initialize(&event, NULL, NULL, (yaml_char_t*)str, (int)strlen(str), 1, 1, YAML_ANY_SCALAR_STYLE);
                 yaml_emitter_emit(emitter, &event);
                 break;
