@@ -23,8 +23,8 @@ if(NOT FLVMETA_RELEASE)
       OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     set(FLVMETA_VERSION "${FLVMETA_VERSION}-dev+g${GIT_RELEASE}")
-  endif(GIT AND DOT_GIT)
-endif(NOT FLVMETA_RELEASE)
+  endif()
+endif()
 
 # generic variables
 set(PACKAGE           "flvmeta")
@@ -67,12 +67,12 @@ if(MSVC AND NOT HAVE_STDINT_H)
   set(uint32_t 1)
   set(uint64_t 1)
   set(uint8_t  1)
-endif(MSVC AND NOT HAVE_STDINT_H)
+endif()
 
 test_big_endian(IS_BIGENDIAN)
 if(IS_BIGENDIAN)
   set(WORDS_BIGENDIAN 1)
-endif(IS_BIGENDIAN)
+endif()
 
 # C99 isfinite support
 check_symbol_exists("isfinite" math.h HAVE_ISFINITE)
@@ -90,15 +90,15 @@ if(HAVE_FSEEKO)
   if(LFS_CFLAGS)
     add_definitions(${LFS_CFLAGS})
     set(CMAKE_REQUIRED_FLAGS ${LFS_CFLAGS})
-  endif(LFS_CFLAGS)
+  endif()
 
   if(WIN32)
     add_definitions(-D_FILE_OFFSET_BITS=64)
     set(CMAKE_REQUIRED_FLAGS -D_FILE_OFFSET_BITS=64)
-  endif(WIN32)
+  endif()
 
   check_type_size("off_t" SIZEOF_OFF_T)
-endif(HAVE_FSEEKO)
+endif()
 
 # configuration file
 configure_file(config-cmake.h.in ${CMAKE_BINARY_DIR}/config.h)
@@ -112,7 +112,7 @@ if(MSVC)
 
   # C runtime deprecation in Visual C++ 2005 and later
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE)
-endif(MSVC)
+endif()
 
 # installation
 set(CPACK_PACKAGE_VENDOR "Marc Noirot <marc.noirot@gmail.com>")
@@ -123,20 +123,20 @@ set(CPACK_SOURCE_IGNORE_FILES "/*build*;/CVS/;/\\\\.svn/;/\\\\.bzr/;/\\\\.hg/;/\
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "flvmeta-${PACKAGE_VERSION}-src")
 
 if(WIN32)
-  if (CMAKE_CL_64)
+  if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
     set(EXECUTABLE_TYPE "64")
-  else(CMAKE_CL_64)
+  else()
     set(EXECUTABLE_TYPE "32")
-  endif(CMAKE_CL_64)
+  endif()
 
   set(CPACK_PACKAGE_FILE_NAME "flvmeta-${PACKAGE_VERSION}-win${EXECUTABLE_TYPE}")
   set(CPACK_GENERATOR ZIP)
   install(FILES ${CMAKE_SOURCE_DIR}/README.md       DESTINATION . RENAME Readme.txt)
   install(FILES ${CMAKE_SOURCE_DIR}/LICENSE.md      DESTINATION . RENAME License.txt)
   install(FILES ${CMAKE_SOURCE_DIR}/CHANGELOG.md    DESTINATION . RENAME Changelog.txt)
-else(WIN32)
+else()
   set(CPACK_PACKAGE_FILE_NAME "flvmeta-${PACKAGE_VERSION}")
-endif(WIN32)
+endif()
 
 include(CPack)
 
@@ -148,15 +148,13 @@ find_package(Check)
 
 # Enable unit testing if Check has been found
 if(CHECK_FOUND)
-  set(CMAKE_REQUIRED_INCLUDES ${CHECK_INCLUDE_DIRS})
+  set(CMAKE_REQUIRED_INCLUDES ${CHECK_INCLUDE_DIR})
   set(CMAKE_REQUIRED_LIBRARIES ${CHECK_LIBRARIES})
-  set(CMAKE_REQUIRED_FLAGS -L${CHECK_LIBRARY_DIRS})
   check_symbol_exists(ck_assert_double_eq check.h HAVE_CK_ASSERT_DOUBLE_EQ)
 
   if(HAVE_CK_ASSERT_DOUBLE_EQ)
     # tests
     enable_testing()
-
     add_subdirectory(tests)
-  endif(HAVE_CK_ASSERT_DOUBLE_EQ)
-endif(CHECK_FOUND)
+  endif()
+endif()

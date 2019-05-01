@@ -12,6 +12,6 @@ set(LIBYAML_SRC
   yaml_private.h
 )
 
-include_directories(BEFORE ${CMAKE_SOURCE_DIR}/src/libyaml)
+add_library(yaml ${LIBYAML_SRC})
 
-add_library(yaml STATIC ${LIBYAML_SRC})
+target_include_directories(yaml BEFORE PRIVATE ${CMAKE_SOURCE_DIR}/src/libyaml)

@@ -42,12 +42,12 @@ if(WIN32)
     compat/gettext.h
   )
   include_directories(compat)
-endif(WIN32)
+endif()
 
 # static build
 if(WIN32)
   add_definitions(-DYAML_DECLARE_STATIC)
-endif(WIN32)
+endif()
 
 add_executable(flvmeta ${flvmeta_src})
 
@@ -57,21 +57,21 @@ if(FLVMETA_USE_SYSTEM_LIBYAML)
   find_package(LibYAML REQUIRED)
   target_include_directories(flvmeta PRIVATE ${LIBYAML_INCLUDE_DIR})
   target_link_libraries(flvmeta ${LIBYAML_LIBRARIES})
-else(FLVMETA_USE_SYSTEM_LIBYAML)
+else()
   # use bundled version of libyaml
   target_include_directories(flvmeta PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/libyaml)
   add_subdirectory(libyaml)
   target_link_libraries(flvmeta yaml)
-endif(FLVMETA_USE_SYSTEM_LIBYAML)
+endif()
 
 if(WIN32)
   install(
     TARGETS flvmeta
     RUNTIME DESTINATION .
   )
-else(WIN32)
+else()
   install(
     TARGETS flvmeta
     RUNTIME DESTINATION bin
   )
-endif(WIN32)
+endif()
