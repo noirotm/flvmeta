@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 3.0)
 project(flvmeta C)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
@@ -148,8 +148,9 @@ find_package(Check)
 
 # Enable unit testing if Check has been found
 if(CHECK_FOUND)
-  set(CMAKE_REQUIRED_INCLUDES ${CHECK_INCLUDE_DIR})
+  set(CMAKE_REQUIRED_INCLUDES ${CHECK_INCLUDE_DIRS})
   set(CMAKE_REQUIRED_LIBRARIES ${CHECK_LIBRARIES})
+  set(CMAKE_REQUIRED_FLAGS -L${CHECK_LIBRARY_DIRS})
   check_symbol_exists(ck_assert_double_eq check.h HAVE_CK_ASSERT_DOUBLE_EQ)
 
   if(HAVE_CK_ASSERT_DOUBLE_EQ)
