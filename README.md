@@ -1,6 +1,6 @@
 # FLVMeta - FLV Metadata Editor
 
-[![New Build Status](https://github.com/noirotm/flvmeta/workflows/Build/badge.svg)](https://github.com/noirotm/flvmeta/workflows/Build/badge.svg)
+![New Build Status](https://github.com/noirotm/flvmeta/workflows/Build/badge.svg)
 [![Build Status](https://api.travis-ci.org/noirotm/flvmeta.svg?branch=master)](https://travis-ci.org/noirotm/flvmeta)
 [![Gitter chat](https://badges.gitter.im/noirotm/flvmeta.svg)](https://gitter.im/noirotm/flvmeta)
 
