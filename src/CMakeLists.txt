@@ -51,6 +51,11 @@ endif()
 
 add_executable(flvmeta ${flvmeta_src})
 
+# link with libm for isfinite when needed
+if(HAVE_ISFINITE AND NOT MSVC)
+  target_link_libraries(flvmeta -lm)
+endif()
+
 # libyaml
 if(FLVMETA_USE_SYSTEM_LIBYAML)
   # search for libyaml on the system, link with it
