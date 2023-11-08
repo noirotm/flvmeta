@@ -30,7 +30,7 @@ typedef struct __flv_info {
     uint8 have_audio;
     uint32 video_width;
     uint32 video_height;
-    uint8 video_codec;
+    uint32_be video_codec;
     uint32 video_frames_number;
     uint8 audio_codec;
     uint8 audio_size;

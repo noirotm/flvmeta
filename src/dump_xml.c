@@ -179,37 +179,41 @@ static int xml_on_video_tag(flv_tag * tag, flv_video_tag vt, flv_parser * parser
     printf("    <videoData codecID=\"%s\"", dump_string_get_video_codec(vt));
     printf(" frameType=\"%s\"", dump_string_get_video_frame_type(vt));
 
-    /* if AVC, detect frame type and composition time */
-    if (flv_video_tag_codec_id(vt) == FLV_VIDEO_TAG_CODEC_AVC) {
-        flv_avc_packet_type type;
+    if (flv_video_tag_is_ext_header(&vt)) {
+        printf(" packetType=\"%s\"", dump_string_get_ext_packet_type(vt));
+        printf("/>\n");
+    } else {
+        /* if AVC, detect frame type and composition time */
+        if (flv_video_tag_codec_id(&vt) == FLV_VIDEO_TAG_CODEC_AVC) {
+            flv_avc_packet_type type;
 
-        printf(">\n");
+            printf(">\n");
 
-        /* packet type */
-        if (flv_read_tag_body(parser->stream, &type, sizeof(flv_avc_packet_type)) < sizeof(flv_avc_packet_type)) {
-            return ERROR_INVALID_TAG;
-        }
-
-        printf("        <AVCData packetType=\"%s\"", dump_string_get_avc_packet_type(type));
-
-        /* composition time */
-        if (type == FLV_AVC_PACKET_TYPE_NALU) {
-            uint24_be composition_time;
-
-            if (flv_read_tag_body(parser->stream, &composition_time, sizeof(uint24_be)) < sizeof(uint24_be)) {
+            /* packet type */
+            if (flv_read_tag_body(parser->stream, &type, sizeof(flv_avc_packet_type)) < sizeof(flv_avc_packet_type)) {
                 return ERROR_INVALID_TAG;
             }
 
-            printf(" compositionTimeOffset=\"%i\"", uint24_be_to_uint32(composition_time));
+            printf("        <AVCData packetType=\"%s\"", dump_string_get_avc_packet_type(type));
+
+            /* composition time */
+            if (type == FLV_AVC_PACKET_TYPE_NALU) {
+                uint24_be composition_time;
+
+                if (flv_read_tag_body(parser->stream, &composition_time, sizeof(uint24_be)) < sizeof(uint24_be)) {
+                    return ERROR_INVALID_TAG;
+                }
+
+                printf(" compositionTimeOffset=\"%i\"", uint24_be_to_uint32(composition_time));
+            }
+
+            printf("/>\n");
+            printf("    </videoData>\n");
         }
-
-        printf("/>\n");
-        printf("    </videoData>\n");
+        else {
+            printf("/>\n");
+        }
     }
-    else {
-        printf("/>\n");
-    }
-
     return OK;
 }
 

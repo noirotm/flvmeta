@@ -28,6 +28,25 @@ void flv_tag_set_timestamp(flv_tag * tag, uint32 timestamp) {
     tag->timestamp_extended = (uint8)((timestamp & 0xFF000000) >> 24);
 }
 
+int flv_video_tag_frame_type(flv_video_tag * tag) {
+  return (((tag->video_tag) & 0x70) >> 4);
+}
+
+int flv_video_tag_is_ext_header(flv_video_tag * tag) {
+  return (((tag->video_tag) & 0x80) >> 7) == 1;
+}
+
+int flv_video_tag_packet_type(flv_video_tag * tag) {
+  return ((tag->video_tag) & 0x0F);
+}
+
+uint32_be flv_video_tag_codec_id(flv_video_tag * tag) {
+  if (flv_video_tag_is_ext_header(tag)) {
+    return tag->fourcc;
+  }
+  return (((tag->video_tag) & 0x0F) >> 0);
+}
+
 /* FLV stream functions */
 flv_stream * flv_open(const char * file) {
     flv_stream * stream = (flv_stream *) malloc(sizeof(flv_stream));
@@ -182,34 +201,54 @@ int flv_read_audio_tag(flv_stream * stream, flv_audio_tag * tag) {
     return FLV_OK;
 }
 
+int flv_read_fourcc_codec(flv_stream * stream, flv_video_tag * tag) {
+    size_t result = flv_read_tag_body(stream, &tag->fourcc, FLV_VIDEO_FOURCC_SIZE);
+
+    if (result != FLV_VIDEO_FOURCC_SIZE) {
+        return FLV_ERROR_EOF;
+    }
+
+    return FLV_OK;
+}
+
 int flv_read_video_tag(flv_stream * stream, flv_video_tag * tag) {
     if (stream == NULL
-    || stream->flvin == NULL
-    || feof(stream->flvin)
-    || stream->state != FLV_STREAM_STATE_TAG_BODY) {
-        return FLV_ERROR_EOF;
-    }
+        || stream->flvin == NULL
+        || feof(stream->flvin)
+        || stream->state != FLV_STREAM_STATE_TAG_BODY) {
+            return FLV_ERROR_EOF;
+        }
 
-    if (stream->current_tag_body_length == 0) {
-        return FLV_ERROR_EMPTY_TAG;
-    }
+        if (stream->current_tag_body_length == 0) {
+            return FLV_ERROR_EMPTY_TAG;
+        }
 
-    if (fread(tag, sizeof(flv_video_tag), 1, stream->flvin) == 0) {
-        return FLV_ERROR_EOF;
-    }
+        if (fread(tag, sizeof(byte), 1, stream->flvin) == 0) {
+            return FLV_ERROR_EOF;
+        }
 
-    if (stream->current_tag_body_length >= sizeof(flv_video_tag)) {
-        stream->current_tag_body_length -= sizeof(flv_video_tag);
-    }
-    else {
-        stream->current_tag_body_overflow = sizeof(flv_video_tag) - stream->current_tag_body_length;
-        stream->current_tag_body_length = 0;
-    }
+        if (stream->current_tag_body_length >= sizeof(byte)) {
+            stream->current_tag_body_length -= sizeof(byte);
+        }
+        else {
+            stream->current_tag_body_overflow = sizeof(byte) - stream->current_tag_body_length;
+            stream->current_tag_body_length = 0;
+        }
 
-    if (stream->current_tag_body_length == 0) {
-        stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
-        if (stream->current_tag_body_overflow > 0) {
-            lfs_fseek(stream->flvin, -(file_offset_t)stream->current_tag_body_overflow, SEEK_CUR);
+        if (stream->current_tag_body_length == 0) {
+            stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
+            if (stream->current_tag_body_overflow > 0) {
+                lfs_fseek(stream->flvin, -(file_offset_t)stream->current_tag_body_overflow, SEEK_CUR);
+            }
+        }
+
+    /* Extended RTMP codec */
+    if (flv_video_tag_is_ext_header(tag)) {
+        int fourcc_retval = flv_read_fourcc_codec(stream, tag);
+
+        if (fourcc_retval == FLV_ERROR_EOF) {
+            flv_close(stream);
+            return FLV_ERROR_EOF;
         }
     }
 
@@ -503,7 +542,7 @@ int flv_parse(const char * file, flv_parser * parser) {
                 flv_close(parser->stream);
                 return retval;
             }
-            
+
             if (retval == FLV_OK
             && parser->on_metadata_tag != NULL
             && amf_data_get_type(name) == AMF_TYPE_STRING) {
