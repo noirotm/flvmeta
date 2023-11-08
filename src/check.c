@@ -225,13 +225,13 @@ int check_flv_file(const flvmeta_opts * opts) {
     flv_audio_tag prev_audio_tag;
     int have_prev_video_tag;
     flv_video_tag prev_video_tag;
-    
+
     int consecutive_unknown_tags;
 
     int video_frames_number, keyframes_number;
 
     prev_audio_tag = 0;
-    prev_video_tag = 0;
+    prev_video_tag.video_tag = 0;
 
     have_audio = have_video = 0;
     tag_number = 0;
@@ -506,7 +506,8 @@ int check_flv_file(const flvmeta_opts * opts) {
             /** check video info **/
             else if (tag.type == FLV_TAG_TYPE_VIDEO) {
                 flv_video_tag vt;
-                uint8_bitmask video_frame_type, video_codec;
+                uint8_bitmask video_frame_type;
+                uint32_be video_codec;
 
                 video_frames_number++;
 
@@ -517,12 +518,12 @@ int check_flv_file(const flvmeta_opts * opts) {
                 }
 
                 /* check whether the format varies between tags */
-                if (have_prev_video_tag && flv_video_tag_codec_id(prev_video_tag) != flv_video_tag_codec_id(vt)) {
+                if (have_prev_video_tag && flv_video_tag_codec_id(&prev_video_tag) != flv_video_tag_codec_id(&vt)) {
                     print_warning(WARNING_VIDEO_FORMAT_CHANGED, offset + 11, "video format changed since last tag");
                 }
 
                 /* check video frame type */
-                video_frame_type = flv_video_tag_frame_type(vt);
+                video_frame_type = flv_video_tag_frame_type(&vt);
                 if (video_frame_type != FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME
                     && video_frame_type != FLV_VIDEO_TAG_FRAME_TYPE_INTERFRAME
                     && video_frame_type != FLV_VIDEO_TAG_FRAME_TYPE_DISPOSABLE_INTERFRAME
@@ -543,7 +544,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                 }
 
                 /* check video codec */
-                video_codec = flv_video_tag_codec_id(vt);
+                video_codec = flv_video_tag_codec_id(&vt);
                 if (video_codec != FLV_VIDEO_TAG_CODEC_JPEG
                     && video_codec != FLV_VIDEO_TAG_CODEC_SORENSEN_H263
                     && video_codec != FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO
@@ -551,6 +552,9 @@ int check_flv_file(const flvmeta_opts * opts) {
                     && video_codec != FLV_VIDEO_TAG_CODEC_ON2_VP6_ALPHA
                     && video_codec != FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO_V2
                     && video_codec != FLV_VIDEO_TAG_CODEC_AVC
+                    && video_codec != FLV_VIDEO_FOURCC_AV1
+                    && video_codec != FLV_VIDEO_FOURCC_VP9
+                    && video_codec != FLV_VIDEO_FOURCC_HEVC
                 ) {
                     sprintf(message, "unknown video codec id %u", video_codec);
                     print_error(ERROR_VIDEO_CODEC_UNKNOWN, offset + 11, message);

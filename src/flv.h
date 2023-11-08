@@ -132,10 +132,37 @@ typedef byte flv_audio_tag;
 #define FLV_VIDEO_TAG_FRAME_TYPE_GENERATED_KEYFRAME     4
 #define FLV_VIDEO_TAG_FRAME_TYPE_COMMAND_FRAME          5
 
-typedef byte flv_video_tag;
+/* See https://github.com/veovera/enhanced-rtmp */
 
-#define flv_video_tag_codec_id(tag)     (((tag) & 0x0F) >> 0)
-#define flv_video_tag_frame_type(tag)   (((tag) & 0xF0) >> 4)
+#define FLV_VIDEO_TAG_PACKET_TYPE_SEQUENCE_START           0
+#define FLV_VIDEO_TAG_PACKET_TYPE_CODED_FRAMES             1
+#define FLV_VIDEO_TAG_PACKET_TYPE_SEQUENCE_END             2
+#define FLV_VIDEO_TAG_PACKET_TYPE_CODED_FRAMES_X           3
+#define FLV_VIDEO_TAG_PACKET_TYPE_METADATA                 4
+#define FLV_VIDEO_TAG_PACKET_TYPE_MPEG2_TS_SEQUENCE_START  5
+
+/* See https://github.com/veovera/enhanced-rtmp */
+typedef struct __flv_video_tag {
+    byte video_tag;
+    uint32_be fourcc;
+} flv_video_tag;
+
+typedef int flv_video_ext_codec;
+
+#define FOURCC(a, b, c, d) (((uint32)(a)) | ((uint32)(b) << 8) | ((uint32)(c) << 16) | ((uint32)(d) << 24))
+
+/* Extended RTMP codecs */
+
+#define FLV_VIDEO_FOURCC_AV1        FOURCC('a', 'v', '0', '1')
+#define FLV_VIDEO_FOURCC_VP9        FOURCC('v', 'p', '0', '9')
+#define FLV_VIDEO_FOURCC_HEVC       FOURCC('h', 'v', 'c', '1')
+
+#define FLV_VIDEO_FOURCC_SIZE 4
+
+uint32_be flv_video_tag_codec_id(flv_video_tag * tag); /* legacy codec id or fourcc */
+int flv_video_tag_frame_type(flv_video_tag * tag);
+int flv_video_tag_is_ext_header(flv_video_tag * tag);
+int flv_video_tag_packet_type(flv_video_tag * tag); /* extended tag only */
 
 /* AVC packet types */
 typedef byte flv_avc_packet_type;

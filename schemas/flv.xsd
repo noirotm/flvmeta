@@ -108,6 +108,7 @@
         </xs:choice>
         <xs:attribute name="frameType" use="required" type="tFrameType"/>
         <xs:attribute name="codecID" use="required" type="tVideoCodec"/>
+        <xs:attribute name="packetType" use="optional" type="tPacketType"/>
     </xs:complexType>
 
     <xs:simpleType name="tFrameType">
@@ -121,6 +122,18 @@
             <xs:enumeration value="video info/command frame"/>
         </xs:restriction>
     </xs:simpleType>
+
+    <xs:simpleType name="tPacketType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="sequence start"/>
+            <xs:enumeration value="coded frames"/>
+            <xs:enumeration value="sequence end"/>
+            <xs:enumeration value="coded frames X"/>
+            <xs:enumeration value="metadata"/>
+            <xs:enumeration value="MPEG2TS sequence start"/>
+        </xs:restriction>
+    </xs:simpleType>
+
 
     <xs:simpleType name="tVideoCodec">
         <xs:restriction base="xs:string">

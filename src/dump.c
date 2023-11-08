@@ -37,7 +37,10 @@ const char * dump_string_get_tag_type(flv_tag * tag) {
 }
 
 const char * dump_string_get_video_codec(flv_video_tag tag) {
-    switch (flv_video_tag_codec_id(tag)) {
+    switch(flv_video_tag_codec_id(&tag)) {
+        case FLV_VIDEO_FOURCC_HEVC: return "HEVC";
+        case FLV_VIDEO_FOURCC_AV1: return "AV1";
+        case FLV_VIDEO_FOURCC_VP9: return "VP9";
         case FLV_VIDEO_TAG_CODEC_JPEG: return "JPEG";
         case FLV_VIDEO_TAG_CODEC_SORENSEN_H263: return "Sorenson H.263";
         case FLV_VIDEO_TAG_CODEC_SCREEN_VIDEO: return "Screen video";
@@ -50,16 +53,16 @@ const char * dump_string_get_video_codec(flv_video_tag tag) {
 }
 
 const char * dump_string_get_video_frame_type(flv_video_tag tag) {
-    switch (flv_video_tag_frame_type(tag)) {
+    switch (flv_video_tag_frame_type(&tag)) {
         case FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME:
-            if (flv_video_tag_codec_id(tag) == FLV_VIDEO_TAG_CODEC_AVC) {
+            if (flv_video_tag_codec_id(&tag) == FLV_VIDEO_TAG_CODEC_AVC) {
                 return "seekable frame";
             }
             else {
                 return "keyframe";
             }
         case FLV_VIDEO_TAG_FRAME_TYPE_INTERFRAME:
-            if (flv_video_tag_codec_id(tag) == FLV_VIDEO_TAG_CODEC_AVC) {
+            if (flv_video_tag_codec_id(&tag) == FLV_VIDEO_TAG_CODEC_AVC) {
                 return "non-seekable frame";
             }
             else {
@@ -70,6 +73,23 @@ const char * dump_string_get_video_frame_type(flv_video_tag tag) {
         case FLV_VIDEO_TAG_FRAME_TYPE_COMMAND_FRAME: return "video info/command frame";
         default: return "Unknown";
     }
+}
+
+const char * dump_string_get_ext_packet_type(flv_video_tag tag) {
+    if (flv_video_tag_is_ext_header(&tag)) {
+       int packet_type = flv_video_tag_packet_type(&tag);
+
+       switch (packet_type) {
+           case FLV_VIDEO_TAG_PACKET_TYPE_SEQUENCE_START: return "sequence start";
+           case FLV_VIDEO_TAG_PACKET_TYPE_CODED_FRAMES: return "coded frames";
+           case FLV_VIDEO_TAG_PACKET_TYPE_SEQUENCE_END: return "sequence end";
+           case FLV_VIDEO_TAG_PACKET_TYPE_CODED_FRAMES_X: return "coded frames X";
+           case FLV_VIDEO_TAG_PACKET_TYPE_METADATA: return "metadata";
+           case FLV_VIDEO_TAG_PACKET_TYPE_MPEG2_TS_SEQUENCE_START: return "MPEG2TS sequence start";
+           default: return "unknown";
+       }
+    }
+    return "Not using extended RTMP, these bits should not be used";
 }
 
 const char * dump_string_get_avc_packet_type(flv_avc_packet_type type) {

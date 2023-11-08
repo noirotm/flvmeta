@@ -91,7 +91,7 @@ static int compute_screen_size(flv_stream * flv_in, flv_info * info, uint32 body
         if (flv_read_tag_body(flv_in, header, 4) < 4) {
             return FLV_ERROR_EOF;
         }
-        
+
         info->video_width  = ((header[0] & 0x0f) << 8) + header[1];
         info->video_height = ((header[2] & 0x0f) << 8) + header[3];
     }
@@ -109,12 +109,12 @@ static int compute_vp6_size(flv_stream * flv_in, flv_info * info, uint32 body_le
         if (flv_read_tag_body(flv_in, header, 7) < 7) {
             return FLV_ERROR_EOF;
         }
-        
+
         /* two bytes offset if VP6 0 */
         offset = (header[1] & 0x01 || !(header[2] & 0x06)) << 1;
         info->video_width  = (header[4 + offset] << 4) - (header[0] >> 4);
         info->video_height = (header[3 + offset] << 4) - (header[0] & 0x0f);
-        
+
     }
     return FLV_OK;
 }
@@ -130,7 +130,7 @@ static int compute_vp6_alpha_size(flv_stream * flv_in, flv_info * info, uint32 b
         if (flv_read_tag_body(flv_in, header, 10) < 10) {
             return FLV_ERROR_EOF;
         }
-        
+
         /* two bytes offset if VP6 0 */
         offset = (header[4] & 0x01 || !(header[5] & 0x06)) << 1;
         info->video_width  = (header[7 + offset] << 4) - (header[0] >> 4);
@@ -423,12 +423,12 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
 
                 if (info->have_video != 1) {
                     info->have_video = 1;
-                    info->video_codec = flv_video_tag_codec_id(vt);
+                    info->video_codec = flv_video_tag_codec_id(&vt);
                     info->video_first_timestamp = timestamp;
                 }
 
                 if (have_video_size != 1
-                && flv_video_tag_frame_type(vt) == FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
+                && flv_video_tag_frame_type(&vt) == FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
                     /* read first video frame to get critical info */
                     result = compute_video_size(flv_in, info, body_length - sizeof(flv_video_tag));
                     if (result != FLV_OK) {
@@ -443,7 +443,7 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
                 }
 
                 /* add keyframe to list */
-                if (flv_video_tag_frame_type(vt) == FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
+                if (flv_video_tag_frame_type(&vt) == FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
                     /* do not add keyframe if the previous one has the same timestamp */
                     if (!info->have_keyframes
                     || (info->have_keyframes && info->last_keyframe_timestamp != timestamp)
@@ -460,7 +460,7 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
                     info->can_seek_to_end = 0;
                 }
 
-                info->real_video_data_size += (body_length - 1);    
+                info->real_video_data_size += (body_length - 1);
             }
 
             info->video_frames_number++;
@@ -490,7 +490,7 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
                 if (flv_read_audio_tag(flv_in, &at) != FLV_OK) {
                     return ERROR_EOF;
                 }
-            
+
                 if (info->have_audio != 1) {
                     info->have_audio = 1;
                     info->audio_codec = flv_audio_tag_sound_format(at);
@@ -506,7 +506,7 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
 
                 info->real_audio_data_size += (body_length - 1);
             }
-            
+
             info->last_media_frame_type = FLV_TAG_TYPE_AUDIO;
 
             info->audio_data_size += (body_length + FLV_TAG_SIZE);
@@ -567,7 +567,7 @@ void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts *
     amf_associative_array_add(meta->on_metadata, "hasMetadata", amf_boolean_new(1));
     amf_associative_array_add(meta->on_metadata, "hasVideo", amf_boolean_new(info->have_video));
     amf_associative_array_add(meta->on_metadata, "hasAudio", amf_boolean_new(info->have_audio));
-    
+
     if (info->last_media_frame_type == FLV_TAG_TYPE_AUDIO) {
         duration = (info->last_timestamp - (opts->reset_timestamps ? 0 : info->first_timestamp) + info->audio_frame_duration) / 1000.0;
     }
@@ -583,7 +583,7 @@ void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts *
 
     amf_associative_array_add(meta->on_metadata, "lasttimestamp", amf_number_new(info->last_timestamp / 1000.0));
     amf_associative_array_add(meta->on_metadata, "lastkeyframetimestamp", amf_number_new(info->last_keyframe_timestamp / 1000.0));
-    
+
     if (info->video_width > 0)
         amf_associative_array_add(meta->on_metadata, "width", amf_number_new(info->video_width));
     if (info->video_height > 0)
@@ -646,7 +646,7 @@ void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts *
         amf_associative_array_add(meta->on_metadata, "audiodelay", amf_number_new((number64)audio_delay));
     }
     amf_associative_array_add(meta->on_metadata, "canSeekToEnd", amf_boolean_new(info->can_seek_to_end));
-    
+
     /* only add empty cuepoints if we don't preserve existing tags OR if the existing tags don't have cuepoints */
     if (opts->preserve_metadata == 0
     || (opts->preserve_metadata == 1 && amf_associative_array_get(info->original_on_metadata, "cuePoints") == NULL)) {
@@ -705,7 +705,7 @@ void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts *
         data_size += (uint32)on_last_second_size + FLV_TAG_SIZE;
     }
     amf_number_set_value(amf_total_data_size, (number64)data_size);
-  
+
     /* compute total file size */
     total_filesize = FLV_HEADER_SIZE + info->total_prev_tags_size + info->video_data_size +
         info->audio_data_size + info->meta_data_size + new_on_metadata_size;
