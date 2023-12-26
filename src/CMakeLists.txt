@@ -3,6 +3,8 @@ set(flvmeta_src
   amf.h
   avc.c
   avc.h
+  bitstream.c
+  bitstream.h
   check.c
   check.h
   dump.c
