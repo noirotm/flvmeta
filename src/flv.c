@@ -247,7 +247,6 @@ int flv_read_video_tag(flv_stream * stream, flv_video_tag * tag) {
         int fourcc_retval = flv_read_fourcc_codec(stream, tag);
 
         if (fourcc_retval == FLV_ERROR_EOF) {
-            flv_close(stream);
             return FLV_ERROR_EOF;
         }
     }
