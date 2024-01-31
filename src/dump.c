@@ -77,7 +77,7 @@ const char * dump_string_get_video_frame_type(flv_video_tag tag) {
 
 const char * dump_string_get_ext_packet_type(flv_video_tag tag) {
     if (flv_video_tag_is_ext_header(&tag)) {
-       int packet_type = flv_video_tag_packet_type(&tag);
+       int packet_type = flv_video_tag_ext_packet_type(&tag);
 
        switch (packet_type) {
            case FLV_VIDEO_TAG_PACKET_TYPE_SEQUENCE_START: return "sequence start";

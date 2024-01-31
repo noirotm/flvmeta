@@ -36,7 +36,7 @@ int flv_video_tag_is_ext_header(flv_video_tag * tag) {
   return (((tag->video_tag) & 0x80) >> 7) == 1;
 }
 
-int flv_video_tag_packet_type(flv_video_tag * tag) {
+int flv_video_tag_ext_packet_type(flv_video_tag * tag) {
   return ((tag->video_tag) & 0x0F);
 }
 
