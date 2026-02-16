@@ -75,7 +75,7 @@ extern "C" {
 
 int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts);
 
-void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts * opts);
+int compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts * opts);
 
 void compute_current_metadata(flv_info * info, flv_metadata * meta);
 

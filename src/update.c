@@ -276,7 +276,12 @@ int update_metadata(const flvmeta_opts * opts) {
         return res;
     }
 
-    compute_metadata(&info, &meta, opts);
+    res = compute_metadata(&info, &meta, opts);
+    if (res != OK) {
+        flv_close(flv_in);
+        amf_data_free(info.keyframes);
+        return res;
+    }
 
     /*
         open output file

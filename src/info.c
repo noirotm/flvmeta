@@ -23,6 +23,7 @@
 #include "avc.h"
 
 #include <string.h>
+#include <stdint.h>
 
 /*
     compute Sorensen H.263 video size
@@ -540,7 +541,7 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
 /*
     compute the metadata
 */
-void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts * opts) {
+int compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts * opts) {
     uint32 new_on_metadata_size, on_last_second_size;
     file_offset_t data_size, total_filesize;
     number64 duration, video_data_rate, framerate;
@@ -569,15 +570,31 @@ void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts *
     amf_associative_array_add(meta->on_metadata, "hasAudio", amf_boolean_new(info->have_audio));
 
     if (info->last_media_frame_type == FLV_TAG_TYPE_AUDIO) {
-        duration = (info->last_timestamp - (opts->reset_timestamps ? 0 : info->first_timestamp) + info->audio_frame_duration) / 1000.0;
+        uint32_t base = opts->reset_timestamps ? 0u : info->first_timestamp;
+        if (info->last_timestamp < base) {
+            return FLV_ERROR_INVALID_METADATA;
+        }
+        uint64_t ms = (uint64_t)(info->last_timestamp - base) + (uint64_t)info->audio_frame_duration;
+        if (ms > (uint64_t)UINT32_MAX) {
+            return FLV_ERROR_INVALID_METADATA;
+        }
+        duration = (double)ms / 1000.0;
     }
     else if (info->last_media_frame_type == FLV_TAG_TYPE_VIDEO) {
-        duration = (info->last_timestamp - (opts->reset_timestamps ? 0 : info->first_timestamp) + info->video_frame_duration) / 1000.0;
+        uint32_t base = opts->reset_timestamps ? 0u : info->first_timestamp;
+        if (info->last_timestamp < base) {
+            return FLV_ERROR_INVALID_METADATA;
+        }
+        uint64_t ms = (uint64_t)(info->last_timestamp - base) + (uint64_t)info->video_frame_duration;
+        if (ms > (uint64_t)UINT32_MAX) {
+            return FLV_ERROR_INVALID_METADATA;
+        }
+        duration = (double)ms / 1000.0;
     }
     else {
-        /* no last frame type means no audio and no video, therefore no duration */
-        duration = 0;
+        duration = 0.0;
     }
+
 
     amf_associative_array_add(meta->on_metadata, "duration", amf_number_new(duration));
 
