@@ -132,8 +132,6 @@ typedef byte flv_audio_tag;
 #define FLV_VIDEO_TAG_FRAME_TYPE_GENERATED_KEYFRAME     4
 #define FLV_VIDEO_TAG_FRAME_TYPE_COMMAND_FRAME          5
 
-/* See https://github.com/veovera/enhanced-rtmp */
-
 #define FLV_VIDEO_TAG_PACKET_TYPE_SEQUENCE_START           0
 #define FLV_VIDEO_TAG_PACKET_TYPE_CODED_FRAMES             1
 #define FLV_VIDEO_TAG_PACKET_TYPE_SEQUENCE_END             2
