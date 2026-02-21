@@ -569,14 +569,14 @@ void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts *
     amf_associative_array_add(meta->on_metadata, "hasAudio", amf_boolean_new(info->have_audio));
 
     if (info->last_media_frame_type == FLV_TAG_TYPE_AUDIO) {
-        duration = (info->last_timestamp - (opts->reset_timestamps ? 0 : info->first_timestamp) + info->audio_frame_duration) / 1000.0;
+        duration = ((number64)info->last_timestamp - (opts->reset_timestamps ? 0.0 : (number64)info->first_timestamp) + info->audio_frame_duration) / 1000.0;
     }
     else if (info->last_media_frame_type == FLV_TAG_TYPE_VIDEO) {
-        duration = (info->last_timestamp - (opts->reset_timestamps ? 0 : info->first_timestamp) + info->video_frame_duration) / 1000.0;
+        duration = ((number64)info->last_timestamp - (opts->reset_timestamps ? 0.0 : (number64)info->first_timestamp) + info->video_frame_duration) / 1000.0;
     }
     else {
         /* no last frame type means no audio and no video, therefore no duration */
-        duration = 0;
+        duration = 0.0;
     }
 
     amf_associative_array_add(meta->on_metadata, "duration", amf_number_new(duration));
