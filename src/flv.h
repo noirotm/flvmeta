@@ -160,7 +160,7 @@ typedef int flv_video_ext_codec;
 uint32_be flv_video_tag_codec_id(flv_video_tag * tag); /* legacy codec id or fourcc */
 int flv_video_tag_frame_type(flv_video_tag * tag);
 int flv_video_tag_is_ext_header(flv_video_tag * tag);
-int flv_video_tag_packet_type(flv_video_tag * tag); /* extended tag only */
+int flv_video_tag_ext_packet_type(flv_video_tag * tag); /* extended tag only */
 
 /* AVC packet types */
 typedef byte flv_avc_packet_type;
