@@ -108,8 +108,8 @@ number64 swap_number64(number64);
 #endif /* WORDS_BIGENDIAN */
 
 /* convert big endian 24 bits integers to native integers */
-# define uint24_be_to_uint32(x) ((uint32)(((x).b[0] << 16) | \
-    ((x).b[1] << 8) | (x).b[2]))
+#define uint24_be_to_uint32(x) ((uint32)((((uint32)((x).b[0]) << 16) | \
+    ((uint32)((x).b[1]) << 8) | (uint32)((x).b[2]))))
 
 /* convert native integers into 24 bits big endian integers */
 uint24_be uint32_to_uint24_be(uint32);

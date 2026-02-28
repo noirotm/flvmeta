@@ -80,7 +80,7 @@ typedef struct __flv_tag {
 
 #define flv_tag_get_body_length(tag)    (uint24_be_to_uint32((tag).body_length))
 #define flv_tag_get_timestamp(tag) \
-    (uint24_be_to_uint32((tag).timestamp) + ((tag).timestamp_extended << 24))
+    (uint24_be_to_uint32((tag).timestamp) + (((uint32)((tag).timestamp_extended)) << 24))
 #define flv_tag_get_stream_id(tag)      (uint24_be_to_uint32((tag).stream_id))
 
 /* audio tag */
