@@ -22,8 +22,6 @@
 #ifndef __AVC_H__
 #define __AVC_H__
 
-#include <stdio.h>
-
 #include "types.h"
 #include "flv.h"
 
