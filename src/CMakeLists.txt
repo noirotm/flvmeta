@@ -34,8 +34,8 @@ set(flvmeta_src
   ${CMAKE_BINARY_DIR}/config.h
 )
 
-# add support for getopt and gettext in windows
-if(WIN32)
+# add support for getopt and gettext in MSVC
+if(MSVC)
   set(flvmeta_src
     ${flvmeta_src}
     compat/getopt1.c
