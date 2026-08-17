@@ -655,8 +655,13 @@ int check_flv_file(const flvmeta_opts * opts) {
                     if (strcmp((char*)amf_string_get_bytes(name), "onMetaData")
                     && strcmp((char*)amf_string_get_bytes(name), "onCuePoint")
                     && strcmp((char*)amf_string_get_bytes(name), "onLastSecond")) {
-                        sprintf(message, "unknown metadata event name: '%s'", (char*)amf_string_get_bytes(name));
-                        print_info(INFO_METADATA_NAME_UNKNOWN, flv_get_offset(flv_in), message);
+                        /* use a dynamic buffer here as the name can be arbitrarily long */
+                        char * buffer = malloc(amf_string_get_size(name) + 50);
+
+                        sprintf(buffer, "unknown metadata event name: '%s'", (char*)amf_string_get_bytes(name));
+                        print_info(INFO_METADATA_NAME_UNKNOWN, flv_get_offset(flv_in), buffer);
+
+                        free(buffer);
                     }
                 }
 
