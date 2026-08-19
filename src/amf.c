@@ -971,7 +971,12 @@ amf_data * amf_object_get(const amf_data * data, const char * name) {
                 return (node != NULL) ? node->data : NULL;
             }
             /* we have to skip the element data to reach the next name */
-            node = node->next->next;
+            node = node->next;
+            /* the data node is NULL, which is invalid, so we assume we reached the end */
+            if (node == NULL) {
+                return NULL;
+            }
+            node = node->next;
         }
     }
     return NULL;
@@ -990,7 +995,12 @@ amf_data * amf_object_set(amf_data * data, const char * name, amf_data * element
                 }
             }
             /* we have to skip the element data to reach the next name */
-            node = node->next->next;
+            node = node->next;
+            /* the data node is NULL, which is invalid, so we assume we reached the end */
+            if (node == NULL) {
+                return NULL;
+            }
+            node = node->next;
         }
     }
     return NULL;
