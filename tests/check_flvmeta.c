@@ -19,22 +19,22 @@
     along with FLVMeta; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
-#include <stdlib.h>
-#include <check.h>
+#include "unity.h"
 
-extern Suite * amf_types_suite(void);
-extern Suite * flv_suite(void);
+extern void amf_tests_teardown(void);
+extern void run_amf_tests(void);
+extern void run_flv_tests(void);
+
+void setUp(void) {
+}
+
+void tearDown(void) {
+    amf_tests_teardown();
+}
 
 int main(void) {
-    int number_failed;
-    SRunner * sr = srunner_create(amf_types_suite());
-    srunner_add_suite(sr, flv_suite());
-    
-    /* srunner_set_log (sr, "check_amf.log"); */
-
-    srunner_run_all(sr, CK_NORMAL);
-    number_failed = srunner_ntests_failed(sr);
-    srunner_free(sr);
-
-    return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
+    UNITY_BEGIN();
+    run_amf_tests();
+    run_flv_tests();
+    return UNITY_END();
 }

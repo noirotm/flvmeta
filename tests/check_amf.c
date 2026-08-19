@@ -19,160 +19,125 @@
     along with FLVMeta; if not, write to the Free Software
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
-#include <check.h>
-#include <stdlib.h>
+#include "unity.h"
 #include <string.h>
 #include "src/amf.h"
 
-amf_data * data;
+static amf_data * data = NULL;
 
-void teardown(void) {
+void amf_tests_teardown(void) {
     amf_data_free(data);
+    data = NULL;
 }
 
 /**
     AMF number
 */
-void setup_amf_number(void) {
+static void test_amf_number_new(void) {
     data = amf_number_new(0);
-}
 
-START_TEST(test_amf_number_new) {
-    ck_assert_ptr_nonnull(data);
-    ck_assert_int_eq(amf_data_get_type(data), AMF_TYPE_NUMBER);
+    TEST_ASSERT_NOT_NULL(data);
+    TEST_ASSERT_EQUAL_INT(AMF_TYPE_NUMBER, amf_data_get_type(data));
     /* AMF number size == 1(header) + 8(data) -> 9 bytes */
-    ck_assert_int_eq(amf_data_size(data), 9);
-    ck_assert_int_eq(amf_number_get_value(data), 0);
+    TEST_ASSERT_EQUAL_size_t(9, amf_data_size(data));
+    TEST_ASSERT_EQUAL_DOUBLE(0, amf_number_get_value(data));
 }
-END_TEST
 
-START_TEST(test_amf_number_set_value) {
+static void test_amf_number_set_value(void) {
+    data = amf_number_new(0);
+
     amf_number_set_value(data, -512.78);
-    ck_assert_double_eq(amf_number_get_value(data), -512.78);
+    TEST_ASSERT_EQUAL_DOUBLE(-512.78, amf_number_get_value(data));
 }
-END_TEST
 
-START_TEST(test_amf_number_null) {
-    ck_assert_int_eq(amf_number_get_value(NULL), 0);
+static void test_amf_number_null(void) {
+    TEST_ASSERT_EQUAL_DOUBLE(0, amf_number_get_value(NULL));
     /* just making sure we don't core dump */
     amf_number_set_value(NULL, 12);
 }
-END_TEST
 
 /**
     AMF boolean
 */
-void setup_amf_boolean(void) {
+static void test_amf_boolean_new(void) {
     data = amf_boolean_new(1);
-}
 
-START_TEST(test_amf_boolean_new) {
-    ck_assert_ptr_nonnull(data);
-    ck_assert_int_eq(amf_data_get_type(data), AMF_TYPE_BOOLEAN);
+    TEST_ASSERT_NOT_NULL(data);
+    TEST_ASSERT_EQUAL_INT(AMF_TYPE_BOOLEAN, amf_data_get_type(data));
     /* AMF boolean size == 1(header) + 1(data) -> 2 bytes */
-    ck_assert_int_eq(amf_data_size(data), 2);
-    ck_assert_int_eq(amf_boolean_get_value(data), 1);
+    TEST_ASSERT_EQUAL_size_t(2, amf_data_size(data));
+    TEST_ASSERT_EQUAL_INT(1, amf_boolean_get_value(data));
 }
-END_TEST
 
-START_TEST(test_amf_boolean_set_value) {
+static void test_amf_boolean_set_value(void) {
+    data = amf_boolean_new(1);
+
     amf_boolean_set_value(data, 0);
-    ck_assert_int_eq(amf_boolean_get_value(data), 0);
+    TEST_ASSERT_EQUAL_INT(0, amf_boolean_get_value(data));
 }
-END_TEST
 
-START_TEST(test_amf_boolean_null) {
-    ck_assert_int_eq(amf_boolean_get_value(NULL), 0);
+static void test_amf_boolean_null(void) {
+    TEST_ASSERT_EQUAL_INT(0, amf_boolean_get_value(NULL));
     /* just making sure we don't core dump */
     amf_boolean_set_value(NULL, 12);
 }
-END_TEST
 
 /**
     AMF string
 */
-START_TEST(test_amf_str) {
-    char * str = "hello world";
-    int length = strlen(str);
+static void test_amf_str(void) {
+    const char * str = "hello world";
+    const size_t length = strlen(str);
     data = amf_str(str);
 
-    ck_assert_ptr_nonnull(data);
-    ck_assert_int_eq(amf_data_get_type(data), AMF_TYPE_STRING);
+    TEST_ASSERT_NOT_NULL(data);
+    TEST_ASSERT_EQUAL_INT(AMF_TYPE_STRING, amf_data_get_type(data));
     /* AMF string size == 1(header) + 2(string length) + length */
-    ck_assert_int_eq(amf_data_size(data), 3 + length);
-    ck_assert_int_eq(amf_string_get_size(data), length);
-    ck_assert_str_eq(amf_string_get_bytes(data), str);
+    TEST_ASSERT_EQUAL_size_t(3 + length, amf_data_size(data));
+    TEST_ASSERT_EQUAL_UINT16(length, amf_string_get_size(data));
+    TEST_ASSERT_EQUAL_STRING(str, amf_string_get_bytes(data));
 }
-END_TEST
 
-START_TEST(test_amf_str_null) {
+static void test_amf_str_null(void) {
     data = amf_str(NULL);
 
-    ck_assert_int_eq(amf_string_get_size(data), 0);
-    ck_assert_str_eq(amf_string_get_bytes(data), "");
-
-    amf_data_free(data);
+    TEST_ASSERT_EQUAL_UINT16(0, amf_string_get_size(data));
+    TEST_ASSERT_EQUAL_STRING("", amf_string_get_bytes(data));
 }
-END_TEST
 
-START_TEST(test_amf_string_new) {
-    char * str = "hello world";
+static void test_amf_string_new(void) {
+    byte str[] = "hello world";
     data = amf_string_new(str, 5);
 
-    ck_assert_int_eq(amf_string_get_size(data), 5);
-    ck_assert_str_eq(amf_string_get_bytes(data), "hello");
-
-    amf_data_free(data);
+    TEST_ASSERT_EQUAL_UINT16(5, amf_string_get_size(data));
+    TEST_ASSERT_EQUAL_STRING("hello", amf_string_get_bytes(data));
 }
-END_TEST
 
-START_TEST(test_amf_string_new_null) {
+static void test_amf_string_new_null(void) {
     data = amf_string_new(NULL, 12);
 
-    ck_assert_ptr_nonnull(data);
-    ck_assert_int_eq(amf_string_get_size(data), 0);
-    ck_assert_str_eq(amf_string_get_bytes(data), "");
-
-    amf_data_free(data);
+    TEST_ASSERT_NOT_NULL(data);
+    TEST_ASSERT_EQUAL_UINT16(0, amf_string_get_size(data));
+    TEST_ASSERT_EQUAL_STRING("", amf_string_get_bytes(data));
 }
-END_TEST
 
-START_TEST(test_amf_string_null) {
-    ck_assert_int_eq(amf_string_get_size(NULL), 0);
-    ck_assert_ptr_null(amf_string_get_bytes(NULL));
+static void test_amf_string_null(void) {
+    TEST_ASSERT_EQUAL_UINT16(0, amf_string_get_size(NULL));
+    TEST_ASSERT_NULL(amf_string_get_bytes(NULL));
 }
-END_TEST
 
-/**
-    AMF Types Suite
-*/
-Suite * amf_types_suite(void) {
-    Suite * s = suite_create("AMF types");
+void run_amf_tests(void) {
+    UnitySetTestFile(__FILE__);
 
-    /* AMF number test case */
-    TCase * tc_number = tcase_create("AMF number");
-    tcase_add_checked_fixture(tc_number, setup_amf_number, teardown);
-    tcase_add_test(tc_number, test_amf_number_new);
-    tcase_add_test(tc_number, test_amf_number_set_value);
-    tcase_add_test(tc_number, test_amf_number_null);
-    suite_add_tcase(s, tc_number);
-
-    /* AMF boolean test case */
-    TCase * tc_boolean = tcase_create("AMF boolean");
-    tcase_add_checked_fixture(tc_boolean, setup_amf_boolean, teardown);
-    tcase_add_test(tc_boolean, test_amf_boolean_new);
-    tcase_add_test(tc_boolean, test_amf_boolean_set_value);
-    tcase_add_test(tc_boolean, test_amf_boolean_null);
-    suite_add_tcase(s, tc_boolean);
-
-    /* AMF string test case */
-    TCase * tc_string = tcase_create("AMF string");
-    tcase_add_test(tc_string, test_amf_str);
-    tcase_add_test(tc_string, test_amf_str_null);
-    tcase_add_test(tc_string, test_amf_string_new);
-    tcase_add_test(tc_string, test_amf_string_new_null);
-    tcase_add_test(tc_string, test_amf_string_null);
-    suite_add_tcase(s, tc_string);
-
-    return s;
+    RUN_TEST(test_amf_number_new);
+    RUN_TEST(test_amf_number_set_value);
+    RUN_TEST(test_amf_number_null);
+    RUN_TEST(test_amf_boolean_new);
+    RUN_TEST(test_amf_boolean_set_value);
+    RUN_TEST(test_amf_boolean_null);
+    RUN_TEST(test_amf_str);
+    RUN_TEST(test_amf_str_null);
+    RUN_TEST(test_amf_string_new);
+    RUN_TEST(test_amf_string_new_null);
+    RUN_TEST(test_amf_string_null);
 }

@@ -143,19 +143,5 @@ include(CPack)
 add_subdirectory(src)
 add_subdirectory(man)
 
-# check unit testing framework
-find_package(Check)
-
-# Enable unit testing if Check has been found
-if(CHECK_FOUND)
-  set(CMAKE_REQUIRED_INCLUDES ${CHECK_INCLUDE_DIRS})
-  set(CMAKE_REQUIRED_LIBRARIES ${CHECK_LIBRARIES})
-  set(CMAKE_REQUIRED_FLAGS -L${CHECK_LIBRARY_DIRS})
-  check_symbol_exists(ck_assert_double_eq check.h HAVE_CK_ASSERT_DOUBLE_EQ)
-
-  if(HAVE_CK_ASSERT_DOUBLE_EQ)
-    # tests
-    enable_testing()
-    add_subdirectory(tests)
-  endif()
-endif()
+enable_testing()
+add_subdirectory(tests)
