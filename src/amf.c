@@ -726,11 +726,14 @@ amf_data * amf_data_clone(const amf_data * data) {
             case AMF_TYPE_NUMBER: return amf_number_new(amf_number_get_value(data));
             case AMF_TYPE_BOOLEAN: return amf_boolean_new(amf_boolean_get_value(data));
             case AMF_TYPE_STRING:
-                if (data->string_data.mbstr != NULL) {
-                    return amf_string_new((byte *)strdup((char *)amf_string_get_bytes(data)), amf_string_get_size(data));
-                }
-                else {
-                    return amf_str(NULL);
+                {
+                    const byte * s = amf_string_get_bytes(data);
+                    if (s != NULL) {
+                        return amf_string_new(s, amf_string_get_size(data));
+                    }
+                    else {
+                        return amf_str(NULL);
+                    }
                 }
             case AMF_TYPE_NULL: return NULL;
             case AMF_TYPE_UNDEFINED: return NULL;
@@ -900,7 +903,7 @@ void amf_boolean_set_value(amf_data * data, uint8 value) {
 }
 
 /* string functions */
-amf_data * amf_string_new(byte * str, uint16 size) {
+amf_data * amf_string_new(const byte * str, uint16 size) {
     amf_data * data = amf_data_new(AMF_TYPE_STRING);
     if (data != NULL) {
         if (str == NULL) {
