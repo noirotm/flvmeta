@@ -294,6 +294,24 @@ static void write_flv_video_tag(FILE * file, uint8_t frame_type, byte fourcc[FLV
     }
 }
 
+static void write_flv_metadata_tag_with_oversized_name(FILE * file) {
+    flv_tag tag;
+    uint32_be previous_tag_size;
+    byte body[] = { AMF_TYPE_STRING, 0x00, 0x05, 'h' };
+
+    tag.type = FLV_TAG_TYPE_META;
+    tag.body_length = uint32_to_uint24_be(sizeof(body));
+    tag.timestamp = uint32_to_uint24_be(0);
+    tag.timestamp_extended = 0;
+    tag.stream_id = uint32_to_uint24_be(0);
+
+    TEST_ASSERT_EQUAL_size_t(1, flv_write_tag(file, &tag));
+    TEST_ASSERT_EQUAL_size_t(1, fwrite(body, sizeof(body), 1, file));
+
+    previous_tag_size = swap_uint32(FLV_TAG_SIZE + sizeof(body));
+    TEST_ASSERT_EQUAL_size_t(1, fwrite(&previous_tag_size, sizeof(previous_tag_size), 1, file));
+}
+
 static void test_flv_reader_no_extended(void) {
     flv_header header;
     flv_tag tag;
@@ -364,6 +382,52 @@ static void test_flv_reader_av1(void) {
     TEST_ASSERT_EQUAL_INT(0, remove(path));
 }
 
+static void test_flv_read_metadata_resyncs_after_oversized_name(void) {
+    flv_header header;
+    flv_tag tag;
+    flv_stream * stream;
+    FILE * file;
+    int retval;
+    uint32 prev_tag_size;
+    file_offset_t body_end_offset;
+    amf_data * name;
+    amf_data * data;
+    char path[FLVMETA_TEST_PATH_SIZE];
+
+    name = NULL;
+    data = NULL;
+
+    file = create_temp_file("flvmeta_metadata_name_overflow.flv", path, sizeof(path));
+    write_flv_header(file);
+    write_flv_metadata_tag_with_oversized_name(file);
+    TEST_ASSERT_EQUAL_INT(0, fclose(file));
+
+    stream = flv_open(path);
+    TEST_ASSERT_NOT_NULL(stream);
+
+    retval = flv_read_header(stream, &header);
+    TEST_ASSERT_EQUAL_INT(FLV_OK, retval);
+    retval = flv_read_tag(stream, &tag);
+    TEST_ASSERT_EQUAL_INT(FLV_OK, retval);
+    TEST_ASSERT_EQUAL_UINT8(FLV_TAG_TYPE_META, tag.type);
+
+    body_end_offset = flv_get_current_tag_offset(stream) + FLV_TAG_SIZE + flv_tag_get_body_length(tag);
+    retval = flv_read_metadata(stream, &name, &data);
+    TEST_ASSERT_EQUAL_INT(FLV_ERROR_INVALID_METADATA, retval);
+    TEST_ASSERT_EQUAL_INT(FLV_STREAM_STATE_PREV_TAG_SIZE, stream->state);
+    TEST_ASSERT_EQUAL_UINT32(4, stream->current_tag_body_overflow);
+    TEST_ASSERT_EQUAL_size_t(body_end_offset, flv_get_offset(stream));
+
+    retval = flv_read_prev_tag_size(stream, &prev_tag_size);
+    TEST_ASSERT_EQUAL_INT(FLV_OK, retval);
+    TEST_ASSERT_EQUAL_UINT32(FLV_TAG_SIZE + flv_tag_get_body_length(tag), prev_tag_size);
+
+    amf_data_free(name);
+    amf_data_free(data);
+    flv_close(stream);
+    TEST_ASSERT_EQUAL_INT(0, remove(path));
+}
+
 static void test_flv_reader_hevc(void) {
     flv_header header;
     flv_tag tag;
@@ -417,5 +481,6 @@ void run_flv_tests(void) {
     RUN_TEST(test_flv_tag_set_timestamp_extended);
     RUN_TEST(test_flv_reader_no_extended);
     RUN_TEST(test_flv_reader_av1);
+    RUN_TEST(test_flv_read_metadata_resyncs_after_oversized_name);
     RUN_TEST(test_flv_reader_hevc);
 }

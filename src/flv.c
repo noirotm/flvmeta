@@ -287,8 +287,8 @@ int flv_read_metadata(flv_stream * stream, amf_data ** name, amf_data ** data) {
         stream->current_tag_body_length -= (uint32)data_size;
     }
     else {
-        stream->current_tag_body_length = 0;
         stream->current_tag_body_overflow = (uint32)data_size - stream->current_tag_body_length;
+        stream->current_tag_body_length = 0;
 
         stream->state = FLV_STREAM_STATE_PREV_TAG_SIZE;
         if (stream->current_tag_body_overflow > 0) {
