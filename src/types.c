@@ -53,7 +53,7 @@ uint24_be uint32_to_uint24_be(uint32 l) {
     return r;
 }
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(HAVE_FSEEKO)
 
 /*
     These functions assume fpos_t is a 64-bit signed integer
@@ -87,4 +87,4 @@ int lfs_fseek(FILE * stream, file_offset_t offset, int whence) {
     }
 }
 
-#endif /* WIN32 */
+#endif /* WIN32 && !HAVE_FSEEKO */

@@ -461,8 +461,26 @@ static void test_flv_reader_hevc(void) {
     TEST_ASSERT_EQUAL_INT(0, remove(path));
 }
 
+#ifdef HAVE_FSEEKO
+static void test_native_lfs_seek_end(void) {
+    FILE * file;
+    char path[FLVMETA_TEST_PATH_SIZE];
+
+    file = create_temp_file("lfs-seek.bin", path, sizeof(path));
+    TEST_ASSERT_EQUAL_INT(3, (int)fwrite("abc", 1, 3, file));
+    TEST_ASSERT_EQUAL_INT(0, lfs_fseek(file, -1, SEEK_END));
+    TEST_ASSERT_TRUE(lfs_ftell(file) == (file_offset_t)2);
+    TEST_ASSERT_EQUAL_INT(0, fclose(file));
+    TEST_ASSERT_EQUAL_INT(0, remove(path));
+}
+#endif
+
 void run_flv_tests(void) {
     UnitySetTestFile(__FILE__);
+
+#ifdef HAVE_FSEEKO
+    RUN_TEST(test_native_lfs_seek_end);
+#endif
 
     RUN_TEST(test_swap_uint16);
     RUN_TEST(test_swap_uint16_neg);
