@@ -52,6 +52,7 @@
 #define AMF_ERROR_NULL_POINTER      ((byte)0x04)
 #define AMF_ERROR_MEMORY            ((byte)0x05)
 #define AMF_ERROR_UNSUPPORTED_TYPE  ((byte)0x06)
+#define AMF_ERROR_DEPTH_LIMIT       ((byte)0x07)
 
 typedef struct __amf_node * p_amf_node;
 

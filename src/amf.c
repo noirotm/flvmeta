@@ -23,6 +23,9 @@
 
 #include "amf.h"
 
+/* Internal parsing budget: scalars add no depth, a root container adds one. */
+#define AMF_MAX_DEPTH 128
+
 /* function common to all array types */
 static void amf_list_init(amf_list * list) {
     if (list != NULL) {
@@ -300,8 +303,10 @@ static amf_data * amf_string_read(amf_read_proc read_proc, void * user_data) {
     }
 }
 
+static amf_data * amf_data_read_depth(amf_read_proc read_proc, void * user_data, unsigned int depth);
+
 /* read an object */
-static amf_data * amf_object_read(amf_read_proc read_proc, void * user_data) {
+static amf_data * amf_object_read(amf_read_proc read_proc, void * user_data, unsigned int depth) {
     amf_data * name;
     amf_data * element;
     byte error_code;
@@ -322,7 +327,7 @@ static amf_data * amf_object_read(amf_read_proc read_proc, void * user_data) {
             return amf_data_error(error_code);
         }
 
-        element = amf_data_read(read_proc, user_data);
+        element = amf_data_read_depth(read_proc, user_data, depth);
         error_code = amf_data_get_error_code(element);
         if (error_code == AMF_ERROR_END_TAG || error_code == AMF_ERROR_UNKNOWN_TYPE) {
             /* end tag or unknown element: end of data, exit loop */
@@ -352,7 +357,7 @@ static amf_data * amf_object_read(amf_read_proc read_proc, void * user_data) {
 }
 
 /* read an associative array */
-static amf_data * amf_associative_array_read(amf_read_proc read_proc, void * user_data) {
+static amf_data * amf_associative_array_read(amf_read_proc read_proc, void * user_data, unsigned int depth) {
     amf_data * name;
     amf_data * element;
     uint32_be size;
@@ -380,8 +385,16 @@ static amf_data * amf_associative_array_read(amf_read_proc read_proc, void * use
             return amf_data_error(error_code);
         }
 
-        element = amf_data_read(read_proc, user_data);
+        element = amf_data_read_depth(read_proc, user_data, depth);
         error_code = amf_data_get_error_code(element);
+
+        /* An empty name must not hide a nesting-limit failure. */
+        if (error_code == AMF_ERROR_DEPTH_LIMIT) {
+            amf_data_free(name);
+            amf_data_free(data);
+            amf_data_free(element);
+            return amf_data_error(error_code);
+        }
 
         if (amf_string_get_size(name) == 0 || error_code == AMF_ERROR_END_TAG || error_code == AMF_ERROR_UNKNOWN_TYPE) {
             /* end tag or unknown element: end of data, exit loop */
@@ -411,7 +424,7 @@ static amf_data * amf_associative_array_read(amf_read_proc read_proc, void * use
 }
 
 /* read an array */
-static amf_data * amf_array_read(amf_read_proc read_proc, void * user_data) {
+static amf_data * amf_array_read(amf_read_proc read_proc, void * user_data, unsigned int depth) {
     size_t i;
     amf_data * element;
     byte error_code;
@@ -431,7 +444,7 @@ static amf_data * amf_array_read(amf_read_proc read_proc, void * user_data) {
     array_size = swap_uint32(array_size);
             
     for (i = 0; i < array_size; ++i) {
-        element = amf_data_read(read_proc, user_data);
+        element = amf_data_read_depth(read_proc, user_data, depth);
         error_code = amf_data_get_error_code(element);
         if (error_code != AMF_ERROR_OK) {
             amf_data_free(element);
@@ -464,11 +477,22 @@ static amf_data * amf_date_read(amf_read_proc read_proc, void * user_data) {
 
 /* load AMF data from stream */
 amf_data * amf_data_read(amf_read_proc read_proc, void * user_data) {
+    return amf_data_read_depth(read_proc, user_data, 0);
+}
+
+static amf_data * amf_data_read_depth(amf_read_proc read_proc, void * user_data, unsigned int depth) {
     byte type;
     if (read_proc(&type, sizeof(byte), user_data) < sizeof(byte)) {
         return amf_data_error(AMF_ERROR_EOF);
     }
         
+    /* Check only containers, so scalars and object terminators remain valid
+       at the limit. Reject before allocating or descending another level. */
+    if ((type == AMF_TYPE_OBJECT || type == AMF_TYPE_ASSOCIATIVE_ARRAY
+        || type == AMF_TYPE_ARRAY) && depth >= AMF_MAX_DEPTH) {
+        return amf_data_error(AMF_ERROR_DEPTH_LIMIT);
+    }
+
     switch (type) {
         case AMF_TYPE_NUMBER:
             return amf_number_read(read_proc, user_data);
@@ -477,16 +501,16 @@ amf_data * amf_data_read(amf_read_proc read_proc, void * user_data) {
         case AMF_TYPE_STRING:
             return amf_string_read(read_proc, user_data);
         case AMF_TYPE_OBJECT:
-            return amf_object_read(read_proc, user_data);
+            return amf_object_read(read_proc, user_data, depth + 1);
         case AMF_TYPE_NULL:
             return amf_null_new();
         case AMF_TYPE_UNDEFINED:
             return amf_undefined_new();
         /*case AMF_TYPE_REFERENCE:*/
         case AMF_TYPE_ASSOCIATIVE_ARRAY:
-            return amf_associative_array_read(read_proc, user_data);
+            return amf_associative_array_read(read_proc, user_data, depth + 1);
         case AMF_TYPE_ARRAY:
-            return amf_array_read(read_proc, user_data);
+            return amf_array_read(read_proc, user_data, depth + 1);
         case AMF_TYPE_DATE:
             return amf_date_read(read_proc, user_data);
         /*case AMF_TYPE_SIMPLEOBJECT:*/

@@ -50,6 +50,11 @@ Its memory usage remains minimal, as it uses a two-pass reading algorithm which
 permits the computation of all necessary tags without loading anything more than
 the file's tags headers in memory.
 
+AMF metadata parsing supports up to 128 nested containers (objects, strict
+arrays, or ECMA arrays). A root container counts as one level; scalar values
+do not add a level. Deeper values are treated as invalid metadata and handled
+according to the selected command's existing error policy.
+
 # COMMANDS
 
 Only one command can be specified for an invocation of **flvmeta**. The chosen
