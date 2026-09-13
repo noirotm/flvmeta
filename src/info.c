@@ -21,6 +21,7 @@
 */
 #include "info.h"
 #include "avc.h"
+#include "hevc.h"
 
 #include <string.h>
 
@@ -147,9 +148,16 @@ static int compute_avc_size(flv_stream * flv_in, flv_info * info, uint32 body_le
 }
 
 /*
+    compute HEVC (H.265) video size (experimental)
+*/
+static int compute_hevc_size(flv_video_tag * vt, flv_stream * flv_in, flv_info * info, uint32 body_length) {
+    return read_hevc_resolution(vt, flv_in, body_length, &(info->video_width), &(info->video_height));
+}
+
+/*
     compute video width and height from the first video frame
 */
-static int compute_video_size(flv_stream * flv_in, flv_info * info, uint32 body_length) {
+static int compute_video_size(flv_video_tag * vt, flv_stream * flv_in, flv_info * info, uint32 body_length) {
     switch (info->video_codec) {
         case FLV_VIDEO_TAG_CODEC_SORENSEN_H263:
             return compute_h263_size(flv_in, info, body_length);
@@ -162,6 +170,8 @@ static int compute_video_size(flv_stream * flv_in, flv_info * info, uint32 body_
             return compute_vp6_alpha_size(flv_in, info, body_length);
         case FLV_VIDEO_TAG_CODEC_AVC:
             return compute_avc_size(flv_in, info, body_length);
+        case FLV_VIDEO_FOURCC_HEVC:
+            return compute_hevc_size(vt, flv_in, info, body_length);
         default:
             return FLV_OK;
     }
@@ -430,7 +440,7 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
                 if (have_video_size != 1
                 && flv_video_tag_frame_type(&vt) == FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
                     /* read first video frame to get critical info */
-                    result = compute_video_size(flv_in, info, body_length - sizeof(flv_video_tag));
+                    result = compute_video_size(&vt, flv_in, info, body_length - sizeof(flv_video_tag));
                     if (result != FLV_OK) {
                         return result;
                     }
