@@ -1,6 +1,6 @@
 # How to Build FLVMeta with CMake
 
-Copyright (c) 2012-2016 Marc Noirot
+Copyright (c) 2012-2026 Marc Noirot
 
 ## WHAT YOU NEED
 

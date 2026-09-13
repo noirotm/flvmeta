@@ -312,7 +312,7 @@ Marc Noirot \<marc.noirot@gmail.com\>
 
 # COPYRIGHT
 
-Copyright 2007-2016 Marc Noirot
+Copyright 2007-2026 Marc Noirot
 
 This is free software; see the source for copying conditions.
 There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR
