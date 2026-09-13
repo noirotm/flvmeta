@@ -632,12 +632,6 @@ int check_flv_file(const flvmeta_opts * opts) {
                             on_metadata = amf_data_clone(data);
                             on_metadata_name = amf_data_clone(name);
 
-                            /* check onMetadata type */
-                            if (amf_data_get_type(on_metadata) != AMF_TYPE_ASSOCIATIVE_ARRAY) {
-                                sprintf(message, "invalid onMetaData data type: %u, should be an associative array (8)", amf_data_get_type(on_metadata));
-                                print_error(ERROR_METADATA_DATA_INVALID_TYPE, offset, message);
-                            }
-
                             /* onMetaData must be the first tag at 0 timestamp */
                             if (tag_number != 1) {
                                 print_warning(WARNING_METADATA_BAD_TAG, offset, "onMetadata event found after the first tag");
@@ -728,6 +722,11 @@ int check_flv_file(const flvmeta_opts * opts) {
     if (!have_on_metadata) {
         print_warning(WARNING_METADATA_NOT_PRESENT, filesize, "onMetaData event not found, file might not be playable");
     }
+    else if (amf_data_get_type(on_metadata) != AMF_TYPE_ASSOCIATIVE_ARRAY) {
+        /* check onMetadata type */
+        sprintf(message, "invalid onMetaData data type: %u, should be an associative array (8)", amf_data_get_type(on_metadata));
+        print_error(ERROR_METADATA_DATA_INVALID_TYPE, on_metadata_offset, message);
+    }
     else {
         amf_node * n;
         int have_width, have_height;
@@ -766,7 +765,19 @@ int check_flv_file(const flvmeta_opts * opts) {
                 duration = (info.last_timestamp - info.first_timestamp + info.video_frame_duration) / 1000.0;
             }
 
-            name = amf_string_get_bytes(amf_associative_array_get_name(n));
+            data = amf_associative_array_get_name(n);
+            type = amf_data_get_type(data);
+
+            /* check if the name is an actual string */
+            if (amf_data_get_type(data) != AMF_TYPE_STRING) {
+                sprintf(message, "onMetadata entry name should be a string, got %s", get_amf_type_string(type));
+                print_warning(WARNING_AMF_DATA_INVALID_TYPE, on_metadata_offset, message);
+
+                /* ignore the current entry in the associative array */
+                continue;
+            }
+
+            name = amf_string_get_bytes(data);
             data = amf_associative_array_get_data(n);
             type = amf_data_get_type(data);
 
@@ -1432,31 +1443,31 @@ int check_flv_file(const flvmeta_opts * opts) {
                 print_error(ERROR_VIDEO_HEIGHT_MISSING, on_metadata_offset, "height information not found in metadata, problems might occur in some players");
             }
         }
-    }
 
-    /* could we compute video resolution ? */
-    if (info.video_width == 0 && info.video_height == 0) {
-        print_warning(WARNING_VIDEO_SIZE_ERROR, filesize, "unable to determine video resolution");
-    }
+        /* could we compute video resolution ? */
+        if (info.video_width == 0 && info.video_height == 0) {
+            print_warning(WARNING_VIDEO_SIZE_ERROR, filesize, "unable to determine video resolution");
+        }
 
-    /* global info */
+        /* global info */
 
-    if (info.have_video) {
-        /* video codec */
-        sprintf(message, "video codec is %s", dump_string_get_video_codec(prev_video_tag));
-        print_info(INFO_VIDEO_CODEC, 0, message);
+        if (info.have_video) {
+            /* video codec */
+            sprintf(message, "video codec is %s", dump_string_get_video_codec(prev_video_tag));
+            print_info(INFO_VIDEO_CODEC, 0, message);
 
-    }
+        }
 
-    if (info.have_audio) {
-        /* audio info */
-        sprintf(message, "audio format is %s (%s, %s-bit, %s kHz)",
-            dump_string_get_sound_format(prev_audio_tag),
-            dump_string_get_sound_type(prev_audio_tag),
-            dump_string_get_sound_size(prev_audio_tag),
-            dump_string_get_sound_rate(prev_audio_tag)
-        );
-        print_info(INFO_AUDIO_FORMAT, 0, message);
+        if (info.have_audio) {
+            /* audio info */
+            sprintf(message, "audio format is %s (%s, %s-bit, %s kHz)",
+                dump_string_get_sound_format(prev_audio_tag),
+                dump_string_get_sound_type(prev_audio_tag),
+                dump_string_get_sound_size(prev_audio_tag),
+                dump_string_get_sound_rate(prev_audio_tag)
+            );
+            print_info(INFO_AUDIO_FORMAT, 0, message);
+        }
     }
 
     /* does the file use extended timestamps ? */

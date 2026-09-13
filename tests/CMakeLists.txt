@@ -28,3 +28,12 @@ add_test(NAME nesting_cli COMMAND ${CMAKE_COMMAND}
   -DTEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/nesting-cli
   -P ${CMAKE_CURRENT_SOURCE_DIR}/nesting_cli.cmake)
 set_tests_properties(nesting_cli PROPERTIES TIMEOUT 60)
+
+add_executable(make_invalid_metadata_flv make_invalid_metadata_flv.c)
+target_compile_definitions(make_invalid_metadata_flv PRIVATE
+  FLVMETA_TEST_TMP_DIR="${CMAKE_CURRENT_BINARY_DIR}")
+add_test(NAME invalid_metadata_cli COMMAND ${CMAKE_COMMAND}
+  -DFLVMETA=$<TARGET_FILE:flvmeta>
+  -DGENERATOR=$<TARGET_FILE:make_invalid_metadata_flv>
+  -P ${CMAKE_CURRENT_SOURCE_DIR}/invalid_metadata_cli.cmake)
+set_tests_properties(invalid_metadata_cli PROPERTIES TIMEOUT 60)
