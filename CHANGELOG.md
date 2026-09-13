@@ -2,6 +2,39 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.3.0] - 2026-09-13
+### Added
+- Added support for Enhanced RTMP video headers, including recognition of HEVC,
+  AV1, and VP9 codecs and dumping of extended packet types.
+- Added CLI regression tests for malformed and deeply nested AMF metadata.
+
+### Changed
+- Raised the minimum supported CMake version to 3.11.
+- Replaced the Check test framework with bundled Unity, removing the external
+  test framework dependency.
+- Migrated continuous integration to GitHub Actions with Linux, macOS, and
+  Windows builds.
+
+### Fixed
+- Rejected AMF metadata nested beyond 128 containers to prevent stack exhaustion
+  while parsing and processing deeply nested input (issue #29).
+- Fixed crashes in the check command when processing invalid metadata types or
+  entry names, and use of uninitialized file information (issue #30).
+- Fixed a stack buffer overflow when reporting long metadata event names
+  (issue #26).
+- Fixed an out-of-bounds read and memory leak when cloning AMF strings containing
+  embedded null bytes (issue #27).
+- Fixed invalid memory access when iterating over malformed AMF objects
+  (issue #28).
+- Fixed a double free when reading incomplete extended video tags (issue #23).
+- Fixed excessive rewinding when recovering from metadata that exceeds its
+  declared tag body length.
+- Fixed duration calculation underflow when input timestamps decrease.
+- Fixed undefined behavior in timestamp and 24-bit integer conversions
+  (issue #25).
+- Fixed MinGW builds involving getopt and large-file support.
+- Fixed linking with the math library on FreeBSD (issue #17).
+
 ## [1.2.2] - 2019-05-01
 ### Fixed
 - Fixed heap overflow in AVC resolution parsing.
@@ -207,6 +240,7 @@ has no audio data.
 ## [1.0] - 2007-09-21
 This is the first public release.
 
+[1.3.0]: https://github.com/noirotm/flvmeta/releases/tag/v1.3.0
 [1.2.2]: https://github.com/noirotm/flvmeta/releases/tag/v1.2.2
 [1.2.1]: https://github.com/noirotm/flvmeta/releases/tag/v1.2.1
 [1.2.0]: https://github.com/noirotm/flvmeta/releases/tag/v1.2.0
