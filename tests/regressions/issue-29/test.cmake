@@ -1,24 +1,8 @@
+# https://github.com/noirotm/flvmeta/issues/29
 # Run against the real executable: unit tests do not link the dumpers or updater.
 # Every generated file contains nested metadata followed by {recovery: true}.
 
-# Compare exact exit results, so a crash or timeout cannot count as rejection.
-# The caller explicitly names its local stdout variable; no shared output state.
-function(assert_flvmeta_exit_code expected output_variable)
-  execute_process(COMMAND "${FLVMETA}" ${ARGN}
-    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 10)
-  if(NOT "${result}" STREQUAL "${expected}")
-    message(FATAL_ERROR "${ARGN}: expected ${expected}, got ${result}\n${error}\n${output}")
-  endif()
-  set(${output_variable} "${output}" PARENT_SCOPE)
-endfunction()
-
-function(generate_fixture input depth kind)
-  execute_process(COMMAND "${GENERATOR}" "${input}" ${depth} ${kind}
-    RESULT_VARIABLE result)
-  if(NOT "${result}" STREQUAL "0")
-    message(FATAL_ERROR "Fixture generation failed for ${input}: ${result}")
-  endif()
-endfunction()
+include("${CMAKE_CURRENT_LIST_DIR}/../support/cli.cmake")
 
 # A normal dump selects the first usable onMetaData tag. Full dump must
 # reach the second tag in both cases and never emit a rejected partial tree.
@@ -68,19 +52,17 @@ endfunction()
 # Keep fixture paths and cleanup together. Failed cases retain their files
 # for diagnosis; successful cases leave no generated media behind.
 function(check_nesting_case kind depth)
-  set(input "${TEST_DIR}/nested-${kind}-${depth}.flv")
-  set(output "${TEST_DIR}/updated-${kind}-${depth}.flv")
-  generate_fixture("${input}" ${depth} ${kind})
+  generate_fixture(input ${depth} ${kind})
+  set(output "${input}.updated.flv")
   check_dump_formats("${input}" ${depth})
   check_validation("${input}" ${depth})
   check_update("${input}" "${output}" ${depth} ${kind})
-  file(REMOVE "${input}" "${output}")
+  remove_fixtures("${input}" "${output}")
 endfunction()
 
 # Kinds: strict arrays, objects, ECMA arrays, and alternating container types.
 # Depths: highest accepted value, first rejected value, and stack-overflow-scale
 # input. Counts include the outer ECMA array added by the fixture generator.
-file(MAKE_DIRECTORY "${TEST_DIR}")
 foreach(kind RANGE 0 3)
   foreach(depth 128 129 70000)
     check_nesting_case(${kind} ${depth})

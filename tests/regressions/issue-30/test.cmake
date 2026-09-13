@@ -1,19 +1,11 @@
+# https://github.com/noirotm/flvmeta/issues/30
 # Issue #30: a string-valued onMetaData must be rejected before list traversal.
 # Run the actual checker, since the Unity executable does not link check.c.
-execute_process(COMMAND "${GENERATOR}"
-  RESULT_VARIABLE result OUTPUT_VARIABLE input ERROR_VARIABLE error
-  OUTPUT_STRIP_TRAILING_WHITESPACE TIMEOUT 10)
-if(NOT "${result}" STREQUAL "0")
-  message(FATAL_ERROR "Fixture generation failed: ${result}\n${error}")
-endif()
+include("${CMAKE_CURRENT_LIST_DIR}/../support/cli.cmake")
+generate_fixture(input)
 
 foreach(format raw json xml)
-  execute_process(COMMAND "${FLVMETA}" --check --${format} "${input}"
-    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 10)
-  # An arbitrary nonzero result could be a crash, so require ERROR_INVALID_FLV_FILE.
-  if(NOT "${result}" STREQUAL "9")
-    message(FATAL_ERROR "${format}: expected exit 9, got ${result}\n${error}\n${output}")
-  endif()
+  assert_flvmeta_exit_code(9 output --check --${format} "${input}")
   # This metadata-only fixture also reports a no-streams header error. Require
   # the specific wrong-type diagnostic so that error alone cannot pass the test.
   if(NOT output MATCHES "E70046" OR
@@ -29,4 +21,4 @@ foreach(format raw json xml)
 endforeach()
 
 # Keep failed fixtures for diagnosis; successful runs leave no media behind.
-file(REMOVE "${input}")
+remove_fixtures("${input}")
