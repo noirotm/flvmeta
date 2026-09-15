@@ -430,7 +430,7 @@ int get_flv_info(flv_stream * flv_in, flv_info * info, const flvmeta_opts * opts
                 if (have_video_size != 1
                 && flv_video_tag_frame_type(&vt) == FLV_VIDEO_TAG_FRAME_TYPE_KEYFRAME) {
                     /* read first video frame to get critical info */
-                    result = compute_video_size(flv_in, info, body_length - sizeof(flv_video_tag));
+                    result = compute_video_size(flv_in, info, flv_in->current_tag_body_length);
                     if (result != FLV_OK) {
                         return result;
                     }
