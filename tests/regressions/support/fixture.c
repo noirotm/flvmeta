@@ -21,11 +21,16 @@ int fixture_header(FILE * file, unsigned int flags) {
 }
 
 int fixture_tag(FILE * file, unsigned int type, const unsigned char * data, size_t size) {
-    if (size > 0xFFFFFFUL) {
+    return fixture_tag_at(file, type, data, size, 0);
+}
+
+int fixture_tag_at(FILE * file, unsigned int type, const unsigned char * data, size_t size, unsigned long timestamp) {
+    if (size > 0xFFFFFFUL || timestamp > 0xFFFFFFFFUL) {
         return 0;
     }
     return fputc((int)type, file) != EOF && put_uint(file, size, 3) &&
-        put_uint(file, 0, 4) && put_uint(file, 0, 3) &&
+        put_uint(file, timestamp & 0xFFFFFFUL, 3) && put_uint(file, timestamp >> 24, 1) &&
+        put_uint(file, 0, 3) &&
         fwrite(data, 1, size, file) == size && put_uint(file, 11 + size, 4);
 }
 

@@ -642,7 +642,7 @@ void compute_metadata(flv_info * info, flv_metadata * meta, const flvmeta_opts *
         amf_associative_array_add(meta->on_metadata, "videocodecid", amf_number_new((number64)info->video_codec));
     }
     if (info->have_audio && info->have_video) {
-        number64 audio_delay = ((sint32)info->audio_first_timestamp - (sint32)info->video_first_timestamp) / 1000.0;
+        number64 audio_delay = ((sint64)info->audio_first_timestamp - (sint64)info->video_first_timestamp) / 1000.0;
         amf_associative_array_add(meta->on_metadata, "audiodelay", amf_number_new((number64)audio_delay));
     }
     amf_associative_array_add(meta->on_metadata, "canSeekToEnd", amf_boolean_new(info->can_seek_to_end));

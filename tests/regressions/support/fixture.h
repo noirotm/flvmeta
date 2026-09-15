@@ -17,5 +17,6 @@ int fixture_metadata_footer(FILE * file, size_t value_size);
 /* Complete framing for fixtures containing audio/video tags. */
 int fixture_header(FILE * file, unsigned int flags);
 int fixture_tag(FILE * file, unsigned int type, const unsigned char * data, size_t size);
+int fixture_tag_at(FILE * file, unsigned int type, const unsigned char * data, size_t size, unsigned long timestamp);
 
 #endif

@@ -1254,7 +1254,7 @@ int check_flv_file(const flvmeta_opts * opts) {
                 if (type == AMF_TYPE_NUMBER) {
                     if (info.have_audio && info.have_video) {
                         number64 audiodelay, file_audiodelay;
-                        audiodelay = ((sint32)info.audio_first_timestamp - (sint32)info.video_first_timestamp) / 1000.0;
+                        audiodelay = ((sint64)info.audio_first_timestamp - (sint64)info.video_first_timestamp) / 1000.0;
                         file_audiodelay = amf_number_get_value(data);
 
                         if (fabs(file_audiodelay - audiodelay) >= 1.0) {
