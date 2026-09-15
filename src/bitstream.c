@@ -63,21 +63,32 @@ uint32 exp_golomb_ue(bit_buffer * bb) {
         }
         if (bit == 0) {
             significant_bits++;
+            if (significant_bits > 32) {
+                return 0;
+            }
         }
     } while (bit == 0);
 
     if (!get_bits(bb, significant_bits, &bits))
         return 0;
 
-    return (1 << significant_bits) + bits - 1;
+    /* Only a zero suffix fits uint32 after 32 leading zeros. */
+    if (significant_bits == 32) {
+        return bits == 0 ? (uint32)0xFFFFFFFFUL : 0;
+    }
+    return (((uint32)1 << significant_bits) - 1) + bits;
 }
 
 sint32 exp_golomb_se(bit_buffer * bb) {
-    sint32 ret;
+    uint32 ret;
     ret = exp_golomb_ue(bb);
+    /* This code maps to +2147483648, which does not fit sint32. */
+    if (ret == (uint32)0xFFFFFFFFUL) {
+        return 0;
+    }
     if ((ret & 0x1) == 0) {
-        return -(ret >> 1);
+        return -(sint32)(ret >> 1);
     }
 
-    return (ret + 1) >> 1;
+    return (sint32)((ret >> 1) + 1);
 }

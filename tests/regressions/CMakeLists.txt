@@ -18,3 +18,4 @@ endfunction()
 
 add_subdirectory(issue-29)
 add_subdirectory(issue-30)
+add_subdirectory(issue-31)

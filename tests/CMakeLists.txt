@@ -3,6 +3,7 @@ add_executable(flvmeta_tests
   check_flvmeta.c
   check_flv.c
   check_amf.c
+  check_bitstream.c
   unity.c
   util.c
   util.h
@@ -10,6 +11,7 @@ add_executable(flvmeta_tests
   ${CMAKE_SOURCE_DIR}/src/amf.c
   ${CMAKE_SOURCE_DIR}/src/flv.c
   ${CMAKE_SOURCE_DIR}/src/types.c
+  ${CMAKE_SOURCE_DIR}/src/bitstream.c
 )
 
 target_include_directories(flvmeta_tests BEFORE PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR})

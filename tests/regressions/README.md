@@ -15,6 +15,8 @@ Shared support:
   temporary paths, FLV header and metadata tag framing, and I/O cleanup.
   Each generator implements `write_flv_fixture()` from `support/fixture.h`.
   Payload bytes are constructed independently of the production AMF writer.
+  `fixture_header()` writes a header with selected stream flags and
+  `fixture_tag()` writes a complete tag at timestamp zero for audio/video cases.
 - `support/cli.cmake` provides `generate_fixture()`,
   `assert_flvmeta_exit_code()`, and `remove_fixtures()`. Exit codes are compared
   exactly; commands have a timeout. Failed cases retain their files.

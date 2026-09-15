@@ -24,6 +24,7 @@
 extern void amf_tests_teardown(void);
 extern void run_amf_tests(void);
 extern void run_flv_tests(void);
+extern void run_bitstream_tests(void);
 
 void setUp(void) {
 }
@@ -36,5 +37,6 @@ int main(void) {
     UNITY_BEGIN();
     run_amf_tests();
     run_flv_tests();
+    run_bitstream_tests();
     return UNITY_END();
 }

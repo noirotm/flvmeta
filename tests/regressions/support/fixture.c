@@ -15,6 +15,20 @@ static int put_uint(FILE * file, size_t value, unsigned int bytes) {
     return 1;
 }
 
+int fixture_header(FILE * file, unsigned int flags) {
+    return fwrite("FLV", 1, 3, file) == 3 && fputc(1, file) != EOF &&
+        fputc((int)flags, file) != EOF && put_uint(file, 9, 4) && put_uint(file, 0, 4);
+}
+
+int fixture_tag(FILE * file, unsigned int type, const unsigned char * data, size_t size) {
+    if (size > 0xFFFFFFUL) {
+        return 0;
+    }
+    return fputc((int)type, file) != EOF && put_uint(file, size, 3) &&
+        put_uint(file, 0, 4) && put_uint(file, 0, 3) &&
+        fwrite(data, 1, size, file) == size && put_uint(file, 11 + size, 4);
+}
+
 int fixture_metadata_header(FILE * file, size_t value_size) {
     static const unsigned char name[] = {
         2, 0, 10, 'o', 'n', 'M', 'e', 't', 'a', 'D', 'a', 't', 'a'
@@ -46,10 +60,6 @@ int main(int argc, char ** argv) {
     unsigned long process_id;
     int written;
     int failed;
-    static const unsigned char header[] = {
-        /* FLV v1, no media streams, nine-byte header, PreviousTagSize0. */
-        'F', 'L', 'V', 1, 0, 0, 0, 0, 9, 0, 0, 0, 0
-    };
 
     if (argc < 2) {
         return 1;
@@ -67,7 +77,7 @@ int main(int argc, char ** argv) {
     if (file == NULL) {
         return 1;
     }
-    failed = fwrite(header, 1, sizeof(header), file) != sizeof(header);
+    failed = !fixture_header(file, 0);
     if (!failed) {
         failed = write_flv_fixture(file, argc - 2, argv + 2) != 0;
     }

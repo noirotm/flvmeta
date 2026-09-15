@@ -14,4 +14,8 @@ int write_flv_fixture(FILE * file, int argc, char ** argv);
 int fixture_metadata_header(FILE * file, size_t value_size);
 int fixture_metadata_footer(FILE * file, size_t value_size);
 
+/* Complete framing for fixtures containing audio/video tags. */
+int fixture_header(FILE * file, unsigned int flags);
+int fixture_tag(FILE * file, unsigned int type, const unsigned char * data, size_t size);
+
 #endif
