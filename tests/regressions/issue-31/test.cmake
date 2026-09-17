@@ -1,11 +1,12 @@
 # https://github.com/noirotm/flvmeta/issues/31
 include("${CMAKE_CURRENT_LIST_DIR}/../support/cli.cmake")
 
+set(TEST_CONTEXT "issue-31 / 47-zero prefix")
 generate_fixture(input)
-assert_flvmeta_exit_code(9 output --check "${input}")
-# These diagnostics follow get_flv_info() and its AVC decoder. A different
-# rejection, including the original PoC's invalid metadata, must not pass.
-if(NOT output MATCHES "E60077" OR NOT output MATCHES "E60078")
-  message(FATAL_ERROR "Checker did not reach metadata verification\n${output}")
-endif()
+set(TEST_CONTEXT "issue-31 / 47-zero prefix / check")
+assert_flvmeta_exit_code(9 check_output --check "${input}")
+# Missing width/height metadata gives exit 9. These diagnostics occur after
+# AVC decoding, so an earlier, unrelated rejection cannot pass the test.
+assert_contains("${check_output}" "E60077")
+assert_contains("${check_output}" "E60078")
 remove_fixtures("${input}")

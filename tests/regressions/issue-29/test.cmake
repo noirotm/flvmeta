@@ -1,70 +1,67 @@
 # https://github.com/noirotm/flvmeta/issues/29
-# Run against the real executable: unit tests do not link the dumpers or updater.
-# Every generated file contains nested metadata followed by {recovery: true}.
-
+# Each file contains nested metadata followed by {recovery: true}.
 include("${CMAKE_CURRENT_LIST_DIR}/../support/cli.cmake")
 
-# A normal dump selects the first usable onMetaData tag. Full dump must
-# reach the second tag in both cases and never emit a rejected partial tree.
 function(check_dump_formats input depth)
   foreach(format raw xml json yaml)
+    set(TEST_CONTEXT "${case_context} / ${format} dump")
     assert_flvmeta_exit_code(0 dump_output --dump --${format} "${input}")
-    if(depth GREATER 128 AND NOT dump_output MATCHES "recovery")
-      message(FATAL_ERROR "${format}: dump did not recover after rejected metadata")
-    endif()
-    if(depth EQUAL 128 AND NOT dump_output MATCHES "nested")
-      message(FATAL_ERROR "${format}: metadata at the depth limit was not dumped")
+    # A normal dump selects the first usable metadata tag.
+    if(depth GREATER 128)
+      assert_contains("${dump_output}" "recovery")
+    elseif(depth EQUAL 128)
+      assert_contains("${dump_output}" "nested")
     endif()
 
+    set(TEST_CONTEXT "${case_context} / ${format} full dump")
     assert_flvmeta_exit_code(0 full_dump_output --full-dump --${format} "${input}")
-    if(NOT full_dump_output MATCHES "recovery")
-      message(FATAL_ERROR "${format}: full dump did not reach the second tag")
-    endif()
-    if(depth GREATER 128 AND full_dump_output MATCHES "nested")
-      message(FATAL_ERROR "${format}: rejected metadata was partially dumped")
+    assert_contains("${full_dump_output}" "recovery")
+    # Rejected metadata must not appear as a partially decoded tree.
+    if(depth GREATER 128)
+      assert_not_contains("${full_dump_output}" "nested")
     endif()
   endforeach()
 endfunction()
 
-# These metadata-only fixtures are not valid playable files, even at depth
-# 128. Exit 9 means the checker reported errors; deeper inputs must also
-# produce the specific invalid-metadata diagnostic.
 function(check_validation input depth)
+  set(TEST_CONTEXT "${case_context} / check")
+  # These files have no media streams, so even accepted metadata gives exit 9.
   assert_flvmeta_exit_code(9 check_output --check "${input}")
-  if(depth GREATER 128 AND NOT check_output MATCHES "invalid metadata")
-    message(FATAL_ERROR "Check did not report rejected metadata")
-  endif()
-endfunction()
-
-# Default update policy stops with ERROR_INVALID_TAG (7). With --ignore,
-# update should finish and produce metadata that can be parsed again.
-function(check_update input output depth kind)
   if(depth GREATER 128)
-    assert_flvmeta_exit_code(7 update_output --update "${input}" "${output}")
-  endif()
-  assert_flvmeta_exit_code(0 update_output --update --ignore --preserve --no-lastsecond "${input}" "${output}")
-  assert_flvmeta_exit_code(0 dump_output --dump --json "${output}")
-  if(kind EQUAL 2 AND depth EQUAL 128 AND NOT dump_output MATCHES "nested")
-    message(FATAL_ERROR "Update did not preserve accepted nested metadata")
+    assert_contains("${check_output}" "invalid metadata")
   endif()
 endfunction()
 
-# Keep fixture paths and cleanup together. Failed cases retain their files
-# for diagnosis; successful cases leave no generated media behind.
+function(check_update input rewritten depth kind)
+  if(depth GREATER 128)
+    set(TEST_CONTEXT "${case_context} / update with default error policy")
+    assert_flvmeta_exit_code(7 update_output --update "${input}" "${rewritten}")
+  endif()
+  set(TEST_CONTEXT "${case_context} / update with --ignore --preserve")
+  assert_flvmeta_exit_code(0 update_output
+    --update --ignore --preserve --no-lastsecond "${input}" "${rewritten}")
+  set(TEST_CONTEXT "${case_context} / generated metadata")
+  assert_flvmeta_exit_code(0 metadata_output --dump --json "${rewritten}")
+  if(kind STREQUAL "ecma-array" AND depth EQUAL 128)
+    assert_contains("${metadata_output}" "nested")
+  endif()
+endfunction()
+
 function(check_nesting_case kind depth)
-  generate_fixture(input ${depth} ${kind})
-  set(output "${input}.updated.flv")
+  set(case_context "issue-29 / ${kind} / depth ${depth}")
+  set(TEST_CONTEXT "${case_context}")
+  generate_fixture(input ${depth} "${kind}")
+  set(rewritten "${input}.updated.flv")
   check_dump_formats("${input}" ${depth})
   check_validation("${input}" ${depth})
-  check_update("${input}" "${output}" ${depth} ${kind})
-  remove_fixtures("${input}" "${output}")
+  check_update("${input}" "${rewritten}" ${depth} "${kind}")
+  remove_fixtures("${input}" "${rewritten}")
 endfunction()
 
-# Kinds: strict arrays, objects, ECMA arrays, and alternating container types.
-# Depths: highest accepted value, first rejected value, and stack-overflow-scale
-# input. Counts include the outer ECMA array added by the fixture generator.
-foreach(kind RANGE 0 3)
+# Depth includes the outer ECMA array: last accepted, first rejected, then
+# enough nesting to exhaust the stack before the recursion limit was added.
+foreach(kind strict-array object ecma-array mixed)
   foreach(depth 128 129 70000)
-    check_nesting_case(${kind} ${depth})
+    check_nesting_case("${kind}" ${depth})
   endforeach()
 endforeach()

@@ -2,8 +2,10 @@
 #include "fixture.h"
 
 int write_flv_fixture(FILE * file, int argc, char ** argv) {
-    static const unsigned char value[] = {2, 0, 0};
-    (void)argv;
+    static const unsigned char value[] = {
+        2,          /* AMF string */
+        0, 0        /* Zero bytes of text */
+    };
     if (argc != 0) return 1;
     return fixture_metadata_header(file, sizeof(value)) &&
         fwrite(value, 1, sizeof(value), file) == sizeof(value) &&

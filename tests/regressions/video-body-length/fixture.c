@@ -2,7 +2,11 @@
 #include <string.h>
 
 int write_flv_fixture(FILE * file, int argc, char ** argv) {
-    static const unsigned char metadata[] = {8, 0, 0, 0, 0, 0, 0, 9};
+    static const unsigned char metadata[] = {
+        8,              /* ECMA array */
+        0, 0, 0, 0,     /* No properties */
+        0, 0, 9         /* End of array */
+    };
     static const unsigned char video[] = {
         0x17,                       /* AVC keyframe: one-byte FLV video header */
         0x00, 0x00, 0x00, 0x00,     /* Sequence header, composition time zero */
