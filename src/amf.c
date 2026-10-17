@@ -20,6 +20,7 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 */
 #include <string.h>
+#include <math.h>
 
 #include "amf.h"
 
@@ -1183,18 +1184,38 @@ sint16 amf_date_get_timezone(const amf_data * data) {
     return (data != NULL) ? data->date_data.timezone : 0;
 }
 
+static int amf_date_to_time_t_checked(const amf_data * data, time_t * time) {
+    double seconds;
+
+    /* Drop fractional seconds, just as the cast to time_t does. */
+    modf(amf_date_get_milliseconds(data) / 1000, &seconds);
+    /* max + 1 is exact even when converting max to double rounds up.
+       NaN and infinity fail these comparisons too. */
+    if (!(seconds >= (double)TIME_T_MIN &&
+          seconds < (double)TIME_T_MAX + 1.0)) {
+        return 0;
+    }
+
+    *time = (time_t)seconds;
+
+    return 1;
+}
+
 time_t amf_date_to_time_t(const amf_data * data) {
-    return (time_t)((data != NULL) ? data->date_data.milliseconds / 1000 : 0);
+    time_t time;
+
+    return amf_date_to_time_t_checked(data, &time) ? time : (time_t)-1;
 }
 
 size_t amf_date_to_iso8601(const amf_data * data, char * buffer, size_t bufsize) {
     struct tm * t;
     time_t time;
     
-    time = amf_date_to_time_t(data);
-    
-    tzset();
-    t = localtime(&time);
+    t = NULL;
+    if (amf_date_to_time_t_checked(data, &time)) {
+        tzset();
+        t = localtime(&time);
+    }
     if (t != NULL) {
         return strftime(buffer, bufsize, "%Y-%m-%dT%H:%M:%S", t);
     }

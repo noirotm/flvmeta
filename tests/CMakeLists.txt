@@ -22,4 +22,8 @@ target_compile_definitions(flvmeta_tests PRIVATE
 
 add_test(NAME flvmeta_tests COMMAND flvmeta_tests)
 
+if(NOT MSVC)
+  target_link_libraries(flvmeta_tests m)
+endif()
+
 add_subdirectory(regressions)

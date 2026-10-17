@@ -21,6 +21,7 @@
 */
 #include "unity.h"
 #include <string.h>
+#include <float.h>
 #include "src/amf.h"
 #include "util.h"
 
@@ -217,6 +218,92 @@ static void test_amf_depth_wide_array(void) {
     TEST_ASSERT_EQUAL_UINT32(TEST_DEPTH_LIMIT + 1, amf_array_size(data));
 }
 
+static void test_amf_date_seconds(void) {
+    data = amf_date_new(1999, 0);
+    TEST_ASSERT_NOT_NULL(data);
+    TEST_ASSERT_TRUE(amf_date_to_time_t(data) == (time_t)1);
+    data->date_data.milliseconds = -999;
+    TEST_ASSERT_TRUE(amf_date_to_time_t(data) == (time_t)0);
+#if TIME_T_IS_SIGNED
+    data->date_data.milliseconds = -1999;
+    TEST_ASSERT_TRUE(amf_date_to_time_t(data) == (time_t)-1);
+    data->date_data.milliseconds = -2999;
+    TEST_ASSERT_TRUE(amf_date_to_time_t(data) == (time_t)-2);
+#endif
+    TEST_ASSERT_TRUE(amf_date_to_time_t(NULL) == (time_t)0);
+}
+
+static void assert_invalid_amf_date(void) {
+    char buffer[128];
+
+    TEST_ASSERT_TRUE(amf_date_to_time_t(data) == (time_t)-1);
+    TEST_ASSERT_EQUAL_size_t(19, amf_date_to_iso8601(data, buffer, sizeof(buffer)));
+    TEST_ASSERT_EQUAL_STRING("0000-00-00T00:00:00", buffer);
+}
+
+static void test_amf_date_nonfinite(void) {
+    static byte dates[][11] = {
+        {11, 0x7F, 0xF8, 0, 0, 0, 0, 0, 0, 0, 0}, /* NaN */
+        {11, 0xFF, 0xF8, 0, 0, 0, 0, 0, 0, 0, 0}, /* Negative NaN */
+        {11, 0x7F, 0xF0, 0, 0, 0, 0, 0, 0, 0, 0}, /* Infinity */
+        {11, 0xFF, 0xF0, 0, 0, 0, 0, 0, 0, 0, 0}  /* Negative infinity */
+    };
+    size_t i;
+
+    for (i = 0; i < sizeof(dates) / sizeof(dates[0]); ++i) {
+        data = amf_data_buffer_read(dates[i], sizeof(dates[i]));
+        TEST_ASSERT_NOT_NULL(data);
+        TEST_ASSERT_EQUAL_INT(AMF_ERROR_OK, amf_data_get_error_code(data));
+        assert_invalid_amf_date();
+        amf_tests_teardown();
+    }
+    data = amf_date_new(DBL_MAX, 0);
+    TEST_ASSERT_NOT_NULL(data);
+    assert_invalid_amf_date();
+    data->date_data.milliseconds = -DBL_MAX;
+    assert_invalid_amf_date();
+}
+
+static void test_amf_date_time_t_upper_bound(void) {
+    double limit, last_seconds;
+
+    limit = (double)TIME_T_MAX + 1.0;
+#if SIZEOF_TIME_T == 4
+    last_seconds = (double)TIME_T_MAX;
+#else
+    /* Leave room for rounding when converting seconds to milliseconds. */
+    last_seconds = limit - 4096;
+#endif
+    data = amf_date_new(last_seconds * 1000, 0);
+    TEST_ASSERT_NOT_NULL(data);
+    TEST_ASSERT_TRUE(amf_date_to_time_t(data) == (time_t)last_seconds);
+#if SIZEOF_TIME_T == 4
+    data->date_data.milliseconds = (last_seconds + 0.5) * 1000;
+    TEST_ASSERT_TRUE(amf_date_to_time_t(data) == (time_t)TIME_T_MAX);
+#endif
+    data->date_data.milliseconds = limit * 1000;
+    assert_invalid_amf_date();
+    data->date_data.milliseconds = (limit + 4096) * 1000;
+    assert_invalid_amf_date();
+}
+
+static void test_amf_date_time_t_lower_bound(void) {
+    data = amf_date_new(0, 0);
+    TEST_ASSERT_NOT_NULL(data);
+    data->date_data.milliseconds = (double)TIME_T_MIN * 1000;
+    TEST_ASSERT_TRUE(amf_date_to_time_t(data) == (time_t)TIME_T_MIN);
+#if TIME_T_IS_SIGNED && SIZEOF_TIME_T == 4
+    data->date_data.milliseconds = ((double)TIME_T_MIN - 0.5) * 1000;
+    TEST_ASSERT_TRUE(amf_date_to_time_t(data) == (time_t)TIME_T_MIN);
+#endif
+#if SIZEOF_TIME_T == 4
+    data->date_data.milliseconds = ((double)TIME_T_MIN - 1) * 1000;
+#else
+    data->date_data.milliseconds = ((double)TIME_T_MIN - 4096) * 1000;
+#endif
+    assert_invalid_amf_date();
+}
+
 void run_amf_tests(void) {
     UnitySetTestFile(__FILE__);
 
@@ -231,6 +318,10 @@ void run_amf_tests(void) {
     RUN_TEST(test_amf_string_new);
     RUN_TEST(test_amf_string_new_null);
     RUN_TEST(test_amf_string_null);
+    RUN_TEST(test_amf_date_seconds);
+    RUN_TEST(test_amf_date_nonfinite);
+    RUN_TEST(test_amf_date_time_t_upper_bound);
+    RUN_TEST(test_amf_date_time_t_lower_bound);
     RUN_TEST(test_amf_strict_array_depth_boundaries);
     RUN_TEST(test_amf_object_depth_boundaries);
     RUN_TEST(test_amf_ecma_array_depth_boundaries);

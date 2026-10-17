@@ -100,6 +100,10 @@ if(HAVE_FSEEKO)
   check_type_size("off_t" SIZEOF_OFF_T)
 endif()
 
+# time_t specifics like size and bounds to help check conversions
+include(CheckTimeT)
+flvmeta_check_time_t()
+
 # configuration file
 configure_file(config-cmake.h.in ${CMAKE_BINARY_DIR}/config.h)
 include_directories(${CMAKE_BINARY_DIR})

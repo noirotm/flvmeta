@@ -31,6 +31,12 @@
 /* The size of `long long', as computed by sizeof. */
 #define SIZEOF_LONG_LONG @SIZEOF_LONG_LONG@
 
+/* The size and integer bounds of time_t. */
+#define SIZEOF_TIME_T @SIZEOF_TIME_T@
+#cmakedefine01 TIME_T_IS_SIGNED
+#define TIME_T_MIN @TIME_T_MIN@
+#define TIME_T_MAX @TIME_T_MAX@
+
 /* Version number of package */
 #define VERSION "@PACKAGE_VERSION@"
 
