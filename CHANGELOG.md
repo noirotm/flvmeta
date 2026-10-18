@@ -2,6 +2,21 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.3.1] - 2026-10-18
+### Changed
+- Improved CLI regression test helpers and documentation, and added coverage
+  for video payload lengths, audio delay, Exp-Golomb parsing, and AMF dates.
+
+### Fixed
+- Fixed undefined behavior when parsing oversized Exp-Golomb codes in AVC
+  video data (issue #31).
+- Fixed video resolution detection for short AVC payloads and length underflow
+  for video tags containing only a header.
+- Fixed audio delay calculation for large timestamps and negative delays in
+  metadata checking and generation (issue #32).
+- Fixed undefined behavior when converting non-finite or out-of-range AMF dates
+  to time_t, and invalid date formatting in metadata dumps (issue #33).
+
 ## [1.3.0] - 2026-09-13
 ### Added
 - Added support for Enhanced RTMP video headers, including recognition of HEVC,
@@ -240,6 +255,7 @@ has no audio data.
 ## [1.0] - 2007-09-21
 This is the first public release.
 
+[1.3.1]: https://github.com/noirotm/flvmeta/releases/tag/v1.3.1
 [1.3.0]: https://github.com/noirotm/flvmeta/releases/tag/v1.3.0
 [1.2.2]: https://github.com/noirotm/flvmeta/releases/tag/v1.2.2
 [1.2.1]: https://github.com/noirotm/flvmeta/releases/tag/v1.2.1
